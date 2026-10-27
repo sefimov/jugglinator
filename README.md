@@ -6,6 +6,22 @@
 - Требуется macOS 14 или новее.
 - Интерфейс на русском.
 
+## Быстрый старт
+
+```sh
+scripts/bundle.sh            # собрать, подписать и самопроверить build/Juggler.app
+open build/Juggler.app       # запустить: в меню-баре появится значок с номером задачи
+```
+
+Дальше:
+
+1. Откройте чат в Claude, ChatGPT, Grok Bot или вкладку в Chrome.
+2. Нажмите ⌃⌥§ или выберите в меню Juggler «Сделать задачей текущий чат».
+3. Повторите для остальных задач.
+4. Переключайтесь по кругу хоткеем ⌃§, назад — ⌃⇧§.
+
+При первой привязке Juggler попросит разрешения, подробнее — в разделе «Разрешения». Чтобы разрешения не сбрасывались после каждой пересборки, подпишите приложение сертификатом «Juggler Dev», см. раздел «Подпись».
+
 ## Сборка и проверки
 
 Нужны только Command Line Tools со Swift 6.x, полный Xcode не требуется.
@@ -22,7 +38,163 @@ swift run Juggler --self-test       # самопроверка компонен�
 swift run Juggler --probe-frontmost # JSON с контекстом переднего окна
 ```
 
-Сборку `.app`, подпись и `scripts/bundle.sh` делает задача PACK. Её описание появится здесь позже.
+`swift run Juggler` удобен для отладки. Но без `.app` разрешения macOS выдаются Терминалу, а не Juggler, и не работает запуск при входе в систему. Для обычной работы собирайте `.app`.
+
+## Сборка .app
+
+```sh
+scripts/bundle.sh                                   # подпись ad-hoc
+JUGGLER_SIGN_IDENTITY="Juggler Dev" scripts/bundle.sh  # подпись своим сертификатом
+scripts/bundle.sh --no-self-test                    # без запуска самопроверки в конце
+JUGGLER_VERSION=0.2.0 scripts/bundle.sh             # своя версия (по умолчанию 0.1.0)
+```
+
+Что делает скрипт:
+
+1. Собирает release: `swift build -c release --product Juggler`.
+2. Складывает `build/Juggler.app`. `Info.plist` берётся из шаблона `scripts/Info.plist`:
+   - `CFBundleIdentifier` — `com.sefimov.juggler`;
+   - `LSUIElement` — значка в Dock нет, только меню-бар;
+   - `LSMinimumSystemVersion` — 14.0;
+   - `NSAppleEventsUsageDescription` — объяснение на русском для запроса управления Chrome;
+   - `CFBundleDevelopmentRegion` — `ru` и локализация `ru.lproj`, поэтому системные строки (меню, заголовок окна настроек) тоже на русском;
+   - `CFBundleVersion` — число коммитов в `git`.
+3. Проверяет `Info.plist` через `plutil -lint`.
+4. Подписывает: идентичностью из `JUGGLER_SIGN_IDENTITY`, по умолчанию ad-hoc (`-`).
+5. Проверяет подпись: `codesign --verify --strict --verbose=2`.
+6. Запускает `build/Juggler.app/Contents/MacOS/Juggler --self-test`.
+
+Любой сбой останавливает скрипт с ненулевым кодом. Папка `build/` в `git` не попадает.
+
+Самопроверку можно запустить и отдельно:
+
+```sh
+build/Juggler.app/Contents/MacOS/Juggler --self-test; echo $?
+```
+
+Она инициализирует хранилище, корень композиции и модули UI, SWITCH и BIND. Проверяет связку «хоткей → переключатель → карточка», «⌃⌥ → привязка», регистрацию хоткеев Carbon и ключи `Info.plist` собранного `.app`. Окон не показывает и разрешений не запрашивает. Код 0 — всё прошло.
+
+## Запуск
+
+- `open build/Juggler.app` — запустить собранное приложение. Если Juggler уже запущен, сначала закройте его: меню Juggler → «Выйти из Juggler».
+- **Запуск при входе в систему** включается в настройках Juggler (меню → «Настройки…»). Работает только из `.app`. Надёжнее всего, если приложение лежит в `/Applications`:
+  ```sh
+  ditto build/Juggler.app /Applications/Juggler.app
+  ```
+  Если macOS просит подтверждения, в настройках Juggler появится кнопка «Открыть «Объекты входа»».
+- Данные — `~/Library/Application Support/Juggler/tasks.json`, свои хоткеи — `hotkeys.json` там же.
+
+## Хоткеи
+
+| Действие | По умолчанию | Клавиатура ANSI |
+|---|---|---|
+| Следующая задача | ⌃§ | ⌃` |
+| Предыдущая задача | ⌃⇧§ | ⌃⇧` |
+| Сделать задачей текущий чат | ⌃⌥§ | ⌃⌥` |
+
+- § — физическая клавиша над Tab, слева от 1. В русской раскладке на ней `<`. Хоткей привязан к самой клавише, а не к символу, поэтому работает и в РУ, и в EN.
+- Тип клавиатуры (ISO с § или ANSI с `) Juggler определяет сам и выбирает умолчания под него.
+- Порядок переключения фиксированный: 1→2→3→1. Задачи с отметкой «сделано» пропускаются. Текущая задача определяется в момент нажатия по переднему окну или вкладке.
+- При переходе на секунду-полторы появляется карточка с номером, названием, заметкой и «не был N мин». Карточка не забирает фокус и пропускает клики.
+- **Переназначение:** настройки Juggler → «Хоткеи». Нажмите на поле и затем нужное сочетание, Esc — отмена, «По умолчанию» — вернуть умолчание.
+- В `~/Library/Application Support/Juggler/hotkeys.json` хранятся только переназначенные сочетания. Умолчания вычисляются при запуске по типу клавиатуры. Чтобы сбросить всё, закройте Juggler и удалите этот файл.
+- Глобальные хоткеи (Carbon) работают только в запущенном приложении. Разрешение Accessibility для самих хоткеев не нужно.
+
+## Привязки
+
+«Сделать задачей текущий чат» смотрит на переднее окно. Если впереди меню Juggler, берётся последнее активное приложение.
+
+- **Google Chrome** (`com.google.Chrome`) — активная вкладка: id, адрес, заголовок. При переходе Juggler ищет вкладку по id, потом по адресу, иначе открывает адрес заново.
+- **Claude** (`com.anthropic.claudefordesktop`) — чат по UUID. Juggler пробует прочитать адрес чата через Accessibility. Если не вышло, просит вставить ссылку на чат: `https://claude.ai/chat/<uuid>`, `claude://claude.ai/chat/<uuid>` или голый UUID. Открывается ссылкой `claude://claude.ai/chat/<uuid>`.
+- **ChatGPT** (`com.openai.codex`, старый `com.openai.chat`) — Juggler просит вставить ссылку `codex://threads/<id>` и открывает тред по ней.
+- **Grok Bot** (`com.anysphere.sand`) и любое другое приложение — привязка к окну: bundle id и заголовок. При переходе поднимается окно с тем же заголовком, иначе просто активируется приложение.
+- Незапущенное приложение запускается.
+- Название новой задачи берётся из заголовка без хвостов вида « - Claude» и « - Google Chrome». Если у текущей задачи нет привязки, Juggler предложит привязать чат к ней.
+
+## Разрешения
+
+Juggler ничего не запрашивает сам по себе — только при привязке, переходе на вкладку Chrome или по кнопке в настройках. Без разрешений он не падает, просто умеет меньше.
+
+Состояние разрешений видно в настройках Juggler, раздел «Разрешения». Там же есть кнопки запроса.
+
+**Универсальный доступ (Accessibility)** нужен, чтобы:
+
+- читать заголовки окон;
+- читать адрес чата Claude;
+- поднимать нужное окно.
+
+Как выдать: Системные настройки → Конфиденциальность и безопасность → Универсальный доступ → включить Juggler. Без этого разрешения Claude и окна привязываются хуже: нужна ссылка, а при переходе просто активируется приложение.
+
+**Автоматизация → Google Chrome (Apple Events)** нужна, чтобы видеть вкладки Chrome и переключаться на привязанную вкладку.
+
+- macOS спрашивает это разрешение при первой привязке вкладки или по кнопке «Разрешить…» в настройках. Текст запроса — из `NSAppleEventsUsageDescription`.
+- **Без разрешения** Juggler не видит вкладку. При переходе он открывает адрес заново, и в Chrome появляются дубли вкладок.
+- Если доступ однажды запретили, macOS больше не спрашивает. Включите его вручную: Системные настройки → Конфиденциальность и безопасность → Автоматизация → Juggler → Google Chrome.
+- Если Juggler в этом списке нет, сбросьте решение и привяжите вкладку снова:
+  ```sh
+  tccutil reset AppleEvents com.sefimov.juggler
+  ```
+
+**Разрешения слетели после пересборки.** При подписи ad-hoc у каждой сборки новая подпись, и macOS считает её другим приложением. Juggler может оставаться в списке «Универсальный доступ» включённым, но не работать. Что делать:
+
+- выключите и снова включите Juggler в списке или удалите его кнопкой «−»;
+- или сбросьте разрешения целиком:
+  ```sh
+  tccutil reset Accessibility com.sefimov.juggler
+  tccutil reset AppleEvents com.sefimov.juggler
+  ```
+
+Надёжное решение — постоянный сертификат «Juggler Dev», см. следующий раздел.
+
+## Подпись: сертификат «Juggler Dev»
+
+С самоподписанным сертификатом подпись одинакова от сборки к сборке. Поэтому выданные разрешения переживают пересборку. Сертификат нужен только на этом маке, платить Apple не нужно.
+
+1. Откройте «Связку ключей» (Keychain Access). С macOS 15 её нет в «Программах», ищите через Spotlight или откройте `/System/Library/CoreServices/Applications/Keychain Access.app`.
+2. Меню «Связка ключей» → «Ассистент сертификации» → «Создать сертификат…».
+3. Заполните поля:
+   - имя — `Juggler Dev`;
+   - тип идентификации — «Самоподписанный корневой»;
+   - тип сертификата — «Подпись кода».
+
+   Нажмите «Создать». Сертификат попадёт в связку «вход» (login).
+4. Проверьте, что сертификат виден:
+   ```sh
+   security find-identity -p codesigning
+   ```
+   Пометка `CSSMERR_TP_NOT_TRUSTED` для локальной подписи не мешает.
+5. Соберите приложение:
+   ```sh
+   JUGGLER_SIGN_IDENTITY="Juggler Dev" scripts/bundle.sh
+   ```
+   При первой подписи macOS спросит, можно ли `codesign` использовать ключ. Введите пароль входа и нажмите «Разрешить всегда».
+6. Проверьте подпись:
+   ```sh
+   codesign -dv build/Juggler.app
+   ```
+   Должно быть `Authority=Juggler Dev`.
+7. Один раз выдайте разрешения заново. Разрешения, выданные ad-hoc-сборке, к новой подписи не относятся. Если что-то не работает, выполните `tccutil reset …` из раздела «Разрешения».
+
+Если `codesign` пишет, что не может построить цепочку до доверенного корня, откройте сертификат в «Связке ключей». В разделе «Доверие» поставьте «Подпись кода: Всегда доверять».
+
+Чтобы `JUGGLER_SIGN_IDENTITY` не задавать каждый раз, добавьте `export JUGGLER_SIGN_IDENTITY="Juggler Dev"` в `~/.zshrc`.
+
+## Отладка привязок: `--probe-frontmost`
+
+```sh
+build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost                 # переднее окно сейчас
+build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost --delay 3       # через 3 с: успеть переключиться на чат
+build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost --app com.google.Chrome  # контекст конкретного приложения
+build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost --prompt        # разрешить системный запрос управления Chrome
+```
+
+Команда печатает JSON из трёх частей:
+
+- `context` — bundle id, заголовок, вкладка Chrome, id чата;
+- `diagnostics` — есть ли Accessibility, статус управления Chrome, кандидаты адреса Claude, заметки;
+- `capture` — какая привязка получилась бы.
+
+Без `--prompt` системных запросов нет. Код выхода 0, если контекст прочитан. Разрешения проверяются у того процесса, из которого запущена команда: из `.app` — у Juggler, через `swift run` — у Терминала.
 
 ## Ограничения Command Line Tools
 
@@ -66,6 +238,9 @@ Sources/
     Harness/              CheckRunner, протокол CheckSuite
     Core/                 проверки ядра
     UI/  Switch/  Bind/   UIChecks, SwitchChecks, BindChecks
+scripts/
+  bundle.sh               сборка build/Juggler.app, подпись, проверки, самопроверка
+  Info.plist              шаблон Info.plist приложения
 ```
 
 Данные хранятся в `~/Library/Application Support/Juggler/tasks.json`.
@@ -85,7 +260,7 @@ Sources/
 | UI | `Sources/Juggler/UI/` | `Sources/JugglerCore/UI/` | `Sources/JugglerChecks/UI/` |
 | SWITCH | `Sources/Juggler/Switch/` | `Sources/JugglerCore/Switch/` | `Sources/JugglerChecks/Switch/` |
 | BIND | `Sources/Juggler/Bind/` | `Sources/JugglerCore/Bind/` | `Sources/JugglerChecks/Bind/` |
-| CORE, PACK | `Sources/Juggler/App/` | `Sources/JugglerCore/Core/` | `Sources/JugglerChecks/{main.swift,Harness,Core}` |
+| CORE, PACK | `Sources/Juggler/App/`, `scripts/` | `Sources/JugglerCore/Core/` | `Sources/JugglerChecks/{main.swift,Harness,Core}` |
 
 1. **Протоколы** описаны в `Sources/Juggler/App/ExtensionPoints.swift`. Все они `@MainActor`.
    - BIND реализует `FrontmostContextProviding`, `BindingCapturing`, `BindingActivating`, `PermissionsProviding` (вместе это `BindServices`) и `CurrentChatBinding`. Последний — сценарий «Сделать задачей текущий чат» из меню и по ⌃⌥.

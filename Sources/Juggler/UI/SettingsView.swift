@@ -14,6 +14,10 @@ struct SettingsView: View {
                 SwitchModule.hotkeySettingsView(environment: environment)
             }
 
+            Section("Разрешения") {
+                PermissionsSection(environment: environment)
+            }
+
             Section("Запуск") {
                 Toggle("Запускать Juggler при входе в систему", isOn: Binding(
                     get: { loginItem.state.isOn },

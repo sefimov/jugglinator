@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Шаблон Info.plist для build/Juggler.app. scripts/bundle.sh подставляет
+     __VERSION__ и __BUILD__ и копирует результат в Contents/Info.plist. -->
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>com.sefimov.juggler</string>
+	<key>CFBundleName</key>
+	<string>Juggler</string>
+	<key>CFBundleDisplayName</key>
+	<string>Juggler</string>
+	<key>CFBundleExecutable</key>
+	<string>Juggler</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleShortVersionString</key>
+	<string>__VERSION__</string>
+	<key>CFBundleVersion</key>
+	<string>__BUILD__</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>ru</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>ru</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>14.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Juggler читает адрес и заголовок активной вкладки Google Chrome, чтобы привязать её к задаче, и переключает на эту вкладку при переходе между задачами.</string>
+</dict>
+</plist>

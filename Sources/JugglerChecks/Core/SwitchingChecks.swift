@@ -67,6 +67,12 @@ extension CoreChecks {
                           claude.id, "Claude: без UUID — по очищенному заголовку окна")
 
             c.expectEqual(resolve(FrontmostContext(bundleID: KnownBundleIDs.chatGPT, chatGPTThreadID: "th-1")), gpt.id, "ChatGPT: совпал id треда")
+            c.expectEqual(resolve(FrontmostContext(bundleID: "com.openai.codex", windowTitle: "Код")), gpt.id,
+                          "ChatGPT (com.openai.codex): без id треда — по заголовку окна")
+            c.expectEqual(resolve(FrontmostContext(bundleID: "com.openai.chat", windowTitle: "Код")), gpt.id,
+                          "ChatGPT (старый com.openai.chat): по заголовку окна")
+            c.expectNil(resolve(FrontmostContext(bundleID: "com.openai.other", windowTitle: "Код")),
+                        "не ChatGPT: заголовок треда не засчитывается")
             c.expectEqual(resolve(FrontmostContext(bundleID: "COM.X.GROK", windowTitle: "Перевод")), grokB.id, "окно: bundle id без регистра и заголовок")
             c.expectEqual(resolve(FrontmostContext(bundleID: "com.x.grok", windowTitle: "Другое")), grokA.id, "окно: только приложение → первая по порядку")
             c.expectEqual(resolve(FrontmostContext(bundleID: "com.x.grok", windowTitle: "Другое"), fallback: grokB.id), grokB.id,
@@ -75,6 +81,16 @@ extension CoreChecks {
                           "нет совпадений → последняя активная")
             c.expectNil(resolve(FrontmostContext(bundleID: "com.apple.finder"), fallback: UUID()), "запасная задача не из списка → nil")
             c.expectNil(resolve(.unknown), "пустой контекст без запасной → nil")
+        }
+
+        c.group("известные bundle id") {
+            c.expectEqual(KnownBundleIDs.chatGPT, "com.openai.codex", "ChatGPT desktop по умолчанию — com.openai.codex")
+            c.expect(KnownBundleIDs.isChatGPT("com.openai.codex"), "isChatGPT: com.openai.codex")
+            c.expect(KnownBundleIDs.isChatGPT("COM.OPENAI.CHAT"), "isChatGPT: старый com.openai.chat без учёта регистра")
+            c.expect(!KnownBundleIDs.isChatGPT(nil) && !KnownBundleIDs.isChatGPT(""), "isChatGPT: nil и пустая строка — нет")
+            c.expect(!KnownBundleIDs.isChatGPT(KnownBundleIDs.claude), "isChatGPT: Claude — нет")
+            c.expectEqual(BindApps.chatGPTBundleIDs, KnownBundleIDs.chatGPTAll, "BIND и ядро используют один список ChatGPT")
+            c.expectEqual(BindApps.grokBot, "com.anysphere.sand", "Grok Bot — com.anysphere.sand")
         }
     }
 }

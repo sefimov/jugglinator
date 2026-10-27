@@ -17,10 +17,10 @@ public enum BindAppKind: String, Codable, Equatable, Sendable {
 /// ChatGPT desktop сейчас поставляется как `com.openai.codex` (схема `codex`);
 /// старый `com.openai.chat` оставлен для совместимости.
 public enum BindApps {
-    public static let chrome = "com.google.Chrome"
-    public static let claude = "com.anthropic.claudefordesktop"
-    public static let chatGPTBundleIDs = ["com.openai.codex", "com.openai.chat"]
-    public static let grokBot = "com.anysphere.sand"
+    public static let chrome = KnownBundleIDs.chrome
+    public static let claude = KnownBundleIDs.claude
+    public static let chatGPTBundleIDs = KnownBundleIDs.chatGPTAll
+    public static let grokBot = KnownBundleIDs.grokBot
     public static let juggler = "com.sefimov.juggler"
 
     public static func kind(of bundleID: String?) -> BindAppKind {

@@ -148,7 +148,16 @@ extension TaskBinding: Codable {
 public enum KnownBundleIDs {
     public static let chrome = "com.google.Chrome"
     public static let claude = "com.anthropic.claudefordesktop"
-    public static let chatGPT = "com.openai.chat"
+    /// ChatGPT desktop: сейчас поставляется как `com.openai.codex` (схема `codex`).
+    public static let chatGPT = "com.openai.codex"
+    /// Все bundle id ChatGPT desktop: текущий и старый `com.openai.chat`.
+    public static let chatGPTAll = ["com.openai.codex", "com.openai.chat"]
+    public static let grokBot = "com.anysphere.sand"
+
+    /// Это ChatGPT desktop (любой из известных bundle id)?
+    public static func isChatGPT(_ bundleID: String?) -> Bool {
+        chatGPTAll.contains { same(bundleID, $0) }
+    }
 
     /// Сравнение bundle id без учёта регистра.
     public static func same(_ a: String?, _ b: String?) -> Bool {

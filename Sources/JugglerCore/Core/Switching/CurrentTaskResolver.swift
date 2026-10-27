@@ -72,7 +72,7 @@ public enum CurrentTaskResolver {
 
         case .chatGPTThread(let ref):
             if let current = context.chatGPTThreadID, current == ref.threadID { return .sameID }
-            guard KnownBundleIDs.same(context.bundleID, KnownBundleIDs.chatGPT) else { return .none }
+            guard KnownBundleIDs.isChatGPT(context.bundleID) else { return .none }
             return titleScore(bound: ref.title, current: context.windowTitle)
 
         case .appWindow(let ref):
