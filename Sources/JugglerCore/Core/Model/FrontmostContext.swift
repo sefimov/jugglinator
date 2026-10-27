@@ -1,0 +1,34 @@
+import Foundation
+
+/// Снимок переднего окна в момент нажатия хоткея. Заполняет BIND
+/// (NSWorkspace, Accessibility, AppleScript); ядро по нему ищет текущую задачу.
+public struct FrontmostContext: Codable, Equatable, Sendable {
+    public var bundleID: String?
+    public var appName: String?
+    public var windowTitle: String?
+    /// Активная вкладка, если впереди Chrome и AppleScript разрешён.
+    public var chromeTab: ChromeTabRef?
+    /// UUID чата Claude desktop, если его удалось прочитать.
+    public var claudeConversationID: String?
+    /// Id треда ChatGPT desktop, если он известен.
+    public var chatGPTThreadID: String?
+
+    public init(
+        bundleID: String? = nil,
+        appName: String? = nil,
+        windowTitle: String? = nil,
+        chromeTab: ChromeTabRef? = nil,
+        claudeConversationID: String? = nil,
+        chatGPTThreadID: String? = nil
+    ) {
+        self.bundleID = bundleID
+        self.appName = appName
+        self.windowTitle = windowTitle
+        self.chromeTab = chromeTab
+        self.claudeConversationID = claudeConversationID
+        self.chatGPTThreadID = chatGPTThreadID
+    }
+
+    /// Пустой контекст: ничего не известно (нет разрешений, нет окна).
+    public static let unknown = FrontmostContext()
+}
