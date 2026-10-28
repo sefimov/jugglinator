@@ -48,6 +48,9 @@ sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD_NUMBER/" \
     "$ROOT/scripts/Info.plist" > "$APP/Contents/Info.plist"
 # Переводы интерфейса и Info.plist; системные строки (меню, окно настроек) — на языке системы.
 cp -R "$ROOT"/Localization/*.lproj "$APP/Contents/Resources/"
+# Иконка приложения (Resources/AppIcon.icns, перегенерация: scripts/make-icon.swift).
+[ -f "$ROOT/Resources/AppIcon.icns" ] || { echo "Нет Resources/AppIcon.icns (swift scripts/make-icon.swift)" >&2; exit 1; }
+cp "$ROOT/Resources/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
 step "Проверка Info.plist и таблиц перевода (plutil -lint)"

@@ -54,6 +54,7 @@ What the script does:
 1. Builds a release: `swift build -c release --product Juggler`.
 2. Assembles `build/Juggler.app`. `Info.plist` comes from the `scripts/Info.plist` template:
    - `CFBundleIdentifier` — `com.sefimov.juggler`;
+   - `CFBundleIconFile` — `AppIcon`; `Resources/AppIcon.icns` is copied into `Contents/Resources` (see "App icon");
    - `LSUIElement` — no Dock icon, menu bar only;
    - `LSMinimumSystemVersion` — 14.0;
    - `NSAppleEventsUsageDescription` — the explanation shown when asking to control Chrome and Terminal, translated in `InfoPlist.strings`;
@@ -296,6 +297,20 @@ Juggler settings → "Language": "Same as system" and the 12 languages, each lab
 
 To add or change a string: change the text in the code, then add the key to `Localizable.strings` for all 12 languages (for `ru`, the value equals the key) and run `scripts/check-localization.py`. To add a language: create a `Localization/<language>.lproj` folder with the three files, and add the language to `CFBundleLocalizations` in `scripts/Info.plist` and to `AppLanguage.all` (the picker list in settings).
 
+## App icon
+
+![Juggler icon](Resources/AppIcon-1024.png)
+
+Three flat balls in a triangle (yellow `#F5B83D` on top, coral `#F2705A` bottom left, teal `#3CC2A8` bottom right) on a dark navy `#1F2A44` rounded square. The icon is drawn in code, so there is no `.xcassets`:
+
+```sh
+swift scripts/make-icon.swift        # writes Resources/AppIcon.icns and Resources/AppIcon-1024.png
+```
+
+`scripts/make-icon.swift` renders every iconset size (16, 32, 128, 256, 512 at @1x and @2x, up to 1024 px) with CoreGraphics and builds the `.icns` with `/usr/bin/iconutil`. Only the Command Line Tools are needed, and the output is deterministic. Both generated files are committed, so `scripts/bundle.sh` does not run the generator; it only copies `Resources/AppIcon.icns` into the `.app`. To change the colors or proportions, edit the constants at the top of `scripts/make-icon.swift`, rerun it and commit the two files.
+
+Geometry on the 1024 px canvas: the background is an 824 px square with a 185 px corner radius (100 px transparent margin), and the three balls (radius 100) sit in a 460 px square centered on the background, so the margin to the background edge is 182 px on all four sides.
+
 ## Package layout
 
 ```
@@ -327,6 +342,10 @@ Sources/
 scripts/
   bundle.sh               builds build/Juggler.app, signs, checks, self-tests
   Info.plist              the app's Info.plist template
+  make-icon.swift         draws the icon and builds Resources/AppIcon.icns (not a SwiftPM target)
+Resources/
+  AppIcon.icns            generated icon, copied into the .app
+  AppIcon-1024.png        1024 px preview for the README
 ```
 
 Data is stored in `~/Library/Application Support/Juggler/tasks.json`.
