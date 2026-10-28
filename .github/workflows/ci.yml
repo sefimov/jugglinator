@@ -1,0 +1,79 @@
+# Сборка и проверки на каждый push и PR в main; на тег v* — релиз с Juggler.app.zip.
+name: CI
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # CFBundleVersion в bundle.sh — число коммитов, нужна полная история.
+          fetch-depth: 0
+
+      - name: Версии инструментов
+        run: |
+          sw_vers
+          swift --version
+
+      - name: Кэш SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: spm-${{ runner.os }}-${{ hashFiles('Package.swift', 'Package.resolved') }}-${{ hashFiles('Sources/**') }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ hashFiles('Package.swift', 'Package.resolved') }}-
+
+      - name: Сборка (swift build)
+        run: swift build
+
+      - name: Логические проверки (JugglerChecks)
+        run: swift run JugglerChecks
+
+      - name: Сборка .app (scripts/bundle.sh)
+        run: |
+          # На тег v1.2.3 версия 1.2.3, иначе значение по умолчанию из bundle.sh.
+          if [ "$GITHUB_REF_TYPE" = tag ]; then export JUGGLER_VERSION="${GITHUB_REF_NAME#v}"; fi
+          scripts/bundle.sh
+
+      - name: Архив Juggler.app.zip
+        run: ditto -c -k --keepParent build/Juggler.app build/Juggler.app.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Juggler.app
+          path: build/Juggler.app.zip
+          retention-days: 14
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Juggler.app
+
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" Juggler.app.zip \
+            --repo "$GITHUB_REPOSITORY" --title "Juggler $GITHUB_REF_NAME" --generate-notes
