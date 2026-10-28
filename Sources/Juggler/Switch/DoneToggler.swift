@@ -2,9 +2,9 @@ import AppKit
 import Foundation
 import JugglerCore
 
-/// ⌃⌥D «отметить сделанной / вернуть в работу» (D24). Выбор задачи и переключение — в JugglerCore
-/// (`DoneToggle`); здесь контекст переднего окна, сохранение в tasks.json, карточка и звук.
-/// Окна не переключаются.
+/// ⌃§ "mark done / back to in progress" (D24). Picking the task and toggling live in JugglerCore
+/// (`DoneToggle`); here: front window context, saving to tasks.json, the card and the sound.
+/// Windows are not switched.
 @MainActor
 final class LiveDoneToggler: DoneToggling {
     private let model: AppModel
@@ -25,7 +25,7 @@ final class LiveDoneToggler: DoneToggling {
             result = DoneToggle.toggle(&document) { bind.contextProvider.currentContext() }
         }
         if !result.didChange { beep() }
-        switchLog.info("⌃⌥D: \(String(describing: result), privacy: .public)")
+        switchLog.info("⌃§: \(String(describing: result), privacy: .public)")
         (card as? TransitionMessagePresenting)?.showMessage(DoneToggleTexts.message(for: result))
     }
 }

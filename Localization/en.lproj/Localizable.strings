@@ -24,7 +24,7 @@
 "Вернуть сочетание по умолчанию: %@" = "Restore the default shortcut: %@";
 "Не удалось зарегистрировать (код %d). Возможно, сочетание занято системой — выберите другое." = "Couldn't register (code %d). The shortcut may be taken by the system — choose another one.";
 "Вернуть все по умолчанию" = "Restore All Defaults";
-"Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). %@ — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена." = "Hotkeys are bound to physical keys and work with any keyboard layout. %@ is the key above Tab, left of 1. To assign a shortcut, click the field and press the keys; Esc cancels.";
+"Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). ⇥ — Tab, %@ — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена." = "Hotkeys are bound to physical keys and work with any keyboard layout. ⇥ is Tab, %@ is the key above Tab, left of 1. To assign a shortcut, click the field and press the keys; Esc cancels.";
 "Нажмите сочетание…" = "Press shortcut…";
 "Не задано" = "Not set";
 "Нажмите новое сочетание или Esc для отмены" = "Press a new shortcut or Esc to cancel";
@@ -51,7 +51,7 @@
 "Удалить" = "Delete";
 "Задач пока нет." = "No tasks yet.";
 "Откройте чат и выберите «%@» ниже." = "Open a chat and choose “%@” below.";
-"Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)" = "The chat or tab that was in front before the menu opened: if it's already a task, remove it; otherwise make it a task (⌃⌥ + the key above Tab)";
+"Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥⇥)" = "The chat or tab that was in front before the menu opened: if it's already a task, remove it; otherwise make it a task (⌃⌥⇥)";
 "Текущая задача" = "Current task";
 "сделано" = "done";
 "Вернуть в работу" = "Mark as Not Done";
@@ -134,6 +134,7 @@
 "%@ — вернуть: «%@» в меню Juggler" = "%@ — to restore: “%@” in the Juggler menu";
 "%@ — %@ в течение %lld с вернёт" = "%@ — %@ within %lld s restores it";
 "Задача %lld «%@» возвращена" = "Task %lld “%@” restored";
+"Задача %lld «%@» добавлена" = "Task %lld “%@” added";
 "Отметить сделанной / вернуть в работу" = "Mark Done / Back to Work";
 "Текущей задачи нет: перейдите к одной из задач" = "No current task: switch to one of your tasks";
 "Задача %lld «%@» сделана" = "Task %lld “%@” done";
@@ -177,6 +178,7 @@
 "Перезапустить сейчас" = "Restart now";
 "Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "Restart only works in the Juggler.app application. Quit Juggler and open it again.";
 "Не удалось перезапустить Juggler: %@" = "Couldn’t restart Juggler: %@";
+"Удалить сделанные задачи" = "Delete Done Tasks";
 "Очистить все задачи" = "Clear All Tasks";
 "Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "Tasks, notes and bindings will be deleted. This can't be undone.";
 "Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: task %lld has waited longest — %@, %@";

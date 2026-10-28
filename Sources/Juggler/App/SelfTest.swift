@@ -2,15 +2,15 @@ import AppKit
 import Foundation
 import JugglerCore
 
-/// `Juggler --self-test`: инициализирует компоненты, не запрашивая разрешений
-/// и не показывая окон. Код выхода 0 — всё прошло.
+/// `Juggler --self-test`: initializes components without requesting permissions
+/// or showing windows. Exit code 0 — everything passed.
 ///
-/// Каждый модуль добавляет свои проверки в `<Module>.selfTest()` в своей папке.
+/// Each module adds its checks to `<Module>.selfTest()` in its own folder.
 @MainActor
 enum SelfTest {
     static func run() -> Int32 {
-        // Компонентам AppKit (панель карточки, NSHostingView) нужен NSApplication;
-        // цикл событий не запускается, окна не показываются.
+        // AppKit components (card panel, NSHostingView) need NSApplication;
+        // the event loop isn't started, no windows are shown.
         _ = NSApplication.shared
         var results = coreResults()
         results += compositionResults()
@@ -29,7 +29,7 @@ enum SelfTest {
         return failed == 0 ? 0 : 1
     }
 
-    /// Хранилище и корень композиции на временном файле (настоящий tasks.json не трогается).
+    /// Store and composition root on a temporary file (the real tasks.json is untouched).
     private static func coreResults() -> [SelfTestResult] {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("juggler-self-test-\(UUID().uuidString)", isDirectory: true)
@@ -52,7 +52,7 @@ enum SelfTest {
         results.append(SelfTestResult(
             "Корень композиции собирается",
             passed: env.model.tasks.count == 1 && env.model.currentTaskNumber == 1))
-        // Рабочая сборка берёт настоящие реализации UI, SWITCH и BIND, а не заглушки.
+        // The production build uses the real UI, SWITCH and BIND implementations, not stubs.
         let live: [(String, Bool)] = [
             ("BIND: контекст", env.bind.contextProvider is LiveFrontmostContextProvider),
             ("BIND: активация", env.bind.activator is LiveBindingActivator),
@@ -60,7 +60,7 @@ enum SelfTest {
             ("BIND: «Сделать задачей текущий чат»", env.binder is LiveCurrentChatBinder),
             ("SWITCH: карточка", env.card is PanelCardPresenter),
             ("SWITCH: переключатель", env.switcher is CycleTaskSwitcher),
-            ("SWITCH: «сделано» ⌃⌥D", env.doneToggler is LiveDoneToggler),
+            ("SWITCH: «сделано» ⌃§", env.doneToggler is LiveDoneToggler),
             ("SWITCH: хоткеи Carbon", env.hotkeys is CarbonHotkeyCenter),
         ]
         let missing = live.filter { !$0.1 }.map(\.0)
@@ -71,9 +71,9 @@ enum SelfTest {
         return results
     }
 
-    /// Связка `AppEnvironment.perform`: хоткеи и меню → переключатель SWITCH и сценарий BIND.
-    /// Настоящий переключатель SWITCH работает над временным хранилищем с поддельными
-    /// контекстом окна, активацией и карточкой: ни AppleScript, ни Accessibility не вызываются.
+    /// `AppEnvironment.perform` wiring: hotkeys and menu → SWITCH switcher and BIND flow.
+    /// The real SWITCH switcher runs over a temporary store with fake
+    /// window context, activation and card: neither AppleScript nor Accessibility is called.
     private static func compositionResults() -> [SelfTestResult] {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("juggler-wiring-self-test-\(UUID().uuidString)", isDirectory: true)
@@ -93,19 +93,19 @@ enum SelfTest {
         env.start()
         let started = env.isStarted && fake.hotkeys.handler != nil
 
-        // ⌃§ — следующая: передняя — задача 1 → задача 2.
+        // ⌃⇥ — next: frontmost is task 1 → task 2.
         fake.hotkeys.press(.nextTask)
         let nextOK = fake.card.shown.last?.number == 2 && fake.activator.activated == [b2]
             && model.document.lastActiveTaskID == t2.id
-        // ⌃⇧§ — предыдущая: ChatGPT (com.openai.codex) с тем же тредом → задача 1.
+        // ⌃⇧⇥ — previous: ChatGPT (com.openai.codex) with the same thread → task 1.
         fake.provider.context = FrontmostContext(bundleID: KnownBundleIDs.chatGPT, windowTitle: "Два", chatGPTThreadID: "th-2")
         fake.hotkeys.press(.previousTask)
         let prevOK = fake.card.shown.last?.number == 1 && fake.activator.activated == [b2, b1]
             && model.document.lastActiveTaskID == t1.id
-        // ⌃⌥§ — добавить или удалить текущее окно.
+        // ⌃⌥⇥ — add or remove the current window.
         fake.hotkeys.press(.bindCurrentChat)
         let bindOK = fake.binder.toggles == 1 && fake.binder.calls == 0
-        // ⌃⌥D — «сделано»: передняя — задача 1 (точное совпадение), окна не переключаются; повтор снимает.
+        // ⌃§ — "done": frontmost is task 1 (exact match), windows don't switch; repeating clears it.
         fake.provider.context = FrontmostContext(bundleID: "com.example.one", windowTitle: "Один")
         let activations = fake.activator.activated.count
         let shownCards = fake.card.shown.count
@@ -125,14 +125,14 @@ enum SelfTest {
                            passed: nextOK && prevOK,
                            detail: "карточки: \(fake.card.shown.map { "\($0.number)" }.joined(separator: "→"))"),
             SelfTestResult("Связка: ⌃⌥ → «добавить или удалить текущее окно»", passed: bindOK),
-            SelfTestResult("Связка: ⌃⌥D → «сделано» и обратно, без переключения окон", passed: doneOK),
+            SelfTestResult("Связка: ⌃§ → «сделано» и обратно, без переключения окон", passed: doneOK),
             toggleResult(),
             clearAllResult(),
         ]
     }
 
-    /// ⌃⌥§ как переключатель (D15) на временном хранилище: сценарий BIND с поддельным контекстом
-    /// удаляет задачу переднего окна с карточкой и возвращает её повторным нажатием.
+    /// ⌃⌥⇥ as a toggle (D15) on a temporary store: the BIND flow with a fake context
+    /// removes the frontmost window's task with a card and restores it on a repeat press.
     private static func toggleResult() -> SelfTestResult {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("juggler-toggle-self-test-\(UUID().uuidString)", isDirectory: true)
@@ -149,7 +149,7 @@ enum SelfTest {
         let before = model.document
 
         let fake = WiringFakes(context: FrontmostContext(bundleID: KnownBundleIDs.chatGPT, windowTitle: "Два - ChatGPT"))
-        let hotkey = Hotkey(keyCode: KeyCode.isoSection, modifiers: [.control, .option])
+        let hotkey = Hotkey(keyCode: KeyCode.tab, modifiers: [.control, .option])
         let binder = BindModule.makeCurrentChatBinder(model: model, services: fake.services, card: fake.card, toggleHotkey: { hotkey })
 
         binder.toggleCurrentChat()
@@ -165,21 +165,27 @@ enum SelfTest {
         let restoredOK = model.document == before && store.load().document == before
             && fake.card.messages.last == TaskToggleTexts.restoredCard(number: 2, title: "Вторая") && model.lastRemoved == nil
 
-        // Пункт меню «Добавить/Удалить текущее окно»: окно уже задача — удаляет её с той же карточкой.
+        // "Add/Remove current window" menu item: the window is already a task — removes it with the same card.
         fake.provider.context = FrontmostContext(bundleID: KnownBundleIDs.chatGPT, windowTitle: "Два - ChatGPT")
         binder.toggleCurrentWindow()
         let menuRemovedOK = model.document.tasks.map(\.id) == [t1.id, t3.id]
             && fake.card.messages.last == TaskToggleTexts.removedCard(number: 2, title: "Вторая", hotkey: hotkey)
             && model.lastRemoved?.undoableByToggle == true
 
+        // A window that is not a task yet: added to the end of the list with a card.
+        fake.provider.context = FrontmostContext(bundleID: "com.example.new", windowTitle: "Новое")
+        binder.toggleCurrentWindow()
+        let addedOK = model.document.tasks.count == 3 && model.document.tasks.last?.title == "Новое"
+            && fake.card.messages.last == TaskToggleTexts.addedCard(number: 3, title: "Новое")
+
         return SelfTestResult(
-            "Связка: ⌃⌥§ удаляет задачу переднего окна и возвращает её повтором в 5 с; пункт меню удаляет так же",
-            passed: removedOK && restoredOK && menuRemovedOK,
+            "Связка: ⌃⌥⇥ удаляет задачу переднего окна и возвращает её повтором в 5 с; пункт меню удаляет так же; новое окно добавляется с карточкой",
+            passed: removedOK && restoredOK && menuRemovedOK && addedOK,
             detail: removedText)
     }
 
-    /// «Очистить все задачи» на временном хранилище: список пуст и сохранён, текущая задача снята,
-    /// «Вернуть удалённую задачу» после очистки ничего не возвращает.
+    /// "Clear all tasks" on a temporary store: the list is empty and saved, the current task is cleared,
+    /// "Restore removed task" restores nothing after the clear.
     private static func clearAllResult() -> SelfTestResult {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("juggler-clear-self-test-\(UUID().uuidString)", isDirectory: true)
@@ -206,7 +212,7 @@ enum SelfTest {
             detail: "удалено \(count)")
     }
 
-    /// Проверки собранного .app (только при запуске из build/Juggler.app).
+    /// Checks of the built .app (only when launched from build/Juggler.app).
     private static func bundleResults() -> [SelfTestResult] {
         let bundle = Bundle.main
         guard bundle.bundleURL.pathExtension == "app" else {
@@ -231,7 +237,7 @@ enum SelfTest {
     }
 }
 
-// MARK: - Подделки для проверки связки
+// MARK: - Fakes for the wiring check
 
 @MainActor
 private final class WiringFakes {
@@ -242,7 +248,11 @@ private final class WiringFakes {
     }
 
     final class Capturer: BindingCapturing {
-        func captureBinding(from context: FrontmostContext) -> BindingCaptureResult { .failed("самопроверка") }
+        func captureBinding(from context: FrontmostContext) -> BindingCaptureResult {
+            guard context.bundleID == "com.example.new" else { return .failed("самопроверка") }
+            return .captured(.appWindow(AppWindowRef(bundleID: "com.example.new", windowTitle: context.windowTitle ?? "")),
+                             suggestedTitle: context.windowTitle ?? "")
+        }
     }
 
     final class Activator: BindingActivating {

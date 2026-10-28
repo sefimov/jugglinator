@@ -1,8 +1,8 @@
 import Foundation
 import JugglerCore
 
-// ⌃⌥§ «добавить или удалить текущее окно» (задача TOGGLE, D15): точное совпадение,
-// решение переключателя, удаление с возвратом, окно отмены и тексты.
+// ⌃⌥⇥ "add or remove the current window" (task TOGGLE, D15): exact match,
+// toggle decision, removal with restore, undo window and texts.
 
 extension CoreChecks {
     static func toggleChecks(_ c: CheckRunner) {
@@ -31,7 +31,7 @@ extension CoreChecks {
     }
 
     static func toggleExactChrome(_ c: CheckRunner) {
-        c.group("⌃⌥§: точное совпадение — Chrome") {
+        c.group("⌃⌥⇥: точное совпадение — Chrome") {
             let bound = TaskBinding.chromeTab(ChromeTabRef(tabID: 7, windowID: 1, url: "https://example.com/a/", title: "A"))
             let d = doc([bound])
             let sameID = FrontmostContext(bundleID: KnownBundleIDs.chrome, chromeTab: ChromeTabRef(tabID: 7, url: "https://other.com", title: "B"))
@@ -49,7 +49,7 @@ extension CoreChecks {
     }
 
     static func toggleExactClaude(_ c: CheckRunner) {
-        c.group("⌃⌥§: точное совпадение — Claude и Claude Code") {
+        c.group("⌃⌥⇥: точное совпадение — Claude и Claude Code") {
             let chat = TaskBinding.claudeChat(ClaudeChatRef(conversationID: toggleUUID, title: "Ревью"))
             let session = TaskBinding.claudeCodeSession(ClaudeCodeSessionRef(sessionID: "local_\(otherUUID)", title: "Сессия"))
             let d = doc([chat, session])
@@ -76,7 +76,7 @@ extension CoreChecks {
     }
 
     static func toggleExactChatGPT(_ c: CheckRunner) {
-        c.group("⌃⌥§: точное совпадение — ChatGPT") {
+        c.group("⌃⌥⇥: точное совпадение — ChatGPT") {
             let thread = TaskBinding.chatGPTThread(ChatGPTThreadRef(threadID: "th-1", title: "План релиза"))
             let generic = TaskBinding.chatGPTThread(ChatGPTThreadRef(threadID: "th-2", title: "ChatGPT"))
             let d = doc([thread, generic])
@@ -99,7 +99,7 @@ extension CoreChecks {
     }
 
     static func toggleExactAppWindow(_ c: CheckRunner) {
-        c.group("⌃⌥§: точное совпадение — окно приложения") {
+        c.group("⌃⌥⇥: точное совпадение — окно приложения") {
             let grok = TaskBinding.appWindow(AppWindowRef(bundleID: KnownBundleIDs.grokBot, windowTitle: "Grok", appName: "Grok Bot"))
             let notes = TaskBinding.appWindow(AppWindowRef(bundleID: "com.example.notes", windowTitle: "Список - Notes"))
             let claudeWindow = TaskBinding.appWindow(AppWindowRef(bundleID: KnownBundleIDs.claude, windowTitle: "Claude"))
@@ -126,7 +126,7 @@ extension CoreChecks {
     }
 
     static func toggleExactPriority(_ c: CheckRunner) {
-        c.group("⌃⌥§: без запасной «последней активной», id важнее названия") {
+        c.group("⌃⌥⇥: без запасной «последней активной», id важнее названия") {
             let a = TaskBinding.appWindow(AppWindowRef(bundleID: "com.example.one", windowTitle: "Один"))
             let d = doc([a, nil], active: 1)
             let unknown = FrontmostContext(bundleID: "com.example.unknown", windowTitle: "Что-то")
@@ -154,7 +154,7 @@ extension CoreChecks {
     }
 
     static func toggleRemoval(_ c: CheckRunner) {
-        c.group("⌃⌥§: удаление и возврат «как было»") {
+        c.group("⌃⌥⇥: удаление и возврат «как было»") {
             let t0 = Fixture.t0
             var original = doc([nil, .chatGPTThread(ChatGPTThreadRef(threadID: "th-1", title: "Тред")), nil], active: 1)
             original.tasks[1].note = "зачем / дальше"
@@ -190,7 +190,7 @@ extension CoreChecks {
             c.expectNil(TaskRemoval.remove(&missing, id: UUID(), now: t0, undoableByToggle: true), "нет такой задачи — нечего удалять")
             c.expectEqual(missing, original, "список не изменился")
 
-            // Удаление сохраняется в tasks.json.
+            // The removal is persisted to tasks.json.
             let (store, dir) = Fixture.tempStore()
             defer { try? FileManager.default.removeItem(at: dir) }
             do {
@@ -205,7 +205,7 @@ extension CoreChecks {
     }
 
     static func toggleUndoWindow(_ c: CheckRunner) {
-        c.group("⌃⌥§: окно отмены 5 с") {
+        c.group("⌃⌥⇥: окно отмены 5 с") {
             let t0 = Fixture.t0
             let removed = RemovedTask(task: Fixture.task("Т"), index: 0, wasActive: false, removedAt: t0, undoableByToggle: true)
             c.expectEqual(TaskRemoval.undoWindow, 5, "окно — 5 с")
@@ -222,7 +222,7 @@ extension CoreChecks {
     }
 
     static func toggleDecision(_ c: CheckRunner) {
-        c.group("⌃⌥§: решение переключателя") {
+        c.group("⌃⌥⇥: решение переключателя") {
             let t0 = Fixture.t0
             let binding = TaskBinding.appWindow(AppWindowRef(bundleID: "com.example.one", windowTitle: "Один"))
             let original = doc([nil, binding])
@@ -258,14 +258,15 @@ extension CoreChecks {
     }
 
     static func toggleTexts(_ c: CheckRunner) {
-        c.group("⌃⌥§: тексты") {
-            let hotkey = Hotkey(keyCode: KeyCode.isoSection, modifiers: [.control, .option])
+        c.group("⌃⌥⇥: тексты") {
+            let hotkey = Hotkey(keyCode: KeyCode.tab, modifiers: [.control, .option])
             c.expectEqual(TaskToggleTexts.removedCard(number: 2, title: "  План\nрелиза ", hotkey: hotkey),
-                          "Задача 2 «План релиза» удалена — ⌃⌥§ в течение 5 с вернёт", "карточка удаления")
+                          "Задача 2 «План релиза» удалена — ⌃⌥⇥ в течение 5 с вернёт", "карточка удаления")
             c.expectEqual(TaskToggleTexts.removedCard(number: 1, title: "", hotkey: nil),
                           "Задача 1 «Без названия» удалена — вернуть: «Вернуть удалённую задачу» в меню Juggler",
                           "без назначенного хоткея — пункт меню")
             c.expectEqual(TaskToggleTexts.restoredCard(number: 3, title: "Тред"), "Задача 3 «Тред» возвращена", "карточка возврата")
+            c.expectEqual(TaskToggleTexts.addedCard(number: 4, title: "  Новое\nокно "), "Задача 4 «Новое окно» добавлена", "карточка добавления")
             c.expectEqual(HotkeyAction.bindCurrentChat.displayName, "Добавить или удалить текущее окно", "подпись в настройках хоткеев")
             c.expectEqual(TaskToggleTexts.restoreMenuTitle, "Вернуть удалённую задачу", "пункт меню возврата")
             let removed = RemovedTask(task: Fixture.task("Тред"), index: 1, wasActive: false, removedAt: Fixture.t0, undoableByToggle: true)
@@ -273,7 +274,7 @@ extension CoreChecks {
         }
     }
 
-    /// Пункт меню «Добавить/Удалить текущее окно» (TUNE, D16).
+    /// The "Add/Remove current window" menu item (TUNE, D16).
     static func toggleMenuItem(_ c: CheckRunner) {
         c.group("меню: пункт «Добавить/Удалить текущее окно»") {
             let t0 = Fixture.t0
@@ -295,12 +296,12 @@ extension CoreChecks {
             c.expectEqual(CurrentWindowMenuAction.add.title, "Добавить текущее окно", "подпись «добавить»")
             c.expectEqual(CurrentWindowMenuAction.decide(context: front, document: d).title, "Удалить текущее окно", "подпись «удалить»")
 
-            // После удаления пункт снова «Добавить» (документ изменился, контекст тот же).
+            // After removal the item is "Add" again (the document changed, the context is the same).
             var after = d
             _ = TaskRemoval.remove(&after, id: d.tasks[1].id, now: t0, undoableByToggle: true)
             c.expectEqual(CurrentWindowMenuAction.decide(context: front, document: after), .add, "после удаления — «Добавить»")
 
-            // Пункт меню не возвращает удалённую задачу: возврат — отдельный пункт, действие совпадает с подписью.
+            // The menu item doesn't restore a removed task: restore is a separate item; the action matches the label.
             var removedDoc = d
             let removed = TaskRemoval.remove(&removedDoc, id: d.tasks[1].id, now: t0, undoableByToggle: true)
             c.expectEqual(TaskToggle.decide(document: removedDoc, lastRemoved: removed, now: t0.addingTimeInterval(2), allowRestore: false) { front },

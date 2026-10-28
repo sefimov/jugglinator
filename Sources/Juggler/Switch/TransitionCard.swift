@@ -3,8 +3,8 @@ import Foundation
 import JugglerCore
 import SwiftUI
 
-/// Панель карточки перехода: не активирует приложение и не становится ключевой,
-/// видна на всех рабочих столах и поверх full-screen, клики проходят насквозь.
+/// Transition card panel: does not activate the app and never becomes key,
+/// is visible on all Spaces and over full-screen apps, clicks pass through.
 final class TransitionCardPanel: NSPanel {
     static let cardLevel = NSWindow.Level.popUpMenu
     static let behavior: NSWindow.CollectionBehavior = [
@@ -36,7 +36,7 @@ final class TransitionCardPanel: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
-    /// Флаги, которые требует приёмка; проверяется в самопроверке.
+    /// Flags required by acceptance; checked in the self-test.
     var flagProblems: [String] {
         var problems: [String] = []
         if !styleMask.contains(.nonactivatingPanel) { problems.append("нет .nonactivatingPanel") }
@@ -50,23 +50,23 @@ final class TransitionCardPanel: NSPanel {
     }
 }
 
-/// Что показывает карточка.
+/// What the card shows.
 enum CardDisplay: Equatable {
     case task(TransitionCardContent)
-    /// Служебное сообщение, например «нет задач в работе».
+    /// A service message, e.g. "no tasks in progress".
     case message(String)
 }
 
-/// Карточка, умеющая показать и служебное сообщение.
+/// A card that can also show a service message.
 @MainActor
 protocol TransitionMessagePresenting: AnyObject {
     func showMessage(_ text: String)
-    /// Сообщение, видимое примерно `duration` секунд (вместе с появлением и исчезновением),
-    /// например карточка удаления на всё окно отмены ⌃⌥§.
+    /// A message visible for about `duration` seconds (including fade-in and fade-out),
+    /// e.g. the removal card for the whole ⌃⌥⇥ undo window.
     func showMessage(_ text: String, duration: TimeInterval)
 }
 
-/// Показ карточки: появление, ~1 с показа, плавное исчезновение (всего ≈1,4 с).
+/// Card display: fade-in, ~1 s visible, smooth fade-out (≈1.4 s total).
 @MainActor
 final class PanelCardPresenter: TransitionCardPresenting, TransitionMessagePresenting {
     let timing: CardTiming
@@ -78,7 +78,7 @@ final class PanelCardPresenter: TransitionCardPresenting, TransitionMessagePrese
         self.timing = timing
     }
 
-    /// Панель создаётся при первом показе (или в самопроверке).
+    /// The panel is created on first display (or in the self-test).
     var panel: TransitionCardPanel {
         if let panelStorage { return panelStorage }
         let panel = TransitionCardPanel()
@@ -111,7 +111,7 @@ final class PanelCardPresenter: TransitionCardPresenting, TransitionMessagePrese
         present(.message(text), hold: max(duration - timing.fadeIn - timing.fadeOut, timing.hold))
     }
 
-    /// Разметить карточку без показа. Возвращает её размер (для самопроверки).
+    /// Lay out the card without showing it. Returns its size (for the self-test).
     @discardableResult
     func layout(_ display: CardDisplay) -> NSSize {
         let panel = self.panel
@@ -147,14 +147,14 @@ final class PanelCardPresenter: TransitionCardPresenting, TransitionMessagePrese
             panel.animator().alphaValue = 0
         }, completionHandler: { [weak self] in
             MainActor.assumeIsolated {
-                // За время исчезновения могла прийти новая карточка — её не прячем.
+                // A new card may have arrived during the fade-out — don't hide it.
                 guard let self, expected == self.generation else { return }
                 self.panelStorage?.orderOut(nil)
             }
         })
     }
 
-    /// Экран под курсором; карточка по центру, чуть выше середины.
+    /// The screen under the cursor; the card is centered, slightly above the middle.
     private func origin(for size: NSSize) -> NSPoint {
         let mouse = NSEvent.mouseLocation
         let screen = NSScreen.screens.first { NSMouseInRect(mouse, $0.frame, false) } ?? NSScreen.main
@@ -165,7 +165,7 @@ final class PanelCardPresenter: TransitionCardPresenting, TransitionMessagePrese
     }
 }
 
-/// Вид карточки.
+/// The card view.
 struct TransitionCardView: View {
     let display: CardDisplay
 

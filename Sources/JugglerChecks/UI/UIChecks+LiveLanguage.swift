@@ -1,17 +1,17 @@
 import Foundation
 import JugglerCore
 
-// Смена языка без перезапуска (LIVELANG): ключи loc(...), чтение таблиц <язык>.lproj напрямую,
-// переключение на ходу, запасной перевод при отсутствующем ключе, склонения из .stringsdict,
-// «Как в системе» по языкам системы. Таблицы — из Localization/ репозитория.
+// Language switch without relaunch (LIVELANG): loc(...) keys, reading <lang>.lproj tables directly,
+// switching on the fly, fallback translation for a missing key, plurals from .stringsdict,
+// "Same as system" from the system languages. Tables come from the repo's Localization/.
 
 extension UIChecks {
-    /// `Localization/` репозитория (от этого файла Sources/JugglerChecks/UI/… — четыре уровня вверх).
+    /// The repo's `Localization/` (four levels up from this file Sources/JugglerChecks/UI/…).
     static let repoLocalization = URL(fileURLWithPath: #filePath)
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
         .appendingPathComponent("Localization", isDirectory: true)
 
-    /// Выполнить `body` с языком `code` у общего переводчика и вернуть русский.
+    /// Run `body` with the shared translator set to `code`, then restore the previous language.
     static func withSharedLanguage<T>(_ code: String, _ body: () -> T) -> T {
         let previous = Localizer.shared.language
         Localizer.shared.setLanguage(code)
@@ -97,6 +97,9 @@ extension UIChecks {
             c.expectEqual(forms("summary.tasks", "en", [1, 2]), ["1 task", "2 tasks"], "en: task/tasks")
             c.expectEqual(forms("clearAll.confirm", "en", [1, 5]), ["Delete 1 task?", "Delete all 5 tasks?"], "en: вопрос об очистке")
             c.expectEqual(forms("clearAll.confirm", "de", [1, 5]), ["1 Aufgabe löschen?", "Alle 5 Aufgaben löschen?"], "de: вопрос об очистке")
+            c.expectEqual(forms("clearDone.confirm", "en", [1, 3]), ["Delete 1 done task?", "Delete 3 done tasks?"], "en: вопрос об удалении сделанных")
+            c.expectEqual(forms("clearDone.confirm", "ru", [1, 3, 5]),
+                          ["Удалить 1 сделанную задачу?", "Удалить 3 сделанные задачи?", "Удалить 5 сделанных задач?"], "ru: сделанную/сделанные/сделанных")
             c.expectEqual(forms("summary.tasks", "ar", [1, 2, 3]), ["مهمة واحدة", "مهمتان", "3 مهام"], "ar: формы one/two/few")
             c.expectEqual(forms("clearAll.confirm", "ru", [1, 21, 3]), ["Удалить 1 задачу?", "Удалить 21 задачу?", "Удалить все 3 задачи?"],
                           "ru: правила языка таблицы, а не системы")

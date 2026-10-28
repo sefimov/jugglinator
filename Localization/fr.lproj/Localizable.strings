@@ -24,7 +24,7 @@
 "Вернуть сочетание по умолчанию: %@" = "Rétablir le raccourci par défaut : %@";
 "Не удалось зарегистрировать (код %d). Возможно, сочетание занято системой — выберите другое." = "Enregistrement impossible (code %d). Le raccourci est peut-être réservé par le système — choisissez-en un autre.";
 "Вернуть все по умолчанию" = "Tout rétablir par défaut";
-"Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). %@ — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена." = "Les raccourcis sont liés aux touches physiques et fonctionnent avec n’importe quelle disposition de clavier. %@ est la touche au-dessus de Tab, à gauche de 1. Pour définir un raccourci, cliquez dans le champ, puis appuyez sur les touches voulues ; Esc annule.";
+"Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). ⇥ — Tab, %@ — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена." = "Les raccourcis sont liés aux touches physiques et fonctionnent avec n’importe quelle disposition de clavier. ⇥ est Tab, %@ est la touche au-dessus de Tab, à gauche de 1. Pour définir un raccourci, cliquez dans le champ, puis appuyez sur les touches voulues ; Esc annule.";
 "Нажмите сочетание…" = "Saisissez le raccourci…";
 "Не задано" = "Non défini";
 "Нажмите новое сочетание или Esc для отмены" = "Saisissez un nouveau raccourci ou appuyez sur Esc pour annuler";
@@ -51,7 +51,7 @@
 "Удалить" = "Supprimer";
 "Задач пока нет." = "Aucune tâche pour l’instant.";
 "Откройте чат и выберите «%@» ниже." = "Ouvrez une conversation et choisissez « %@ » ci-dessous.";
-"Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)" = "La conversation ou l’onglet qui était au premier plan avant l’ouverture du menu : si c’est déjà une tâche, la supprimer ; sinon, en faire une tâche (⌃⌥ + touche au-dessus de Tab)";
+"Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥⇥)" = "La conversation ou l’onglet qui était au premier plan avant l’ouverture du menu : si c’est déjà une tâche, la supprimer ; sinon, en faire une tâche (⌃⌥⇥)";
 "Текущая задача" = "Tâche en cours";
 "сделано" = "terminée";
 "Вернуть в работу" = "Remettre en cours";
@@ -134,6 +134,7 @@
 "%@ — вернуть: «%@» в меню Juggler" = "%@ — pour la rétablir : « %@ » dans le menu Juggler";
 "%@ — %@ в течение %lld с вернёт" = "%@ — %@ dans les %lld s la rétablit";
 "Задача %lld «%@» возвращена" = "Tâche %lld « %@ » rétablie";
+"Задача %lld «%@» добавлена" = "Tâche %lld « %@ » ajoutée";
 "Отметить сделанной / вернуть в работу" = "Marquer comme terminée / reprendre";
 "Текущей задачи нет: перейдите к одной из задач" = "Aucune tâche en cours : passez à l’une de vos tâches";
 "Задача %lld «%@» сделана" = "Tâche %lld « %@ » terminée";
@@ -177,6 +178,7 @@
 "Перезапустить сейчас" = "Redémarrer maintenant";
 "Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "Le redémarrage ne fonctionne que dans l’application Juggler.app. Quittez Juggler et rouvrez-le.";
 "Не удалось перезапустить Juggler: %@" = "Impossible de redémarrer Juggler : %@";
+"Удалить сделанные задачи" = "Supprimer les tâches terminées";
 "Очистить все задачи" = "Supprimer toutes les tâches";
 "Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "Les tâches, leurs notes et leurs associations seront supprimées. Cette action est irréversible.";
 "Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler : la tâche %lld attend depuis le plus longtemps — %@, %@";

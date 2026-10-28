@@ -1,8 +1,8 @@
 import Foundation
 import JugglerCore
 
-// Окна и вкладки Terminal.app (задача TERM): модель и JSON, заголовки, вывод AppleScript,
-// привязка, текущая задача, переключатель ⌃⌥§ и поиск вкладки при переходе.
+// Terminal.app windows and tabs (task TERM): model and JSON, titles, AppleScript output,
+// binding, current task, the ⌃⌥⇥ toggle and finding the tab when switching.
 
 extension BindChecks {
     static let terminalTitle = "sergejefimov — sergejefimov@MacBook-Pro-Sergej — -zsh — 214×24"
@@ -41,7 +41,7 @@ extension BindChecks {
             let text = String(decoding: data, as: UTF8.self)
             c.expect(text.contains("\"kind\" : \"terminalWindow\"") || text.contains("\"kind\":\"terminalWindow\""), "вид в JSON — terminalWindow")
 
-            // Файл до TERM: те же виды и ключи — читается без потерь.
+            // Pre-TERM file: same kinds and keys — reads without loss.
             let old = """
             {"version":1,"lastActiveTaskID":"22222222-2222-2222-2222-222222222222","tasks":[
               {"id":"11111111-1111-1111-1111-111111111111","title":"Вкладка","note":"заметка","isDone":true,
@@ -69,7 +69,7 @@ extension BindChecks {
             c.expectEqual(lenient.tasks.first?.binding, .terminalWindow(TerminalWindowRef(tty: "/dev/ttys009")), "недостающие поля — пустые")
             c.expectEqual(lenient.tasks.count, 2, "пустая привязка Терминала не ломает задачу")
 
-            // Контекст переднего окна без нового поля (например, старый JSON пробы) читается.
+            // A frontmost context without the new field (e.g. old probe JSON) still decodes.
             let context = try JSONDecoder().decode(FrontmostContext.self, from: Data(#"{"bundleID":"com.apple.Terminal"}"#.utf8))
             c.expectNil(context.terminalWindow, "FrontmostContext без terminalWindow")
         }
@@ -126,7 +126,7 @@ extension BindChecks {
                                               suggestedTitle: "sergejefimov"),
                           "окно и вкладка сразу, название без шума")
 
-            // Без разрешения AppleScript: обычное окно, но название тоже без шума.
+            // Without AppleScript permission: a plain window, but the title is still noise-free.
             let noAccess = BindingCapture.capture(context: FrontmostContext(bundleID: BindApps.terminal, appName: "Терминал",
                                                                             windowTitle: "juggler — -zsh — 214×24"))
             c.expectEqual(noAccess, .captured(.appWindow(AppWindowRef(bundleID: BindApps.terminal, windowTitle: "juggler — -zsh — 214×24", appName: "Терминал")),
@@ -176,7 +176,7 @@ extension BindChecks {
             let tab = Fixture.task("Вкладка", binding: .terminalWindow(TerminalWindowRef(windowID: 7, tty: "/dev/ttys003", title: terminalTitle)))
             let other = Fixture.task("Соседняя", binding: .terminalWindow(TerminalWindowRef(windowID: 7, tty: "/dev/ttys004", title: terminalTitle)))
             let tasks = [other, tab]
-            // Команда и размер сменились — заголовок другой, tty тот же.
+            // Command and size changed — the title differs, the tty is the same.
             let changed = terminalContext(title: "sergejefimov — vim notes.md — 100×30")
             c.expectEqual(CurrentTaskResolver.match(context: changed, tasks: tasks), tab.id, "по tty, хотя заголовок другой")
             c.expectEqual(CurrentTaskResolver.score(tab.binding!, against: changed), .sameID, "tty — как id")
@@ -202,23 +202,23 @@ extension BindChecks {
     }
 
     static func terminalToggle(_ c: CheckRunner) {
-        c.group("Терминал: ⌃⌥§") {
+        c.group("Терминал: ⌃⌥⇥") {
             let tab = Fixture.task("Вкладка", binding: .terminalWindow(TerminalWindowRef(windowID: 7, tty: "/dev/ttys003", title: terminalTitle)))
             let doc = TasksDocument(tasks: [Fixture.task("Другая"), tab])
             let resized = terminalContext(title: "sergejefimov — node — 80×24")
             c.expectEqual(ExactTaskMatcher.match(context: resized, document: doc), tab.id, "та же вкладка при смене команды и размера")
             c.expectEqual(ExactTaskMatcher.strength(tab.binding!, against: resized), .id, "tty — точное совпадение")
             if case .remove(let id, let number) = TaskToggle.decide(document: doc, lastRemoved: nil, now: Fixture.t0, context: { resized }) {
-                c.expectEqual(id, tab.id, "⌃⌥§ удаляет задачу этой вкладки")
+                c.expectEqual(id, tab.id, "⌃⌥⇥ удаляет задачу этой вкладки")
                 c.expectEqual(number, 2, "номер задачи")
             } else {
-                c.expect(false, "⌃⌥§ в привязанной вкладке должен удалить задачу")
+                c.expect(false, "⌃⌥⇥ в привязанной вкладке должен удалить задачу")
             }
 
             let sameTitleOtherTab = terminalContext(tty: "/dev/ttys004")
             c.expectNil(ExactTaskMatcher.match(context: sameTitleOtherTab, document: doc), "другая вкладка с тем же заголовком — не задача")
             c.expectEqual(TaskToggle.decide(document: doc, lastRemoved: nil, now: Fixture.t0, context: { sameTitleOtherTab }),
-                          .add(sameTitleOtherTab), "⌃⌥§ в другой вкладке — добавить")
+                          .add(sameTitleOtherTab), "⌃⌥⇥ в другой вкладке — добавить")
             c.expectNil(ExactTaskMatcher.match(context: terminalContext(windowID: 8, tty: "/dev/ttys009", title: terminalTitle), document: doc),
                         "другое окно с тем же заголовком — не задача")
 
@@ -226,7 +226,7 @@ extension BindChecks {
             c.expectEqual(ExactTaskMatcher.strength(byWindow.tasks[0].binding!, against: terminalContext(title: "B")), .url,
                           "tty привязки неизвестен — по id окна")
 
-            // Старая привязка Терминала как окна: AppleScript дал id — окно-привязка не совпадает (как у Chrome).
+            // Old Terminal-as-window binding: AppleScript gave an id — the window binding does not match (as with Chrome).
             let legacy = TasksDocument(tasks: [Fixture.task("Старое", binding: .appWindow(AppWindowRef(bundleID: BindApps.terminal, windowTitle: terminalTitle)))])
             c.expectNil(ExactTaskMatcher.match(context: terminalContext(), document: legacy), "есть tty — старая привязка окна не точная")
             let noScript = FrontmostContext(bundleID: BindApps.terminal, windowTitle: "sergejefimov — sergejefimov@MacBook-Pro-Sergej — -zsh — 80×24")

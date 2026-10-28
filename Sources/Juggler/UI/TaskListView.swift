@@ -2,7 +2,7 @@ import AppKit
 import JugglerCore
 import SwiftUI
 
-/// Панель меню-бара: список задач, правка и действия под списком.
+/// Menu bar panel: task list, editing, and actions below the list.
 struct TaskListView: View {
     let environment: AppEnvironment
     @ObservedObject var model: AppModel
@@ -14,7 +14,7 @@ struct TaskListView: View {
         VStack(alignment: .leading, spacing: 10) {
             header
             notices
-            // «не был N мин» пересчитывается, пока панель открыта.
+            // "away N min" is recomputed while the panel is open.
             TimelineView(.periodic(from: .now, by: 30)) { context in
                 taskList(now: context.date)
             }
@@ -28,8 +28,8 @@ struct TaskListView: View {
         .onAppear(perform: refreshWindowContext)
     }
 
-    /// Прочитать окно, бывшее впереди до открытия меню. Откладывается на следующий проход цикла
-    /// событий, чтобы панель успела появиться; разрешений не запрашивает.
+    /// Read the window that was in front before the menu opened. Deferred to the next event loop
+    /// pass so the panel has time to appear; does not request permissions.
     private func refreshWindowContext() {
         state.resetWindowContext()
         DispatchQueue.main.async {
@@ -39,12 +39,12 @@ struct TaskListView: View {
         }
     }
 
-    /// Что делает пункт «Добавить/Удалить текущее окно» сейчас.
+    /// What the "Add/Remove current window" item does right now.
     private var windowAction: CurrentWindowMenuAction {
         CurrentWindowMenuAction.decide(context: state.windowContext, document: model.document)
     }
 
-    // MARK: - Заголовок и уведомления
+    // MARK: - Header and notices
 
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -72,7 +72,7 @@ struct TaskListView: View {
         }
     }
 
-    // MARK: - Список
+    // MARK: - List
 
     @ViewBuilder
     private func taskList(now: Date) -> some View {
@@ -118,7 +118,7 @@ struct TaskListView: View {
             delete: { state.askDelete(id) })
     }
 
-    // MARK: - Правка и удаление
+    // MARK: - Editing and removal
 
     @ViewBuilder
     private var editorPanel: some View {
@@ -136,10 +136,18 @@ struct TaskListView: View {
                 onCancel: { state.cancel() })
             .id(editing.taskID)
         } else if state.pendingClearAll, !model.document.tasks.isEmpty {
-            ClearAllConfirmationView(
-                count: model.document.tasks.count,
+            ClearConfirmationView(
+                question: TaskListPresenter.clearAllConfirmation(count: model.document.tasks.count),
                 onClear: {
                     model.clearAllTasks()
+                    state.cancel()
+                },
+                onCancel: { state.cancel() })
+        } else if state.pendingClearDone, doneCount > 0 {
+            ClearConfirmationView(
+                question: TaskListPresenter.clearDoneConfirmation(count: doneCount),
+                onClear: {
+                    model.clearDoneTasks()
                     state.cancel()
                 },
                 onCancel: { state.cancel() })
@@ -154,12 +162,15 @@ struct TaskListView: View {
         }
     }
 
-    // MARK: - Под списком
+    // MARK: - Below the list
 
-    /// Столбиком: текущее окно, возврат удалённой, очистка списка, настройки, выход (порядок — `MenuFooterItem.items`).
+    private var doneCount: Int { model.document.tasks.filter(\.isDone).count }
+
+    /// In a column: current window, restore removed, delete done, clear list, settings, quit (order — `MenuFooterItem.items`).
     private var footer: some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(MenuFooterItem.items(canRestore: model.lastRemoved != nil, hasTasks: !model.document.tasks.isEmpty), id: \.self) { item in
+            ForEach(MenuFooterItem.items(canRestore: model.lastRemoved != nil, hasTasks: !model.document.tasks.isEmpty,
+                                         hasDone: doneCount > 0), id: \.self) { item in
                 footerItem(item)
             }
         }
@@ -174,19 +185,23 @@ struct TaskListView: View {
                 UIActions.toggleCurrentWindow(environment: environment, dismiss: { dismiss() })
             }
             .disabled(!state.windowContextLoaded)
-            .help(loc("Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)"))
+            .help(loc("Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥⇥)"))
         case .restoreRemoved:
             footerButton(TaskToggleTexts.restoreMenuTitle, systemImage: "arrow.uturn.backward") {
                 model.restoreLastRemoved()
             }
             .help(model.lastRemoved.map(TaskToggleTexts.restoreHelp) ?? "")
+        case .clearDone:
+            footerButton(TaskToggleTexts.clearDoneMenuTitle, systemImage: "checkmark.circle.badge.xmark") {
+                state.askClearDone()
+            }
         case .clearAll:
             footerButton(TaskToggleTexts.clearAllMenuTitle, systemImage: "trash") {
                 state.askClearAll()
             }
         case .settings:
             footerButton(TaskToggleTexts.settingsMenuTitle, systemImage: "gearshape") {
-                // Сначала закрыть меню, затем открыть настройки и вывести их вперёд.
+                // Close the menu first, then open settings and bring them to front.
                 let open = openSettings
                 UIActions.afterClosingMenu({ dismiss() }) {
                     UIActions.activateForSettings()
@@ -213,8 +228,8 @@ struct TaskListView: View {
     }
 }
 
-/// Сообщает, когда окно панели меню-бара становится ключевым (меню открыто) и перестаёт им быть.
-/// Нужен, потому что `onAppear` у панели `MenuBarExtra` не срабатывает при каждом открытии.
+/// Reports when the menu bar panel window becomes key (menu opened) and stops being key.
+/// Needed because `onAppear` of the `MenuBarExtra` panel does not fire on every opening.
 private struct WindowKeyObserver: NSViewRepresentable {
     let onBecomeKey: () -> Void
     let onResignKey: () -> Void

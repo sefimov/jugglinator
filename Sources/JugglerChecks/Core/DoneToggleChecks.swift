@@ -1,7 +1,7 @@
 import Foundation
 import JugglerCore
 
-// ⌃⌥D «отметить сделанной / вернуть в работу» (задача DONEKEY, D24): выбор цели, переключатель, тексты.
+// ⌃§ "mark done / back to work" (task DONEKEY, D24): target choice, toggle, texts.
 
 extension CoreChecks {
     static func doneToggleChecks(_ c: CheckRunner) {
@@ -25,27 +25,27 @@ extension CoreChecks {
     }
 
     static func doneTarget(_ c: CheckRunner) {
-        c.group("⌃⌥D: выбор задачи") {
+        c.group("⌃§: выбор задачи") {
             let d = doneDoc(active: 1)
             c.expectEqual(DoneToggle.target(document: d, context: frontOne), d.tasks[0].id, "точное совпадение важнее текущей")
             c.expectEqual(DoneToggle.target(document: d, context: frontNone), d.tasks[1].id, "нет совпадения — текущая (▸)")
             let noCurrent = doneDoc(active: nil)
             c.expectEqual(DoneToggle.target(document: noCurrent, context: frontOne), noCurrent.tasks[0].id, "без текущей точное совпадение всё равно работает")
             c.expectNil(DoneToggle.target(document: doneDoc(active: nil), context: frontNone), "ни совпадения, ни текущей — цели нет")
-            // Слабое совпадение (то же приложение, другой заголовок) — не точное: берётся текущая.
+            // A weak match (same app, different title) is not exact: the current task is taken.
             let sameApp = FrontmostContext(bundleID: "com.example.one", windowTitle: "Другое")
             c.expectEqual(DoneToggle.target(document: d, context: sameApp), d.tasks[1].id, "то же приложение, другое окно — текущая")
-            // Текущая, которой уже нет в списке, не цель.
+            // A current task that is no longer in the list is not a target.
             let stale = TasksDocument(tasks: d.tasks, lastActiveTaskID: UUID())
             c.expectNil(DoneToggle.target(document: stale, context: frontNone), "устаревший id текущей — цели нет")
-            // Готовая задача тоже цель: повтор вернёт её в работу.
+            // A done task is also a target: repeating brings it back to work.
             let allDone = doneDoc(active: 2, done: [true, true, true])
             c.expectEqual(DoneToggle.target(document: allDone, context: frontNone), allDone.tasks[2].id, "сделанная текущая — всё равно цель")
         }
     }
 
     static func doneToggling(_ c: CheckRunner) {
-        c.group("⌃⌥D: переключатель") {
+        c.group("⌃§: переключатель") {
             var d = doneDoc(active: 1)
             var reads = 0
             let ctx: () -> FrontmostContext = { reads += 1; return frontOne }
@@ -73,7 +73,7 @@ extension CoreChecks {
             c.expectEqual(DoneToggle.toggle(&nobody) { frontNone }, .noCurrentTask, "задачи есть, цели нет")
             c.expectEqual(nobody, before, "документ не изменился")
 
-            // Сохраняется в tasks.json через обычную запись документа.
+            // Persisted to tasks.json via the regular document write.
             let (store, dir) = Fixture.tempStore()
             defer { try? FileManager.default.removeItem(at: dir) }
             var saved = doneDoc(active: 1)
@@ -84,7 +84,7 @@ extension CoreChecks {
     }
 
     static func doneTexts(_ c: CheckRunner) {
-        c.group("⌃⌥D: тексты") {
+        c.group("⌃§: тексты") {
             c.expectEqual(DoneToggleTexts.card(number: 2, title: "  План\nрелиза ", isDone: true), "Задача 2 «План релиза» сделана", "карточка «сделана»")
             c.expectEqual(DoneToggleTexts.card(number: 3, title: "Тред", isDone: false), "Задача 3 «Тред» вернулась в работу", "карточка «в работе»")
             c.expectEqual(DoneToggleTexts.card(number: 1, title: "", isDone: true), "Задача 1 «Без названия» сделана", "пустое название")
