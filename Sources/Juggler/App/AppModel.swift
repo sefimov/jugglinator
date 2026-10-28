@@ -85,6 +85,16 @@ final class AppModel: ObservableObject {
         return restored ? removed : nil
     }
 
+    /// Удалить все задачи и снять текущую (сохраняется сразу). Возврата очищенных задач нет:
+    /// `lastRemoved` сбрасывается, чтобы «Вернуть удалённую задачу» не вернула задачу из очистки.
+    @discardableResult
+    func clearAllTasks() -> Int {
+        var count = 0
+        update { count = TaskListOps.clearAll(&$0) }
+        lastRemoved = nil
+        return count
+    }
+
     private func save() {
         do {
             try store.save(document)

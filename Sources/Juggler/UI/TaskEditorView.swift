@@ -88,3 +88,29 @@ struct DeleteConfirmationView: View {
         }
     }
 }
+
+/// Подтверждение очистки всего списка.
+struct ClearAllConfirmationView: View {
+    let count: Int
+    let onClear: () -> Void
+    let onCancel: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(TaskListPresenter.clearAllConfirmation(count: count))
+                .font(.subheadline.weight(.semibold))
+                .fixedSize(horizontal: false, vertical: true)
+            Text(TaskListPresenter.clearAllWarning)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+            HStack {
+                Spacer()
+                Button("Отмена", action: onCancel)
+                    .keyboardShortcut(.cancelAction)
+                Button("Удалить", role: .destructive, action: onClear)
+                    .tint(.red)
+            }
+        }
+    }
+}

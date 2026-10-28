@@ -17,6 +17,8 @@ final class MenuState: ObservableObject {
 
     @Published var editing: Editing?
     @Published var pendingDeleteID: UUID?
+    /// Показан вопрос «Удалить все N задач?».
+    @Published var pendingClearAll = false
     /// Контекст окна, бывшего впереди до открытия меню; `nil` — ещё не прочитан (панель только открылась).
     @Published var windowContext: FrontmostContext?
     /// Контекст прочитан для текущего открытия панели (даже если прочитать ничего не удалось).
@@ -34,16 +36,25 @@ final class MenuState: ObservableObject {
 
     func edit(_ id: UUID, field: EditorField) {
         pendingDeleteID = nil
+        pendingClearAll = false
         editing = Editing(taskID: id, field: field)
     }
 
     func askDelete(_ id: UUID) {
         editing = nil
+        pendingClearAll = false
         pendingDeleteID = id
+    }
+
+    func askClearAll() {
+        editing = nil
+        pendingDeleteID = nil
+        pendingClearAll = true
     }
 
     func cancel() {
         editing = nil
         pendingDeleteID = nil
+        pendingClearAll = false
     }
 }

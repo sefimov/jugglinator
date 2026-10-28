@@ -243,12 +243,18 @@ public enum MenuFooterItem: Equatable, Sendable {
     /// «Добавить текущее окно» или «Удалить текущее окно» (подпись — `CurrentWindowMenuAction.title`).
     case currentWindow
     case restoreRemoved
+    /// «Очистить все задачи» — сначала встроенное подтверждение (D25).
+    case clearAll
     case settings
     case quit
 
-    /// Столбик под разделителем; «Вернуть удалённую задачу» — только если есть что вернуть.
-    public static func items(canRestore: Bool) -> [MenuFooterItem] {
-        (canRestore ? [.currentWindow, .restoreRemoved] : [.currentWindow]) + [.settings, .quit]
+    /// Столбик под разделителем; «Вернуть удалённую задачу» — только если есть что вернуть,
+    /// «Очистить все задачи» — только если в списке есть задачи.
+    public static func items(canRestore: Bool, hasTasks: Bool) -> [MenuFooterItem] {
+        var items: [MenuFooterItem] = [.currentWindow]
+        if canRestore { items.append(.restoreRemoved) }
+        if hasTasks { items.append(.clearAll) }
+        return items + [.settings, .quit]
     }
 }
 
@@ -261,6 +267,7 @@ public enum TaskToggleTexts {
     /// Пункт меню: переднее окно уже задача.
     public static let menuRemoveTitle = String(localized: "Удалить текущее окно")
     public static let restoreMenuTitle = String(localized: "Вернуть удалённую задачу")
+    public static let clearAllMenuTitle = String(localized: "Очистить все задачи")
     public static let settingsMenuTitle = String(localized: "Настройки…")
     public static let quitMenuTitle = String(localized: "Выйти")
 

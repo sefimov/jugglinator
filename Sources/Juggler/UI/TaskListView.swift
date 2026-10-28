@@ -135,6 +135,14 @@ struct TaskListView: View {
                 },
                 onCancel: { state.cancel() })
             .id(editing.taskID)
+        } else if state.pendingClearAll, !model.document.tasks.isEmpty {
+            ClearAllConfirmationView(
+                count: model.document.tasks.count,
+                onClear: {
+                    model.clearAllTasks()
+                    state.cancel()
+                },
+                onCancel: { state.cancel() })
         } else if let id = state.pendingDeleteID, let task = model.document.task(withID: id) {
             DeleteConfirmationView(
                 title: task.title,
@@ -148,10 +156,10 @@ struct TaskListView: View {
 
     // MARK: - Под списком
 
-    /// Столбиком: текущее окно, возврат удалённой, настройки, выход (порядок — `MenuFooterItem.items`).
+    /// Столбиком: текущее окно, возврат удалённой, очистка списка, настройки, выход (порядок — `MenuFooterItem.items`).
     private var footer: some View {
         VStack(alignment: .leading, spacing: 2) {
-            ForEach(MenuFooterItem.items(canRestore: model.lastRemoved != nil), id: \.self) { item in
+            ForEach(MenuFooterItem.items(canRestore: model.lastRemoved != nil, hasTasks: !model.document.tasks.isEmpty), id: \.self) { item in
                 footerItem(item)
             }
         }
@@ -172,6 +180,10 @@ struct TaskListView: View {
                 model.restoreLastRemoved()
             }
             .help(model.lastRemoved.map(TaskToggleTexts.restoreHelp) ?? "")
+        case .clearAll:
+            footerButton(TaskToggleTexts.clearAllMenuTitle, systemImage: "trash") {
+                state.askClearAll()
+            }
         case .settings:
             footerButton(TaskToggleTexts.settingsMenuTitle, systemImage: "gearshape") {
                 // Сначала закрыть меню, затем открыть настройки и вывести их вперёд.

@@ -127,6 +127,7 @@ enum SelfTest {
             SelfTestResult("Связка: ⌃⌥ → «добавить или удалить текущее окно»", passed: bindOK),
             SelfTestResult("Связка: ⌃⌥D → «сделано» и обратно, без переключения окон", passed: doneOK),
             toggleResult(),
+            clearAllResult(),
         ]
     }
 
@@ -175,6 +176,34 @@ enum SelfTest {
             "Связка: ⌃⌥§ удаляет задачу переднего окна и возвращает её повтором в 5 с; пункт меню удаляет так же",
             passed: removedOK && restoredOK && menuRemovedOK,
             detail: removedText)
+    }
+
+    /// «Очистить все задачи» на временном хранилище: список пуст и сохранён, текущая задача снята,
+    /// «Вернуть удалённую задачу» после очистки ничего не возвращает.
+    private static func clearAllResult() -> SelfTestResult {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("juggler-clear-self-test-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = TaskStore(fileURL: dir.appendingPathComponent("tasks.json"))
+        let t0 = Date(timeIntervalSince1970: 1_800_000_000)
+        let model = AppModel(store: store, clock: { t0 })
+        let t1 = JugglerTask(title: "Первая", createdAt: t0)
+        let t2 = JugglerTask(title: "Вторая", createdAt: t0)
+        let t3 = JugglerTask(title: "Третья", createdAt: t0)
+        model.update { $0.tasks = [t1, t2, t3]; $0.lastActiveTaskID = t2.id }
+        model.removeTask(t3.id, undoableByToggle: false)
+        let hadRemoved = model.lastRemoved != nil
+
+        let count = model.clearAllTasks()
+        let saved = store.load().document
+        let clearedOK = count == 2 && model.document.tasks.isEmpty && model.document.lastActiveTaskID == nil
+            && saved.tasks.isEmpty && saved.lastActiveTaskID == nil
+        let noRestoreOK = hadRemoved && model.lastRemoved == nil && model.restoreLastRemoved() == nil && model.document.tasks.isEmpty
+
+        return SelfTestResult(
+            "Очистка списка: задачи удалены и сохранены, текущая снята, возврата очищенных нет",
+            passed: clearedOK && noRestoreOK,
+            detail: "удалено \(count)")
     }
 
     /// Проверки собранного .app (только при запуске из build/Juggler.app).
