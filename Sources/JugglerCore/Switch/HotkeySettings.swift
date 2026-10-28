@@ -36,13 +36,14 @@ public struct HotkeyAssignments: Equatable, Sendable {
         hotkeys[action]
     }
 
-    /// По умолчанию (D9): ⌃ + клавиша над Tab — следующая, ⌃⇧ — предыдущая, ⌃⌥ — привязать.
+    /// По умолчанию (D9): ⌃ + клавиша над Tab — следующая, ⌃⇧ — предыдущая, ⌃⌥ — привязать; ⌃⌥D — «сделано» (D24, физическая клавиша D на любой клавиатуре).
     public static func defaults(for keyboard: KeyboardKind) -> HotkeyAssignments {
         let key = keyboard.keyAboveTab
         return HotkeyAssignments([
             .nextTask: Hotkey(keyCode: key, modifiers: [.control]),
             .previousTask: Hotkey(keyCode: key, modifiers: [.control, .shift]),
             .bindCurrentChat: Hotkey(keyCode: key, modifiers: [.control, .option]),
+            .toggleDone: Hotkey(keyCode: KeyCode.ansiD, modifiers: [.control, .option]),
         ])
     }
 

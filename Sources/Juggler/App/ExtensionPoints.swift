@@ -76,6 +76,13 @@ protocol TaskSwitching: AnyObject {
     func activateTask(id: UUID)
 }
 
+/// ⌃⌥D «отметить сделанной / вернуть в работу»: задача переднего окна при точном совпадении,
+/// иначе текущая; сохраняет tasks.json, показывает карточку, окна не переключает.
+@MainActor
+protocol DoneToggling: AnyObject {
+    func toggleDone()
+}
+
 /// Карточка перехода: неактивирующая панель поверх всех рабочих столов.
 @MainActor
 protocol TransitionCardPresenting: AnyObject {

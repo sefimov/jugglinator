@@ -16,6 +16,7 @@ enum CoreChecks: CheckSuite {
         titleChecks(c)
         sessionChecks(c)
         toggleChecks(c)
+        doneToggleChecks(c)
     }
 }
 

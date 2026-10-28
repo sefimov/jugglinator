@@ -134,6 +134,10 @@
 "%@ — вернуть: «%@» в меню Juggler" = "%@ – zum Wiederherstellen: „%@“ im Juggler-Menü";
 "%@ — %@ в течение %lld с вернёт" = "%@ – %@ innerhalb von %lld s stellt sie wieder her";
 "Задача %lld «%@» возвращена" = "Aufgabe %lld „%@“ wiederhergestellt";
+"Отметить сделанной / вернуть в работу" = "Als erledigt markieren / wieder aufnehmen";
+"Текущей задачи нет: перейдите к одной из задач" = "Keine aktuelle Aufgabe: wechsle zu einer deiner Aufgaben";
+"Задача %lld «%@» сделана" = "Aufgabe %lld „%@“ erledigt";
+"Задача %lld «%@» вернулась в работу" = "Aufgabe %lld „%@“ ist wieder in Arbeit";
 "Вернуть «%@» на место %lld" = "„%@“ an Position %lld wiederherstellen";
 "Клавиша %lld" = "Taste %lld";
 "Пробел" = "Leertaste";

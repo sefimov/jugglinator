@@ -103,7 +103,14 @@ enum SwitchChecks: CheckSuite {
             c.expectEqual(iso[.previousTask], Hotkey(keyCode: section, modifiers: [.control, .shift]), "по умолчанию «предыдущая» ⌃⇧§")
             c.expectEqual(iso[.bindCurrentChat], Hotkey(keyCode: section, modifiers: [.control, .option]), "по умолчанию «привязать» ⌃⌥§")
             c.expectEqual(HotkeyAssignments.defaults(for: .ansi)[.nextTask]?.displayString, "⌃`", "ANSI: ⌃`")
-            c.expectEqual(Set(iso.hotkeys.values).count, 3, "умолчания не пересекаются")
+            c.expectEqual(iso[.toggleDone], Hotkey(keyCode: 2, modifiers: [.control, .option]), "по умолчанию «сделано» ⌃⌥D (kVK_ANSI_D)")
+            c.expectEqual(HotkeyAssignments.defaults(for: .ansi)[.toggleDone], iso[.toggleDone], "⌃⌥D одинаково на ISO и ANSI")
+            c.expectEqual(iso[.toggleDone]?.displayString, "⌃⌥D", "показ ⌃⌥D")
+            c.expectEqual(iso.hotkeys.count, HotkeyAction.allCases.count, "у каждого действия есть умолчание")
+            for kind in KeyboardKind.allCases {
+                let defaults = HotkeyAssignments.defaults(for: kind)
+                c.expectEqual(Set(defaults.hotkeys.values).count, HotkeyAction.allCases.count, "умолчания не пересекаются (\(kind.rawValue))")
+            }
 
             var overrides = HotkeyOverrides()
             let f5 = Hotkey(keyCode: 0x60, modifiers: [.control])
@@ -158,6 +165,16 @@ enum SwitchChecks: CheckSuite {
             let lossy = try JSONDecoder().decode(HotkeyOverrides.self, from: Data(json.utf8))
             c.expectEqual(lossy.hotkeys, [.nextTask: Hotkey(keyCode: section, modifiers: [.control, .shift])],
                           "неизвестные действия и битые записи пропускаются")
+            // Старый hotkeys.json без «сделано»: загружается, у «сделано» остаётся умолчание.
+            let old = try JSONDecoder().decode(HotkeyOverrides.self, from: Data("""
+                {"version": 1, "hotkeys": {"nextTask": {"keyCode": 96, "modifiers": ["control"]}}}
+                """.utf8))
+            let oldResolved = HotkeyAssignments.resolve(overrides: old, defaults: HotkeyAssignments.defaults(for: .iso))
+            c.expectEqual(oldResolved[.toggleDone], Hotkey(keyCode: 2, modifiers: [.control, .option]), "старый файл: «сделано» — по умолчанию")
+            let ownDone = Hotkey(keyCode: 0x60, modifiers: [.control, .option])
+            let doneData = try JSONEncoder().encode(HotkeyOverrides([.toggleDone: ownDone]))
+            c.expect(String(decoding: doneData, as: UTF8.self).contains("\"toggleDone\""), "ключ в hotkeys.json — toggleDone")
+            c.expectEqual(try JSONDecoder().decode(HotkeyOverrides.self, from: doneData).hotkeys, [.toggleDone: ownDone], "переназначение «сделано» сохраняется")
             let empty = try JSONDecoder().decode(HotkeyOverrides.self, from: Data("{}".utf8))
             c.expect(empty.hotkeys.isEmpty, "пустой объект — без своих сочетаний")
 

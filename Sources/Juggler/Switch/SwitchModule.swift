@@ -33,6 +33,10 @@ enum SwitchModule {
         CycleTaskSwitcher(model: model, bind: bind, card: card, bindHotkey: bindHotkey)
     }
 
+    static func makeDoneToggler(model: AppModel, bind: BindServices, card: TransitionCardPresenting) -> DoneToggling {
+        LiveDoneToggler(model: model, bind: bind, card: card)
+    }
+
     static func makeHotkeys() -> HotkeyRegistering {
         CarbonHotkeyCenter(preferences: preferences)
     }

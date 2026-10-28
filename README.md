@@ -73,7 +73,7 @@ The self-test can also be run on its own:
 build/Juggler.app/Contents/MacOS/Juggler --self-test; echo $?
 ```
 
-It initializes the store, the composition root and the UI, SWITCH and BIND modules. It checks the "hotkey → switcher → card" chain, "⌃⌥ → add or remove the current window", removing the frontmost window's task and restoring it with a second ⌃⌥§, Carbon hotkey registration, and the `Info.plist` keys of the built `.app`. It shows no windows and requests no permissions. Exit code 0 means everything passed.
+It initializes the store, the composition root and the UI, SWITCH and BIND modules. It checks the "hotkey → switcher → card" chain, "⌃⌥ → add or remove the current window", removing the frontmost window's task and restoring it with a second ⌃⌥§, ⌃⌥D marking the task done and back, Carbon hotkey registration, and the `Info.plist` keys of the built `.app`. It shows no windows and requests no permissions. Exit code 0 means everything passed.
 
 ## Running
 
@@ -92,8 +92,10 @@ It initializes the store, the composition root and the UI, SWITCH and BIND modul
 | Next task | ⌃§ | ⌃` |
 | Previous task | ⌃⇧§ | ⌃⇧` |
 | Add or remove current window | ⌃⌥§ | ⌃⌥` |
+| Mark done / back to work | ⌃⌥D | ⌃⌥D |
 
 - § is the physical key above Tab, to the left of 1. In the Russian layout it types `<`. The hotkey is bound to the key itself, not the character, so it works in both RU and EN layouts.
+- D is the physical key D (`kVK_ANSI_D`), the same on every keyboard type, and it works in the Russian layout too (where it types "В"). It does not clash with the other defaults.
 - Juggler detects the keyboard type (ISO with § or ANSI with `) and picks the defaults accordingly.
 - The switching order is fixed: 1→2→3→1. Tasks marked "done" are skipped. The current task is determined at the moment of the key press from the frontmost window or tab.
 - On each switch, a card with the number, title, note and "away N min" appears for a second or so. The card does not take focus and lets clicks through.
@@ -124,6 +126,15 @@ The frontmost window counts as a task only on an exact match. The fallback "last
 - App window (Grok Bot and others) — the same bundle id and the same non-empty window title. Without the Accessibility permission the title cannot be read, so there is no match. If a tab, chat or session id was read from the window, a "window only" binding does not apply.
 
 If several tasks match, a match by id wins, then by URL, then by name. On a tie, the last active task wins, otherwise the first in the list.
+
+## Mark done / back to work
+
+⌃⌥D ("Mark Done / Back to Work" in the hotkey settings) toggles the "done" mark of one task. It does not switch windows.
+
+- **Which task:** the task of the frontmost window if the window matches it exactly (the rules above), otherwise the current task, the one marked ▸ in the list.
+- **First press** marks the task done; a card appears: "Task N “…” done". **A second press** takes the mark off: "Task N “…” is back in progress". The change is saved to `tasks.json` right away.
+- **No tasks** — nothing changes: a short beep and a card "No tasks yet: add a task from the Juggler menu". If there are tasks but none is current and the window matches none of them, there is also a beep and a card explaining it.
+- The hotkey is reassigned like the others (Settings → "Hotkeys"). An old `hotkeys.json` without this action still loads, and ⌃⌥D stays the default; the key in the file is `toggleDone`.
 
 ## Bindings
 
@@ -394,6 +405,7 @@ Each task works only in its own folders:
 4. **Hotkey and menu actions** go through `AppEnvironment.perform(_ action: HotkeyAction)`.
    - SWITCH calls the handler passed to `HotkeyRegistering.start(handler:)`.
    - `.bindCurrentChat` is ⌃⌥§ "Add or remove current window": `binder.toggleCurrentChat()`. The case name was not changed because it is the key in `hotkeys.json`.
+   - `.toggleDone` is ⌃⌥D "Mark done / back to work": `doneToggler.toggleDone()`. The logic is `DoneToggle` and `DoneToggleTexts` in `Sources/JugglerCore/Core/Toggle/DoneToggle.swift`.
    - UI calls `environment.binder.toggleCurrentWindow()` (the "Add/Remove Current Window" menu item: the undo window is ignored, restoring is a separate item) and `environment.switcher.activateTask(id:)`.
 5. **Pure logic** — list operations (UI), card texts and hotkey parsing (SWITCH), AppleScript response parsing and binding selection (BIND). It lives in `Sources/JugglerCore/<Area>/`.
    - Only Foundation may be used.

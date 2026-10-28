@@ -60,6 +60,7 @@ enum SelfTest {
             ("BIND: «Сделать задачей текущий чат»", env.binder is LiveCurrentChatBinder),
             ("SWITCH: карточка", env.card is PanelCardPresenter),
             ("SWITCH: переключатель", env.switcher is CycleTaskSwitcher),
+            ("SWITCH: «сделано» ⌃⌥D", env.doneToggler is LiveDoneToggler),
             ("SWITCH: хоткеи Carbon", env.hotkeys is CarbonHotkeyCenter),
         ]
         let missing = live.filter { !$0.1 }.map(\.0)
@@ -86,8 +87,9 @@ enum SelfTest {
 
         let fake = WiringFakes(context: FrontmostContext(bundleID: "com.example.one", windowTitle: "Один"))
         let switcher = SwitchModule.makeSwitcher(model: model, bind: fake.services, card: fake.card)
+        let doneToggler = SwitchModule.makeDoneToggler(model: model, bind: fake.services, card: fake.card)
         let env = AppEnvironment(model: model, bind: fake.services, binder: fake.binder,
-                                 card: fake.card, switcher: switcher, hotkeys: fake.hotkeys)
+                                 card: fake.card, switcher: switcher, doneToggler: doneToggler, hotkeys: fake.hotkeys)
         env.start()
         let started = env.isStarted && fake.hotkeys.handler != nil
 
@@ -103,6 +105,17 @@ enum SelfTest {
         // ⌃⌥§ — добавить или удалить текущее окно.
         fake.hotkeys.press(.bindCurrentChat)
         let bindOK = fake.binder.toggles == 1 && fake.binder.calls == 0
+        // ⌃⌥D — «сделано»: передняя — задача 1 (точное совпадение), окна не переключаются; повтор снимает.
+        fake.provider.context = FrontmostContext(bundleID: "com.example.one", windowTitle: "Один")
+        let activations = fake.activator.activated.count
+        let shownCards = fake.card.shown.count
+        fake.hotkeys.press(.toggleDone)
+        let doneOn = model.document.task(withID: t1.id)?.isDone == true
+            && fake.card.messages.last == DoneToggleTexts.card(number: 1, title: "Первая", isDone: true)
+        fake.hotkeys.press(.toggleDone)
+        let doneOff = model.document.task(withID: t1.id)?.isDone == false
+            && fake.card.messages.last == DoneToggleTexts.card(number: 1, title: "Первая", isDone: false)
+        let doneOK = doneOn && doneOff && fake.activator.activated.count == activations && fake.card.shown.count == shownCards
         env.stop()
         let stopped = !env.isStarted && fake.hotkeys.stopped
 
@@ -112,6 +125,7 @@ enum SelfTest {
                            passed: nextOK && prevOK,
                            detail: "карточки: \(fake.card.shown.map { "\($0.number)" }.joined(separator: "→"))"),
             SelfTestResult("Связка: ⌃⌥ → «добавить или удалить текущее окно»", passed: bindOK),
+            SelfTestResult("Связка: ⌃⌥D → «сделано» и обратно, без переключения окон", passed: doneOK),
             toggleResult(),
         ]
     }

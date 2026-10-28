@@ -134,6 +134,10 @@
 "%@ — вернуть: «%@» в меню Juggler" = "%@ — to restore: “%@” in the Juggler menu";
 "%@ — %@ в течение %lld с вернёт" = "%@ — %@ within %lld s restores it";
 "Задача %lld «%@» возвращена" = "Task %lld “%@” restored";
+"Отметить сделанной / вернуть в работу" = "Mark Done / Back to Work";
+"Текущей задачи нет: перейдите к одной из задач" = "No current task: switch to one of your tasks";
+"Задача %lld «%@» сделана" = "Task %lld “%@” done";
+"Задача %lld «%@» вернулась в работу" = "Task %lld “%@” is back in progress";
 "Вернуть «%@» на место %lld" = "Restore “%@” to position %lld";
 "Клавиша %lld" = "Key %lld";
 "Пробел" = "Space";

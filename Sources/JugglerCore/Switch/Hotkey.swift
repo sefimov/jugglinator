@@ -82,6 +82,8 @@ public enum KeyCode {
     public static let isoSection: UInt32 = 0x0A
     /// ANSI: клавиша над Tab, слева от 1 (`); на ISO-клавиатуре — у левого Shift.
     public static let ansiGrave: UInt32 = 0x32
+    /// Физическая клавиша D (kVK_ANSI_D): на русской раскладке печатает «В», хоткей работает так же.
+    public static let ansiD: UInt32 = 0x02
     public static let escape: UInt32 = 0x35
     public static let delete: UInt32 = 0x33
     public static let forwardDelete: UInt32 = 0x75
