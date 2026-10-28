@@ -32,6 +32,11 @@ extension UIChecks {
             c.expect(TaskListPresenter.rows(for: TasksDocument(), now: now).isEmpty, "пустой документ → нет строк")
             let custom = TaskListPresenter.rows(for: doc, now: now, thresholds: StalenessThresholds(agingMinutes: 1, staleMinutes: 2, forgottenMinutes: 200))
             c.expectEqual(custom[2].staleness, .stale, "пороги старения передаются")
+            let heights = (1...30).map { n in TaskListPresenter.listHeight(rows: Array(TaskListPresenter.rows(for: doc, now: now).prefix(0)) + Array(repeating: rows[0], count: n)) }
+            c.expectEqual(TaskListPresenter.listHeight(rows: []), TaskListPresenter.listPadding, "высота пустого списка — только запас")
+            c.expectEqual(heights[0], TaskListPresenter.listPadding + TaskListPresenter.rowHeight, "одна строка без заметки")
+            c.expect(heights[1] > heights[0], "высота растёт с числом строк")
+            c.expectEqual(heights[29], TaskListPresenter.maxListHeight, "много строк — высота ограничена, дальше прокрутка")
         }
     }
 

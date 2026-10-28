@@ -36,6 +36,19 @@ public struct TaskRow: Identifiable, Equatable, Sendable {
 
 /// Тексты и строки списка для меню-бара. Всё на русском.
 public enum TaskListPresenter {
+    /// Высота строки списка, pt (с отступами `List`): без заметки и с заметкой.
+    public static let rowHeight: Double = 24
+    public static let rowHeightWithNote: Double = 38
+    /// Небольшой запас сверху/снизу списка и предел высоты (дальше — прокрутка).
+    public static let listPadding: Double = 4
+    public static let maxListHeight: Double = 360
+
+    /// Высота списка по строкам: ровно по содержимому, не выше `maxListHeight`.
+    public static func listHeight(rows: [TaskRow]) -> Double {
+        let total = rows.reduce(listPadding) { $0 + ($1.note.isEmpty ? rowHeight : rowHeightWithNote) }
+        return min(total, maxListHeight)
+    }
+
     /// Строки списка в порядке документа.
     public static func rows(
         for document: TasksDocument, now: Date, thresholds: StalenessThresholds = .standard

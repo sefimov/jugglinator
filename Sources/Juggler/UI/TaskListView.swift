@@ -90,6 +90,8 @@ struct TaskListView: View {
             List {
                 ForEach(rows) { row in
                     TaskRowView(row: row, actions: actions(for: row, count: rows.count))
+                        .listRowInsets(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
+                        .listRowSeparator(.hidden)
                 }
                 .onMove { offsets, destination in
                     model.update { TaskListOps.move(&$0, fromOffsets: offsets, toOffset: destination) }
@@ -97,13 +99,8 @@ struct TaskListView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .frame(height: listHeight(rows: rows))
+            .frame(height: CGFloat(TaskListPresenter.listHeight(rows: rows)))
         }
-    }
-
-    private func listHeight(rows: [TaskRow]) -> CGFloat {
-        let height = rows.reduce(CGFloat(6)) { sum, row in sum + (row.note.isEmpty ? 34 : 48) }
-        return min(height, 360)
     }
 
     private func actions(for row: TaskRow, count: Int) -> TaskRowActions {
