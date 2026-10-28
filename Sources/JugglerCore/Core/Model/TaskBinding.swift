@@ -30,7 +30,7 @@ public enum BindingSource: String, Codable, CaseIterable, Sendable {
         case .claudeChat: return "sparkles"
         case .claudeCodeSession: return "terminal"
         case .chatGPTThread: return "bubble.left.and.bubble.right"
-        case .terminalWindow: return "bubble.left.and.bubble.right.fill"
+        case .terminalWindow: return "terminal.fill"
         case .appWindow: return "macwindow"
         }
     }
