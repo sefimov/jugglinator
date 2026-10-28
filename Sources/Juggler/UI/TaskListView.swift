@@ -62,7 +62,7 @@ struct TaskListView: View {
         if rows.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Задач пока нет.")
-                Text("Откройте чат и выберите «Сделать задачей текущий чат» или добавьте задачу ниже.")
+                Text("Откройте чат и выберите «\(TaskToggleTexts.actionTitle)» или добавьте задачу ниже.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -124,7 +124,7 @@ struct TaskListView: View {
             DeleteConfirmationView(
                 title: task.title,
                 onDelete: {
-                    model.update { TaskListOps.delete(&$0, id: id) }
+                    model.removeTask(id, undoableByToggle: false)
                     state.cancel()
                 },
                 onCancel: { state.cancel() })
@@ -157,12 +157,22 @@ struct TaskListView: View {
     private var footer: some View {
         VStack(alignment: .leading, spacing: 6) {
             Button {
-                UIActions.bindCurrentChat(environment: environment, dismiss: { dismiss() })
+                UIActions.toggleCurrentTask(environment: environment, dismiss: { dismiss() })
             } label: {
-                Label("Сделать задачей текущий чат", systemImage: "link.badge.plus")
+                Label(TaskToggleTexts.actionTitle, systemImage: "link.badge.plus")
             }
             .buttonStyle(.borderless)
-            .help("Привязать чат или вкладку, которые были впереди до открытия меню (⌃⌥ + клавиша над Tab)")
+            .help("Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)")
+
+            if let removed = model.lastRemoved {
+                Button {
+                    model.restoreLastRemoved()
+                } label: {
+                    Label(TaskToggleTexts.restoreMenuTitle, systemImage: "arrow.uturn.backward")
+                }
+                .buttonStyle(.borderless)
+                .help(TaskToggleTexts.restoreHelp(removed))
+            }
 
             HStack {
                 Button("Настройки…") {

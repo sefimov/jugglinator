@@ -24,11 +24,13 @@ enum SwitchModule {
         PanelCardPresenter()
     }
 
+    /// Текущее сочетание «добавить или удалить текущую задачу» (⌃⌥§ по умолчанию) для подсказок и карточек.
+    static func bindHotkey() -> Hotkey? {
+        preferences.assignments[.bindCurrentChat]
+    }
+
     static func makeSwitcher(model: AppModel, bind: BindServices, card: TransitionCardPresenting) -> TaskSwitching {
-        let preferences = self.preferences
-        return CycleTaskSwitcher(model: model, bind: bind, card: card) {
-            preferences.assignments[.bindCurrentChat]
-        }
+        CycleTaskSwitcher(model: model, bind: bind, card: card, bindHotkey: bindHotkey)
     }
 
     static func makeHotkeys() -> HotkeyRegistering {

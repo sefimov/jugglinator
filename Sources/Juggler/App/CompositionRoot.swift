@@ -41,8 +41,9 @@ final class AppEnvironment {
         let model = AppModel(store: store)
         model.load()
         let bind = BindModule.makeServices()
-        let binder = BindModule.makeCurrentChatBinder(model: model, services: bind)
         let card = SwitchModule.makeCardPresenter()
+        let binder = BindModule.makeCurrentChatBinder(model: model, services: bind, card: card,
+                                                      toggleHotkey: SwitchModule.bindHotkey)
         let switcher = SwitchModule.makeSwitcher(model: model, bind: bind, card: card)
         let hotkeys = SwitchModule.makeHotkeys()
         return AppEnvironment(model: model, bind: bind, binder: binder, card: card, switcher: switcher, hotkeys: hotkeys)
@@ -67,7 +68,7 @@ final class AppEnvironment {
         switch action {
         case .nextTask: switcher.switchTask(.next)
         case .previousTask: switcher.switchTask(.previous)
-        case .bindCurrentChat: binder.bindCurrentChat()
+        case .bindCurrentChat: binder.toggleCurrentChat()
         }
     }
 }

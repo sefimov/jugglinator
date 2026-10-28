@@ -14,7 +14,7 @@ import os
 //   LiveBindingCapturer       — привязка по контексту (логика в JugglerCore/Bind);
 //   LiveBindingActivator      — открытие вкладки, чата, окна; запуск приложения;
 //   LivePermissions           — Accessibility, Automation, инструкции;
-//   LiveCurrentChatBinder     — «Сделать задачей текущий чат».
+//   LiveCurrentChatBinder     — «Сделать задачей текущий чат» и ⌃⌥§ «добавить или удалить текущую задачу».
 
 @MainActor
 enum BindModule {
@@ -29,13 +29,17 @@ enum BindModule {
             permissions: permissions)
     }
 
-    static func makeCurrentChatBinder(model: AppModel, services: BindServices) -> CurrentChatBinding {
+    /// `card` и `toggleHotkey` — для карточек ⌃⌥§ «добавить или удалить текущую задачу» (удалена / возвращена).
+    static func makeCurrentChatBinder(model: AppModel, services: BindServices,
+                                      card: TransitionCardPresenting? = nil,
+                                      toggleHotkey: @escaping () -> Hotkey? = { nil }) -> CurrentChatBinding {
         guard let provider = services.contextProvider as? LiveFrontmostContextProvider,
               let permissions = services.permissions as? LivePermissions else {
-            // Подменённые сервисы (например, в будущих проверках): без диалогов.
-            return MinimalCurrentChatBinder(model: model, services: services)
+            // Подменённые сервисы (например, в самопроверке): без диалогов.
+            return MinimalCurrentChatBinder(model: model, services: services, card: card, toggleHotkey: toggleHotkey)
         }
-        return LiveCurrentChatBinder(model: model, provider: provider, capturer: services.capturer, permissions: permissions)
+        return LiveCurrentChatBinder(model: model, provider: provider, capturer: services.capturer, permissions: permissions,
+                                     card: card, toggleHotkey: toggleHotkey)
     }
 
     /// `Juggler --probe-frontmost [--delay <сек>] [--app <bundle id>] [--prompt] [--window-title <заголовок>]`:
@@ -121,14 +125,29 @@ private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 private final class MinimalCurrentChatBinder: CurrentChatBinding {
     private let model: AppModel
     private let services: BindServices
+    private let card: TransitionCardPresenting?
+    private let toggleHotkey: () -> Hotkey?
 
-    init(model: AppModel, services: BindServices) {
+    init(model: AppModel, services: BindServices, card: TransitionCardPresenting?, toggleHotkey: @escaping () -> Hotkey?) {
         self.model = model
         self.services = services
+        self.card = card
+        self.toggleHotkey = toggleHotkey
     }
 
     func bindCurrentChat() {
-        let context = services.contextProvider.currentContext()
+        bind(context: services.contextProvider.currentContext())
+    }
+
+    func toggleCurrentChat() {
+        let decision = TaskToggle.decide(document: model.document, lastRemoved: model.lastRemoved, now: model.clock()) {
+            services.contextProvider.currentContext()
+        }
+        guard let context = TaskToggleApplier.apply(decision, model: model, card: card, hotkey: toggleHotkey()) else { return }
+        bind(context: context)
+    }
+
+    private func bind(context: FrontmostContext) {
         guard case .captured(let binding, let title) = services.capturer.captureBinding(from: context) else {
             log.info("Привязка без диалогов невозможна")
             NSSound.beep()

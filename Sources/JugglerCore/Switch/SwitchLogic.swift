@@ -27,7 +27,7 @@ public enum TransitionCardBuilder {
     public static let maxTitleLength = 120
 
     /// Карточка для задачи `id` в момент `now` (до обновления времени захода).
-    /// - `bindHotkey`: текущее сочетание «привязать текущий чат» для подсказки (`nil` — не назначено).
+    /// - `bindHotkey`: текущее сочетание «добавить или удалить текущую задачу» для подсказки (`nil` — не назначено).
     /// - `activation`: итог активации привязки; запасной вариант или ошибка попадают в подсказку.
     public static func content(
         for id: UUID, in document: TasksDocument, now: Date,
@@ -76,7 +76,7 @@ public enum TransitionCardBuilder {
         if let bindHotkey {
             return "Нет привязки: откройте чат и нажмите \(bindHotkey.displayString)"
         }
-        return "Нет привязки: откройте чат и выберите в меню «Сделать задачей текущий чат»"
+        return "Нет привязки: откройте чат и выберите в меню «\(TaskToggleTexts.actionTitle)»"
     }
 
     /// Строка заголовка карточки: «2. Название».

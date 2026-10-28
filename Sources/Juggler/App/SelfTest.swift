@@ -100,9 +100,9 @@ enum SelfTest {
         fake.hotkeys.press(.previousTask)
         let prevOK = fake.card.shown.last?.number == 1 && fake.activator.activated == [b2, b1]
             && model.document.lastActiveTaskID == t1.id
-        // ⌃⌥§ — привязать текущий чат.
+        // ⌃⌥§ — добавить или удалить текущую задачу.
         fake.hotkeys.press(.bindCurrentChat)
-        let bindOK = fake.binder.calls == 1
+        let bindOK = fake.binder.toggles == 1 && fake.binder.calls == 0
         env.stop()
         let stopped = !env.isStarted && fake.hotkeys.stopped
 
@@ -111,8 +111,49 @@ enum SelfTest {
             SelfTestResult("Связка: «следующая» и «предыдущая» → переключатель, карточка, привязка",
                            passed: nextOK && prevOK,
                            detail: "карточки: \(fake.card.shown.map { "\($0.number)" }.joined(separator: "→"))"),
-            SelfTestResult("Связка: ⌃⌥ → «Сделать задачей текущий чат»", passed: bindOK),
+            SelfTestResult("Связка: ⌃⌥ → «добавить или удалить текущую задачу»", passed: bindOK),
+            toggleResult(),
         ]
+    }
+
+    /// ⌃⌥§ как переключатель (D15) на временном хранилище: сценарий BIND с поддельным контекстом
+    /// удаляет задачу переднего окна с карточкой и возвращает её повторным нажатием.
+    private static func toggleResult() -> SelfTestResult {
+        let dir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("juggler-toggle-self-test-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let store = TaskStore(fileURL: dir.appendingPathComponent("tasks.json"))
+        let t0 = Date(timeIntervalSince1970: 1_800_000_000)
+        var now = t0
+        let model = AppModel(store: store, clock: { now })
+        let b2 = TaskBinding.chatGPTThread(ChatGPTThreadRef(threadID: "th-2", title: "Два"))
+        let t1 = JugglerTask(title: "Первая", createdAt: t0, binding: .appWindow(AppWindowRef(bundleID: "com.example.one", windowTitle: "Один")))
+        let t2 = JugglerTask(title: "Вторая", note: "дальше", isDone: true, lastVisitedAt: t0, createdAt: t0, binding: b2)
+        let t3 = JugglerTask(title: "Третья", createdAt: t0)
+        model.update { $0.tasks = [t1, t2, t3]; $0.lastActiveTaskID = t2.id }
+        let before = model.document
+
+        let fake = WiringFakes(context: FrontmostContext(bundleID: KnownBundleIDs.chatGPT, windowTitle: "Два - ChatGPT"))
+        let hotkey = Hotkey(keyCode: KeyCode.isoSection, modifiers: [.control, .option])
+        let binder = BindModule.makeCurrentChatBinder(model: model, services: fake.services, card: fake.card, toggleHotkey: { hotkey })
+
+        binder.toggleCurrentChat()
+        let removedText = fake.card.messages.last ?? ""
+        let removedOK = model.document.tasks.map(\.id) == [t1.id, t3.id]
+            && store.load().document.tasks.map(\.id) == [t1.id, t3.id]
+            && removedText == "Задача 2 «Вторая» удалена — ⌃⌥§ в течение 5 с вернёт"
+            && fake.card.durations.last == TaskRemoval.undoWindow
+
+        now = t0.addingTimeInterval(3)
+        fake.provider.context = FrontmostContext(bundleID: "com.unknown")
+        binder.toggleCurrentChat()
+        let restoredOK = model.document == before && store.load().document == before
+            && fake.card.messages.last == "Задача 2 «Вторая» возвращена" && model.lastRemoved == nil
+
+        return SelfTestResult(
+            "Связка: ⌃⌥§ удаляет задачу переднего окна и возвращает её повтором в 5 с",
+            passed: removedOK && restoredOK,
+            detail: removedText)
     }
 
     /// Проверки собранного .app (только при запуске из build/Juggler.app).
@@ -167,14 +208,20 @@ private final class WiringFakes {
         func requestAccessibility() {}
     }
 
-    final class Card: TransitionCardPresenting {
+    final class Card: TransitionCardPresenting, TransitionMessagePresenting {
         var shown: [TransitionCardContent] = []
+        var messages: [String] = []
+        var durations: [TimeInterval?] = []
         func show(_ content: TransitionCardContent) { shown.append(content) }
+        func showMessage(_ text: String) { messages.append(text); durations.append(nil) }
+        func showMessage(_ text: String, duration: TimeInterval) { messages.append(text); durations.append(duration) }
     }
 
     final class Binder: CurrentChatBinding {
         var calls = 0
+        var toggles = 0
         func bindCurrentChat() { calls += 1 }
+        func toggleCurrentChat() { toggles += 1 }
     }
 
     final class Hotkeys: HotkeyRegistering {

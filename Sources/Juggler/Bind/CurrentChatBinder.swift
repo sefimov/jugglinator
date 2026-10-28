@@ -23,7 +23,40 @@ final class LiveBindingCapturer: BindingCapturing {
     }
 }
 
-/// «Сделать задачей текущий чат» (меню и ⌃⌥-хоткей).
+/// Итог ⌃⌥§ «добавить или удалить текущую задачу» (D15): удаление и возврат с карточкой.
+/// Логика решения — `TaskToggle` (JugglerCore); здесь только применение к модели и показ карточки.
+@MainActor
+enum TaskToggleApplier {
+    /// Применяет `.restore` и `.remove`; для `.add` возвращает контекст, с которым идти в привязку.
+    static func apply(_ decision: ToggleDecision, model: AppModel, card: TransitionCardPresenting?, hotkey: Hotkey?) -> FrontmostContext? {
+        let messages = card as? TransitionMessagePresenting
+        switch decision {
+        case .restore:
+            guard let restored = model.restoreLastRemoved(), let number = model.document.number(of: restored.task.id) else {
+                NSSound.beep()
+                return nil
+            }
+            log.info("⌃⌥§: задача \(number) возвращена")
+            messages?.showMessage(TaskToggleTexts.restoredCard(number: number, title: restored.task.title))
+            return nil
+
+        case .remove(let id, let number):
+            guard let removed = model.removeTask(id, undoableByToggle: true) else { return nil }
+            log.info("⌃⌥§: задача \(number) удалена, переднее окно точно совпало с привязкой")
+            messages?.showMessage(TaskToggleTexts.removedCard(number: number, title: removed.task.title, hotkey: hotkey),
+                                  duration: TaskRemoval.undoWindow)
+            return nil
+
+        case .add(let context):
+            return context
+        }
+    }
+}
+
+/// «Сделать задачей текущий чат»; через `toggleCurrentChat` — и ⌃⌥§ «добавить или удалить текущую задачу».
+///
+/// Переключатель: в течение 5 с после удаления ⌃⌥§ возвращает задачу; если переднее окно точно
+/// совпадает с задачей (`ExactTaskMatcher`) — удаляет её с карточкой; иначе — привязка, как ниже.
 ///
 /// 1. Читает контекст переднего окна (если впереди Juggler — последнего активного приложения).
 /// 2. Строит привязку; для Claude без прочитанного id и для ChatGPT, чей тред не найден по названию
@@ -36,18 +69,36 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
     private let provider: LiveFrontmostContextProvider
     private let capturer: BindingCapturing
     private let permissions: LivePermissions
+    private let card: TransitionCardPresenting?
+    private let toggleHotkey: () -> Hotkey?
     private var isRunning = false
 
-    init(model: AppModel, provider: LiveFrontmostContextProvider, capturer: BindingCapturing, permissions: LivePermissions) {
+    init(model: AppModel, provider: LiveFrontmostContextProvider, capturer: BindingCapturing, permissions: LivePermissions,
+         card: TransitionCardPresenting? = nil, toggleHotkey: @escaping () -> Hotkey? = { nil }) {
         self.model = model
         self.provider = provider
         self.capturer = capturer
         self.permissions = permissions
+        self.card = card
+        self.toggleHotkey = toggleHotkey
     }
 
     func bindCurrentChat() {
         guard !isRunning else { return }
-        let context = provider.context(interactive: true)
+        start(context: provider.context(interactive: true))
+    }
+
+    func toggleCurrentChat() {
+        guard !isRunning else { return }
+        let decision = TaskToggle.decide(document: model.document, lastRemoved: model.lastRemoved, now: model.clock()) {
+            provider.context(interactive: true)
+        }
+        guard let context = TaskToggleApplier.apply(decision, model: model, card: card, hotkey: toggleHotkey()) else { return }
+        start(context: context)
+    }
+
+    /// Привязка по уже прочитанному контексту (диагностика — от того же чтения).
+    private func start(context: FrontmostContext) {
         let diagnostics = provider.lastDiagnostics
         log.info("Привязка: \(context.bundleID ?? "-", privacy: .public), вкладка \(context.chromeTab != nil), Claude \(diagnostics.claudeChat?.rawValue ?? "-", privacy: .public), ChatGPT \(diagnostics.chatGPTThread?.status.rawValue ?? "-", privacy: .public)")
         isRunning = true

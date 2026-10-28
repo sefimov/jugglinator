@@ -58,6 +58,33 @@ final class AppModel: ObservableObject {
         update { $0.markVisited(id, at: now) }
     }
 
+    // MARK: - Удаление с возвратом (D15)
+
+    /// Последняя удалённая задача (только в памяти, до выхода из Juggler):
+    /// её возвращает пункт меню «Вернуть удалённую задачу», а в окне отмены — и ⌃⌥§.
+    @Published private(set) var lastRemoved: RemovedTask?
+
+    /// Удалить задачу (удаление сразу сохраняется в tasks.json) и запомнить её для возврата.
+    /// `undoableByToggle` — удалено переключателем ⌃⌥§, повтор хоткея в течение 5 с вернёт.
+    @discardableResult
+    func removeTask(_ id: UUID, undoableByToggle: Bool) -> RemovedTask? {
+        let now = clock()
+        var removed: RemovedTask?
+        update { removed = TaskRemoval.remove(&$0, id: id, now: now, undoableByToggle: undoableByToggle) }
+        if let removed { lastRemoved = removed }
+        return removed
+    }
+
+    /// Вернуть последнюю удалённую задачу на прежнее место. `nil`, если возвращать нечего.
+    @discardableResult
+    func restoreLastRemoved() -> RemovedTask? {
+        guard let removed = lastRemoved else { return nil }
+        lastRemoved = nil
+        var restored = false
+        update { restored = TaskRemoval.restore(removed, into: &$0) }
+        return restored ? removed : nil
+    }
+
     private func save() {
         do {
             try store.save(document)

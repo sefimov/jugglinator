@@ -61,13 +61,15 @@ public struct TransitionCardContent: Equatable, Sendable {
 public enum HotkeyAction: String, Codable, CaseIterable, Sendable {
     case nextTask
     case previousTask
+    /// ⌃⌥§: добавить переднее окно задачей или удалить задачу, если оно уже задача (D15).
+    /// Имя случая не меняется: это ключ в hotkeys.json.
     case bindCurrentChat
 
     public var displayName: String {
         switch self {
         case .nextTask: return "Следующая задача"
         case .previousTask: return "Предыдущая задача"
-        case .bindCurrentChat: return "Привязать текущий чат"
+        case .bindCurrentChat: return TaskToggleTexts.actionTitle
         }
     }
 }

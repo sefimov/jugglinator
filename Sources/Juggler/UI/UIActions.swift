@@ -27,8 +27,9 @@ enum UIActions {
         }
     }
 
-    /// «Сделать задачей текущий чат» (BIND).
-    static func bindCurrentChat(environment: AppEnvironment, dismiss: () -> Void) {
+    /// «Добавить или удалить текущую задачу» (BIND) — то же, что ⌃⌥§: переднее окно уже задача —
+    /// удалить её (с карточкой и возвратом), иначе — «сделать задачей текущий чат».
+    static func toggleCurrentTask(environment: AppEnvironment, dismiss: () -> Void) {
         afterClosingMenu(dismiss) {
             environment.perform(.bindCurrentChat)
         }

@@ -61,6 +61,9 @@ enum CardDisplay: Equatable {
 @MainActor
 protocol TransitionMessagePresenting: AnyObject {
     func showMessage(_ text: String)
+    /// Сообщение, видимое примерно `duration` секунд (вместе с появлением и исчезновением),
+    /// например карточка удаления на всё окно отмены ⌃⌥§.
+    func showMessage(_ text: String, duration: TimeInterval)
 }
 
 /// Показ карточки: появление, ~1 с показа, плавное исчезновение (всего ≈1,4 с).
@@ -104,6 +107,10 @@ final class PanelCardPresenter: TransitionCardPresenting, TransitionMessagePrese
         present(.message(text))
     }
 
+    func showMessage(_ text: String, duration: TimeInterval) {
+        present(.message(text), hold: max(duration - timing.fadeIn - timing.fadeOut, timing.hold))
+    }
+
     /// Разметить карточку без показа. Возвращает её размер (для самопроверки).
     @discardableResult
     func layout(_ display: CardDisplay) -> NSSize {
@@ -116,7 +123,7 @@ final class PanelCardPresenter: TransitionCardPresenting, TransitionMessagePrese
         return size
     }
 
-    private func present(_ display: CardDisplay) {
+    private func present(_ display: CardDisplay, hold: TimeInterval? = nil) {
         generation += 1
         let current = generation
         let size = layout(display)
@@ -128,7 +135,7 @@ final class PanelCardPresenter: TransitionCardPresenting, TransitionMessagePrese
             context.duration = timing.fadeIn
             panel.animator().alphaValue = 1
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + timing.fadeIn + timing.hold) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + timing.fadeIn + (hold ?? timing.hold)) { [weak self] in
             MainActor.assumeIsolated { self?.fadeOut(generation: current) }
         }
     }
