@@ -20,6 +20,7 @@ enum UIChecks: CheckSuite {
         checkTexts(c)
         checkLoginItem(c)
         checkPersistence(c)
+        checkSessionRows(c)
     }
 
     // MARK: - Вспомогательное

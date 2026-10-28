@@ -83,9 +83,16 @@ enum BindModule {
         results.append(SelfTestResult("BIND: разбор ответа Chrome", passed: parsed?.tabID == 2 && parsed?.windowID == 1))
 
         let handlers = [("claude://", ChatLinkParser.claudeAppURL(conversationID: "00000000-0000-0000-0000-000000000000")),
+                        ("claude://…/epitaxy", ChatLinkParser.claudeCodeSessionAppURL(sessionID: "local_00000000-0000-0000-0000-000000000000")),
                         ("codex://", ChatLinkParser.chatGPTAppURL(threadID: "x"))]
             .map { "\($0.0) → \(NSWorkspace.shared.urlForApplication(toOpen: $0.1)?.lastPathComponent ?? "нет приложения")" }
         results.append(SelfTestResult("BIND: обработчики ссылок", passed: true, detail: handlers.joined(separator: ", ")))
+
+        // Только чтение: есть ли папка метаданных сессий Claude Code (её отсутствие — не ошибка).
+        let sessionsRoot = ClaudeCodeSessionMetadata.defaultRoot()
+        let sessionsFound = sessionsRoot.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+        results.append(SelfTestResult("BIND: метаданные сессий Claude Code", passed: true,
+                                      detail: sessionsFound ? "папка найдена" : "папки нет — названия сессий возьмутся из заголовка окна"))
 
         let binder = makeCurrentChatBinder(model: AppModel(store: TaskStore(fileURL: FileManager.default.temporaryDirectory
             .appendingPathComponent("juggler-bind-self-test-\(UUID().uuidString).json"))), services: services)

@@ -21,6 +21,8 @@ final class LiveBindingActivator: BindingActivating {
         switch binding {
         case .chromeTab(let ref): result = activateChrome(ref)
         case .claudeChat(let ref): result = openAppURL(ref.appURL, name: "Claude", webFallback: ChatLinkParser.claudeWebURL(conversationID: ref.conversationID))
+        // Локальная сессия Claude Code живёт только в Claude desktop: в браузере её не открыть.
+        case .claudeCodeSession(let ref): result = openAppURL(ref.appURL, name: "Claude", webFallback: nil)
         case .chatGPTThread(let ref): result = openAppURL(ref.appURL, name: "ChatGPT", webFallback: nil)
         case .appWindow(let ref): result = activateWindow(ref)
         }

@@ -4,6 +4,8 @@ import Foundation
 public enum ChatLink: Equatable, Hashable, Sendable {
     /// Чат Claude: UUID в нижнем регистре.
     case claude(conversationID: String)
+    /// Сессия Claude Code: `local_<uuid>` в нижнем регистре.
+    case claudeCodeSession(sessionID: String)
     /// Тред ChatGPT desktop: id как есть (регистр сохраняется).
     case chatGPT(threadID: String)
 
@@ -11,6 +13,7 @@ public enum ChatLink: Equatable, Hashable, Sendable {
     public var appURL: URL {
         switch self {
         case .claude(let id): return ChatLinkParser.claudeAppURL(conversationID: id)
+        case .claudeCodeSession(let id): return ChatLinkParser.claudeCodeSessionAppURL(sessionID: id)
         case .chatGPT(let id): return ChatLinkParser.chatGPTAppURL(threadID: id)
         }
     }
@@ -18,6 +21,7 @@ public enum ChatLink: Equatable, Hashable, Sendable {
     public var source: BindingSource {
         switch self {
         case .claude: return .claudeChat
+        case .claudeCodeSession: return .claudeCodeSession
         case .chatGPT: return .chatGPTThread
         }
     }
@@ -29,7 +33,12 @@ public enum ChatLink: Equatable, Hashable, Sendable {
 /// - `https://claude.ai/chat/<uuid>` (также `http`, `www.`, без схемы, с `?query`/`#fragment`, с хвостовым `/`);
 /// - `claude://claude.ai/chat/<uuid>` и `claude://chat/<uuid>`;
 /// - голый UUID (считается чатом Claude);
+/// - сессия Claude Code: `https://claude.ai/epitaxy/local_<uuid>`, `claude://claude.ai/epitaxy/local_<uuid>`,
+///   `claude://epitaxy/local_<uuid>` и голый `local_<uuid>`;
 /// - `codex://threads/<id>`.
+///
+/// Ссылки «Поделиться» (`claude.ai/share/<id>`) — это публичные копии, а не id чата: `parse` их
+/// не принимает, а `isClaudeShareLink` позволяет объяснить пользователю, почему.
 ///
 /// Пробелы, переводы строк, кавычки и угловые скобки по краям отбрасываются.
 public enum ChatLinkParser {
@@ -38,6 +47,7 @@ public enum ChatLinkParser {
         guard !text.isEmpty, !text.contains(where: { $0.isWhitespace }) else { return nil }
 
         if isUUID(text) { return .claude(conversationID: text.lowercased()) }
+        if isClaudeCodeSessionID(text) { return .claudeCodeSession(sessionID: text.lowercased()) }
 
         let lower = text.lowercased()
         if lower.hasPrefix("codex://") {
@@ -48,16 +58,26 @@ public enum ChatLinkParser {
             if let first = segments.first, isClaudeHost(first) { segments.removeFirst() }
             return claudeChat(in: segments)
         }
-        var rest = text
-        for scheme in ["https://", "http://"] where lower.hasPrefix(scheme) {
-            rest = String(text.dropFirst(scheme.count))
-            break
-        }
-        if rest.contains("://") { return nil }
-        var segments = pathSegments(rest)
+        guard var segments = webSegments(text) else { return nil }
         guard let host = segments.first, isClaudeHost(host) else { return nil }
         segments.removeFirst()
         return claudeChat(in: segments)
+    }
+
+    /// Ссылка «Поделиться» Claude (`https://claude.ai/share/<id>`): ведёт на публичную копию
+    /// беседы, а не на сам чат, поэтому для привязки не подходит.
+    public static func isClaudeShareLink(_ raw: String) -> Bool {
+        let text = trimmed(raw)
+        guard !text.isEmpty, !text.contains(where: { $0.isWhitespace }) else { return false }
+        guard let segments = webSegments(text), segments.count >= 3, isClaudeHost(segments[0]) else { return false }
+        return segments[1].lowercased() == "share"
+    }
+
+    /// `local_<uuid>` (любой регистр) — id сессии Claude Code.
+    public static func isClaudeCodeSessionID(_ text: String) -> Bool {
+        let prefix = "local_"
+        guard text.count == prefix.count + 36, text.lowercased().hasPrefix(prefix) else { return false }
+        return isUUID(String(text.dropFirst(prefix.count)))
     }
 
     /// UUID вида 8-4-4-4-12 шестнадцатеричных цифр (любой регистр).
@@ -77,6 +97,12 @@ public enum ChatLinkParser {
         URL(string: "https://claude.ai/chat/\(conversationID.lowercased())")!
     }
 
+    /// `claude://claude.ai/epitaxy/<local_uuid>` — сессия Claude Code в Claude desktop.
+    public static func claudeCodeSessionAppURL(sessionID: String) -> URL {
+        URL(string: "claude://claude.ai/epitaxy/\(sessionID.lowercased())")
+            ?? URL(string: "claude://claude.ai/epitaxy/\(sessionID.lowercased().addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? "")")!
+    }
+
     /// `codex://threads/<id>` — тред ChatGPT desktop.
     public static func chatGPTAppURL(threadID: String) -> URL {
         URL(string: "codex://threads/\(threadID)")
@@ -94,6 +120,18 @@ public enum ChatLinkParser {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    /// Сегменты `https://`, `http://` или ссылки без схемы (первый — хост); `nil` для другой схемы.
+    private static func webSegments(_ text: String) -> [String]? {
+        let lower = text.lowercased()
+        var rest = text
+        for scheme in ["https://", "http://"] where lower.hasPrefix(scheme) {
+            rest = String(text.dropFirst(scheme.count))
+            break
+        }
+        if rest.contains("://") { return nil }
+        return pathSegments(rest)
+    }
+
     /// Сегменты пути без query и fragment; пустые сегменты (`//`, хвостовой `/`) отбрасываются.
     private static func pathSegments(_ text: String) -> [String] {
         let withoutFragment = text.split(separator: "#", maxSplits: 1, omittingEmptySubsequences: false).first ?? ""
@@ -106,10 +144,17 @@ public enum ChatLinkParser {
         return h == "claude.ai" || h == "www.claude.ai"
     }
 
-    /// Ровно `chat/<uuid>`: другие разделы (project, settings) не считаются чатом.
+    /// Ровно `chat/<uuid>` или `epitaxy/local_<uuid>`: другие разделы (project, settings, share) не считаются чатом.
     private static func claudeChat(in segments: [String]) -> ChatLink? {
-        guard segments.count == 2, segments[0].lowercased() == "chat", isUUID(segments[1]) else { return nil }
-        return .claude(conversationID: segments[1].lowercased())
+        guard segments.count == 2 else { return nil }
+        switch segments[0].lowercased() {
+        case "chat" where isUUID(segments[1]):
+            return .claude(conversationID: segments[1].lowercased())
+        case "epitaxy" where isClaudeCodeSessionID(segments[1]):
+            return .claudeCodeSession(sessionID: segments[1].lowercased())
+        default:
+            return nil
+        }
     }
 
     private static func parseCodex(_ rest: String) -> ChatLink? {

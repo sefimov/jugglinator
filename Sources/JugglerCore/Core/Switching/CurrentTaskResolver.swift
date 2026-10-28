@@ -16,7 +16,7 @@ public enum CurrentTaskResolver {
         case sameTitle = 50
         /// Тот же адрес вкладки (без учёта фрагмента, регистра хоста и хвостового «/»).
         case sameURL = 80
-        /// Тот же id: вкладки Chrome, чата Claude или треда ChatGPT.
+        /// Тот же id: вкладки Chrome, чата Claude, сессии Claude Code или треда ChatGPT.
         case sameID = 100
 
         public static func < (lhs: Score, rhs: Score) -> Bool { lhs.rawValue < rhs.rawValue }
@@ -68,6 +68,13 @@ public enum CurrentTaskResolver {
                 return .sameID
             }
             guard KnownBundleIDs.same(context.bundleID, KnownBundleIDs.claude) else { return .none }
+            return titleScore(bound: ref.title, current: context.windowTitle)
+
+        case .claudeCodeSession(let ref):
+            let id = ref.sessionID.lowercased()
+            if let current = context.claudeCodeSessionID?.lowercased(), current == id { return .sameID }
+            guard KnownBundleIDs.same(context.bundleID, KnownBundleIDs.claude) else { return .none }
+            // Заголовок окна вкладки Code — просто «Claude», поэтому обычно это лишь «то же приложение».
             return titleScore(bound: ref.title, current: context.windowTitle)
 
         case .chatGPTThread(let ref):

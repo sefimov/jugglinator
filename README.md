@@ -1,6 +1,6 @@
 # Juggler
 
-Приложение для macOS в меню-баре. Показывает список параллельных задач-чатов и переключает их по кругу хоткеем. При переключении открывает привязанный чат в Claude, ChatGPT, Grok Bot или вкладку Chrome.
+Приложение для macOS в меню-баре. Показывает список параллельных задач-чатов и переключает их по кругу хоткеем. При переключении открывает привязанный чат в Claude, сессию Claude Code, тред ChatGPT, окно Grok Bot или вкладку Chrome.
 
 - Bundle id: `com.sefimov.juggler`.
 - Требуется macOS 14 или новее.
@@ -15,7 +15,7 @@ open build/Juggler.app       # запустить: в меню-баре появ
 
 Дальше:
 
-1. Откройте чат в Claude, ChatGPT, Grok Bot или вкладку в Chrome.
+1. Откройте чат в Claude, сессию на вкладке Code в Claude, чат в ChatGPT или Grok Bot, вкладку в Chrome.
 2. Нажмите ⌃⌥§ или выберите в меню Juggler «Сделать задачей текущий чат».
 3. Повторите для остальных задач.
 4. Переключайтесь по кругу хоткеем ⌃§, назад — ⌃⇧§.
@@ -105,7 +105,14 @@ build/Juggler.app/Contents/MacOS/Juggler --self-test; echo $?
 «Сделать задачей текущий чат» смотрит на переднее окно. Если впереди меню Juggler, берётся последнее активное приложение.
 
 - **Google Chrome** (`com.google.Chrome`) — активная вкладка: id, адрес, заголовок. При переходе Juggler ищет вкладку по id, потом по адресу, иначе открывает адрес заново.
-- **Claude** (`com.anthropic.claudefordesktop`) — чат по UUID. Juggler пробует прочитать адрес чата через Accessibility. Если не вышло, просит вставить ссылку на чат: `https://claude.ai/chat/<uuid>`, `claude://claude.ai/chat/<uuid>` или голый UUID. Открывается ссылкой `claude://claude.ai/chat/<uuid>`.
+- **Claude** (`com.anthropic.claudefordesktop`) — чат по UUID. Juggler пробует прочитать адрес чата через Accessibility. Если не вышло, просит вставить адрес чата: `https://claude.ai/chat/<uuid>`, `claude://claude.ai/chat/<uuid>` или голый UUID. Адрес виден в адресной строке, если открыть чат на claude.ai в браузере. Ссылка «Поделиться» (`claude.ai/share/…`) не подходит: это публичная копия беседы, а не сам чат. Juggler её распознаёт и так и говорит. Открывается ссылкой `claude://claude.ai/chat/<uuid>`.
+- **Сессия Claude Code** (вкладка Code в Claude desktop) — сессия по id `local_<uuid>`.
+  - На вкладке Code ⌃⌥ и «Сделать задачей текущий чат» привязывают сессию сразу, без диалога. Juggler читает её адрес `https://claude.ai/epitaxy/local_<uuid>` через Accessibility.
+  - Название задачи — `title` сессии из `~/Library/Application Support/Claude/claude-code-sessions/…/local_<uuid>.json`. Если файла или названия нет — очищенный заголовок окна, а если и он пустой (у вкладки Code это просто «Claude») — «Сессия Claude Code». Эти файлы Juggler только читает.
+  - Открывается ссылкой `claude://claude.ai/epitaxy/local_<uuid>`. Текущая задача определяется по id сессии в переднем окне Claude, поэтому круг 1→2→3→1 работает и между сессиями.
+  - В диалоге ссылки сессию можно указать и вручную: `https://claude.ai/epitaxy/local_<uuid>`, `claude://claude.ai/epitaxy/local_<uuid>` или голый `local_<uuid>`.
+  - В списке у такой задачи значок терминала и подпись «Claude Code».
+  - Без разрешения «Универсальный доступ» id сессии не прочитать: Juggler покажет диалог ссылки.
 - **ChatGPT** (`com.openai.codex`, старый `com.openai.chat`) — Juggler просит вставить ссылку `codex://threads/<id>` и открывает тред по ней.
 - **Grok Bot** (`com.anysphere.sand`) и любое другое приложение — привязка к окну: bundle id и заголовок. При переходе поднимается окно с тем же заголовком, иначе просто активируется приложение.
 - Незапущенное приложение запускается.
@@ -120,7 +127,7 @@ Juggler ничего не запрашивает сам по себе — тол
 **Универсальный доступ (Accessibility)** нужен, чтобы:
 
 - читать заголовки окон;
-- читать адрес чата Claude;
+- читать адрес чата Claude и id сессии Claude Code;
 - поднимать нужное окно.
 
 Как выдать: Системные настройки → Конфиденциальность и безопасность → Универсальный доступ → включить Juggler. Без этого разрешения Claude и окна привязываются хуже: нужна ссылка, а при переходе просто активируется приложение.
@@ -191,7 +198,7 @@ build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost --prompt        # р�
 Команда печатает JSON из трёх частей:
 
 - `context` — bundle id, заголовок, вкладка Chrome, id чата;
-- `diagnostics` — есть ли Accessibility, статус управления Chrome, кандидаты адреса Claude, заметки;
+- `diagnostics` — есть ли Accessibility, статус управления Chrome, кандидаты адреса Claude, заметки. В `claudeChat` значение `read` — прочитан id чата, `codeSession` — впереди вкладка Code и прочитан id сессии (`context.claudeCodeSessionID`, название — `context.claudeCodeSessionTitle`);
 - `capture` — какая привязка получилась бы.
 
 Без `--prompt` системных запросов нет. Код выхода 0, если контекст прочитан. Разрешения проверяются у того процесса, из которого запущена команда: из `.app` — у Juggler, через `swift run` — у Терминала.
@@ -219,12 +226,13 @@ Package.swift
 Sources/
   JugglerCore/            библиотека, только Foundation: вся проверяемая логика
     Core/                 CORE: модель, хранилище, переключение, старение, ссылки, заголовки
-      Model/              JugglerTask, TaskBinding (+ ChromeTabRef, ClaudeChatRef,
+      Model/              JugglerTask, TaskBinding (+ ChromeTabRef, ClaudeChatRef, ClaudeCodeSessionRef,
                           ChatGPTThreadRef, AppWindowRef), TasksDocument, FrontmostContext
       Store/              TaskStore: tasks.json, атомарная запись, резервная копия, карантин битого файла
       Switching/          TaskCycler (1→2→3→1, пропуск «сделано»), CurrentTaskResolver
       Staleness/          «не был N мин», уровни старения
-      Links/              ChatLinkParser (claude.ai/chat, claude://, UUID, codex://threads), URLNormalizer
+      Links/              ChatLinkParser (claude.ai/chat, claude.ai/epitaxy, claude://, UUID, local_<uuid>,
+                          codex://threads, распознавание claude.ai/share), URLNormalizer
       Titles/             TitleCleaner (хвосты « - Claude», « - Google Chrome», …)
       Contracts/          ActivationResult, BindingCaptureResult, TransitionCardContent, HotkeyAction
     UI/  Switch/  Bind/   чистая логика задач UI, SWITCH, BIND
@@ -244,6 +252,8 @@ scripts/
 ```
 
 Данные хранятся в `~/Library/Application Support/Juggler/tasks.json`.
+
+Привязка в JSON — `{"kind": "<вид>", "<вид>": {…}}`. Виды: `chromeTab`, `claudeChat`, `claudeCodeSession`, `chatGPTThread`, `appWindow`. Новые виды только добавляются, поэтому файлы прежних версий читаются без потерь. Нераспознанный вид, например из файла более новой версии, превращается в «без привязки», а остальные данные задачи сохраняются.
 
 Если файл не читается при загрузке:
 

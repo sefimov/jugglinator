@@ -7,7 +7,10 @@ private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
 /// Читает контекст переднего окна: приложение (NSWorkspace), заголовок окна (Accessibility),
 /// активную вкладку Chrome (AppleScript, только при выданном разрешении), id чата Claude
-/// (Accessibility + `AXManualAccessibility`). Системных запросов не показывает.
+/// или сессии Claude Code (Accessibility + `AXManualAccessibility`). Системных запросов не показывает.
+///
+/// Название сессии Claude Code читается из её метаданных (`claude-code-sessions`, только чтение)
+/// лишь в интерактивном режиме — при привязке; при переключении хватает id.
 ///
 /// Если впереди сам Juggler (меню в меню-баре), берётся последнее активное другое приложение.
 @MainActor
@@ -20,9 +23,12 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
     private let ownBundleID = Bundle.main.bundleIdentifier
     /// Приложения, у которых уже включён `AXManualAccessibility` (pid).
     private var manualAccessibilityEnabled = Set<pid_t>()
+    /// Папка метаданных сессий Claude Code.
+    private let claudeCodeSessionsRoot: URL?
 
-    init(chrome: ChromeController) {
+    init(chrome: ChromeController, claudeCodeSessionsRoot: URL? = ClaudeCodeSessionMetadata.defaultRoot()) {
         self.chrome = chrome
+        self.claudeCodeSessionsRoot = claudeCodeSessionsRoot
         rememberIfExternal(NSWorkspace.shared.frontmostApplication)
         observer = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
@@ -78,6 +84,17 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
             }
             let read = readClaudeChat(pid: pid, window: window, interactive: interactive)
             context.claudeConversationID = ClaudeChatURLExtractor.conversationID(fromCandidates: read.urls)
+            context.claudeCodeSessionID = ClaudeChatURLExtractor.sessionID(fromCandidates: read.urls)
+            if interactive, let sessionID = context.claudeCodeSessionID {
+                let info = ClaudeCodeSessionMetadata.info(sessionID: sessionID, root: claudeCodeSessionsRoot)
+                if let title = info?.title, !title.isEmpty {
+                    context.claudeCodeSessionTitle = title
+                } else {
+                    diagnostics.notes.append(info == nil
+                        ? "Метаданные сессии Claude Code не найдены: название возьмётся из заголовка окна"
+                        : "У сессии Claude Code нет названия: оно возьмётся из заголовка окна")
+                }
+            }
             diagnostics.claudeCandidateURLs = read.urls
             diagnostics.claudeChat = ClaudeChatURLExtractor.status(
                 candidates: read.urls, treeAvailable: read.foundWebArea, accessibilityTrusted: true)
@@ -132,7 +149,7 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
         for attempt in 0..<attempts {
             guard let window = window ?? AX.focusedWindow(pid: pid) else { break }
             last = AX.webAreaURLs(in: window)
-            if ClaudeChatURLExtractor.conversationID(fromCandidates: last.urls) != nil { break }
+            if ClaudeChatURLExtractor.link(fromCandidates: last.urls) != nil { break }
             if attempt + 1 < attempts { Thread.sleep(forTimeInterval: 0.15) }
         }
         log.debug("Claude AX: веб-область \(last.foundWebArea), адресов \(last.urls.count)")

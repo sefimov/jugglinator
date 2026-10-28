@@ -19,7 +19,8 @@ public enum WindowTitleMatcher {
 /// Привязка по контексту переднего окна (без диалогов).
 public enum BindingCapture {
     /// - Chrome → вкладка (нужен AppleScript; без него — ошибка с пояснением);
-    /// - Claude → чат, если id прочитан, иначе запрос ссылки;
+    /// - Claude → чат, если id прочитан; сессия Claude Code (вкладка Code), если прочитан её id
+    ///   (название — из метаданных сессии, иначе из заголовка окна); иначе запрос ссылки;
     /// - ChatGPT → тред, если id известен, иначе запрос ссылки `codex://threads/<id>`;
     /// - Grok Bot и прочие → окно (bundle id и заголовок, заголовок может быть пустым без Accessibility).
     public static func capture(
@@ -46,6 +47,14 @@ public enum BindingCapture {
             if let id = context.claudeConversationID, ChatLinkParser.isUUID(id) {
                 return .captured(.claudeChat(ClaudeChatRef(conversationID: id, title: storedTitle(context.windowTitle))), suggestedTitle: title)
             }
+            if let id = context.claudeCodeSessionID, ChatLinkParser.isClaudeCodeSessionID(id) {
+                let sessionTitle = storedTitle(context.claudeCodeSessionTitle)
+                let suggested = TitleCleaner.suggestedTaskTitle(
+                    from: sessionTitle.isEmpty ? context.windowTitle : sessionTitle, fallback: BindTexts.defaultSessionTaskTitle)
+                // Заголовок окна вкладки Code — обычно просто «Claude»: хранится очищенным, чтобы не было «Claude Code: Claude».
+                let ref = ClaudeCodeSessionRef(sessionID: id, title: sessionTitle.isEmpty ? TitleCleaner.clean(context.windowTitle ?? "") : sessionTitle)
+                return .captured(.claudeCodeSession(ref), suggestedTitle: suggested)
+            }
             return .needsManualLink(.claudeChat, suggestedTitle: title)
 
         case .chatGPT:
@@ -66,7 +75,9 @@ public enum BindingCapture {
     /// Привязка по ссылке, вставленной пользователем.
     ///
     /// Для ChatGPT голый UUID считается id треда (а не чатом Claude, как в `ChatLinkParser`).
-    /// Явная ссылка другого источника принимается как есть: `claude.ai/chat/…` в окне ChatGPT — это чат Claude.
+    /// Явная ссылка другого источника принимается как есть: `claude.ai/chat/…` в окне ChatGPT — это чат Claude,
+    /// `local_<uuid>` и `claude.ai/epitaxy/local_<uuid>` — сессия Claude Code.
+    /// Ссылка «Поделиться» (`claude.ai/share/…`) распознаётся и отклоняется с пояснением.
     public static func bindingFromManualLink(_ text: String, expected: BindingSource, windowTitle: String?) -> ManualLinkOutcome {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return .invalid(BindTexts.emptyLink) }
@@ -77,9 +88,12 @@ public enum BindingCapture {
         switch ChatLinkParser.parse(trimmed) {
         case .claude(let id)?:
             return .binding(.claudeChat(ClaudeChatRef(conversationID: id, title: title)))
+        case .claudeCodeSession(let id)?:
+            return .binding(.claudeCodeSession(ClaudeCodeSessionRef(sessionID: id, title: title)))
         case .chatGPT(let id)?:
             return .binding(.chatGPTThread(ChatGPTThreadRef(threadID: id, title: title)))
         case nil:
+            if ChatLinkParser.isClaudeShareLink(trimmed) { return .invalid(BindTexts.shareLinkNotSupported) }
             return .invalid(BindTexts.unrecognizedLink(expected))
         }
     }
@@ -126,6 +140,8 @@ public enum BindPlanner {
             return !x.url.isEmpty && URLNormalizer.normalize(x.url) == URLNormalizer.normalize(y.url)
         case (.claudeChat(let x), .claudeChat(let y)):
             return x.conversationID.lowercased() == y.conversationID.lowercased()
+        case (.claudeCodeSession(let x), .claudeCodeSession(let y)):
+            return x.sessionID.lowercased() == y.sessionID.lowercased()
         case (.chatGPTThread(let x), .chatGPTThread(let y)):
             return x.threadID == y.threadID
         case (.appWindow(let x), .appWindow(let y)):

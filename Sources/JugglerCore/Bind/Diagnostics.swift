@@ -35,6 +35,8 @@ public enum AutomationStatus: String, Codable, Equatable, Sendable {
 public enum ClaudeChatReadStatus: String, Codable, Equatable, Sendable {
     /// Id прочитан из адреса веб-области окна (AXURL).
     case read
+    /// Впереди вкладка Code: прочитан id сессии Claude Code (`claude.ai/epitaxy/local_<uuid>`), а не чата.
+    case codeSession
     /// Нет разрешения Accessibility — читать нечего.
     case noAccessibility
     /// Дерево доступно, но адреса чата в нём нет (например, открыт не чат, а проект или настройки).
@@ -79,20 +81,38 @@ public struct ContextDiagnostics: Codable, Equatable, Sendable {
     }
 }
 
-/// Поиск id чата Claude среди адресов, найденных в дереве Accessibility
-/// (AXURL веб-областей, AXDocument окна). Берётся первый адрес, который является чатом.
+/// Поиск id чата Claude или сессии Claude Code среди адресов, найденных в дереве Accessibility
+/// (AXURL веб-областей, AXDocument окна). Берётся первый адрес, который является чатом или сессией.
 public enum ClaudeChatURLExtractor {
-    public static func conversationID(fromCandidates candidates: [String]) -> String? {
-        for raw in candidates {
-            if case .claude(let id)? = ChatLinkParser.parse(raw) { return id }
+    /// Первая ссылка на чат (`claude.ai/chat/<uuid>`) или сессию (`claude.ai/epitaxy/local_<uuid>`).
+    /// Голые id не считаются: в дереве ищутся только адреса.
+    public static func link(fromCandidates candidates: [String]) -> ChatLink? {
+        for raw in candidates where raw.contains("/") {
+            switch ChatLinkParser.parse(raw) {
+            case let link? where link.source == .claudeChat || link.source == .claudeCodeSession: return link
+            default: continue
+            }
         }
+        return nil
+    }
+
+    public static func conversationID(fromCandidates candidates: [String]) -> String? {
+        if case .claude(let id)? = link(fromCandidates: candidates) { return id }
+        return nil
+    }
+
+    public static func sessionID(fromCandidates candidates: [String]) -> String? {
+        if case .claudeCodeSession(let id)? = link(fromCandidates: candidates) { return id }
         return nil
     }
 
     /// Итог чтения для диагностики.
     public static func status(candidates: [String], treeAvailable: Bool, accessibilityTrusted: Bool) -> ClaudeChatReadStatus {
         guard accessibilityTrusted else { return .noAccessibility }
-        if conversationID(fromCandidates: candidates) != nil { return .read }
-        return treeAvailable ? .notFound : .treeUnavailable
+        switch link(fromCandidates: candidates) {
+        case .claude?: return .read
+        case .claudeCodeSession?: return .codeSession
+        default: return treeAvailable ? .notFound : .treeUnavailable
+        }
     }
 }

@@ -12,6 +12,10 @@ public struct FrontmostContext: Codable, Equatable, Sendable {
     public var claudeConversationID: String?
     /// Id треда ChatGPT desktop, если он известен.
     public var chatGPTThreadID: String?
+    /// Id сессии Claude Code (`local_<uuid>`), если впереди вкладка Code и id прочитан.
+    public var claudeCodeSessionID: String?
+    /// Название этой сессии из её метаданных Claude (`claude-code-sessions`), если найдено.
+    public var claudeCodeSessionTitle: String?
 
     public init(
         bundleID: String? = nil,
@@ -19,7 +23,9 @@ public struct FrontmostContext: Codable, Equatable, Sendable {
         windowTitle: String? = nil,
         chromeTab: ChromeTabRef? = nil,
         claudeConversationID: String? = nil,
-        chatGPTThreadID: String? = nil
+        chatGPTThreadID: String? = nil,
+        claudeCodeSessionID: String? = nil,
+        claudeCodeSessionTitle: String? = nil
     ) {
         self.bundleID = bundleID
         self.appName = appName
@@ -27,6 +33,8 @@ public struct FrontmostContext: Codable, Equatable, Sendable {
         self.chromeTab = chromeTab
         self.claudeConversationID = claudeConversationID
         self.chatGPTThreadID = chatGPTThreadID
+        self.claudeCodeSessionID = claudeCodeSessionID
+        self.claudeCodeSessionTitle = claudeCodeSessionTitle
     }
 
     /// Пустой контекст: ничего не известно (нет разрешений, нет окна).

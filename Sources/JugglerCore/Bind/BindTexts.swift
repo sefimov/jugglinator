@@ -8,6 +8,15 @@ public enum BindTexts {
     public static let noFrontmostApp = "Не удалось определить переднее окно. Переключитесь на окно чата и повторите."
     public static let frontmostIsJuggler = "Впереди окно Juggler. Переключитесь на окно чата и повторите."
     public static let emptyLink = "Вставьте ссылку на чат."
+    /// Название новой задачи-сессии, если у сессии нет названия, а заголовок окна — просто «Claude».
+    public static let defaultSessionTaskTitle = "Сессия Claude Code"
+
+    /// Пояснение к вставленной ссылке «Поделиться» (`claude.ai/share/…`): что не так и что подойдёт.
+    public static let shareLinkNotSupported = """
+        Это ссылка «Поделиться» (claude.ai/share/…). Она ведёт на публичную копию беседы, а не на сам чат, \
+        поэтому открыть по ней чат в Claude нельзя. Нужен адрес самого чата: https://claude.ai/chat/<id> — \
+        он виден в адресной строке, если открыть чат на claude.ai в браузере.
+        """
 
     public static func chromeTabUnavailable(_ status: AutomationStatus?) -> String {
         switch status {
@@ -27,7 +36,8 @@ public enum BindTexts {
         case .chatGPTThread:
             return "Ссылка не распознана. Нужна ссылка вида codex://threads/<id>."
         default:
-            return "Ссылка не распознана. Нужна ссылка вида https://claude.ai/chat/<id> или claude://claude.ai/chat/<id>."
+            return "Ссылка не распознана. Нужен адрес чата вида https://claude.ai/chat/<id> или claude://claude.ai/chat/<id>, "
+                + "а для сессии Claude Code — claude://claude.ai/epitaxy/local_<id> или просто local_<id>."
         }
     }
 
@@ -36,6 +46,7 @@ public enum BindTexts {
     public static func manualLinkTitle(_ source: BindingSource) -> String {
         switch source {
         case .chatGPTThread: return "Ссылка на тред ChatGPT"
+        case .claudeCodeSession: return "Ссылка на сессию Claude Code"
         default: return "Ссылка на чат Claude"
         }
     }
@@ -48,7 +59,10 @@ public enum BindTexts {
             let reason = accessibilityTrusted
                 ? "Juggler не смог прочитать адрес чата из окна Claude."
                 : "Без разрешения «Универсальный доступ» Juggler не может прочитать адрес чата из окна Claude."
-            return reason + " Скопируйте ссылку на чат (Поделиться → Копировать ссылку или адрес claude.ai/chat/…) и вставьте её сюда."
+            return reason + " Откройте этот чат на claude.ai в браузере, скопируйте адрес из адресной строки "
+                + "(https://claude.ai/chat/<id>) и вставьте его сюда. Ссылки «Поделиться» (claude.ai/share/…) не подходят. "
+                + "Сессия Claude Code (вкладка Code) привязывается сама, если у Juggler есть разрешение «Универсальный доступ»; "
+                + "вручную — ссылкой claude://claude.ai/epitaxy/local_<id>."
         }
     }
 

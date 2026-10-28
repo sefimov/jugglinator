@@ -19,6 +19,7 @@ enum BindChecks: CheckSuite {
         manualLinks(c)
         planner(c)
         probe(c)
+        sessions(c)
     }
 
     static let uuid = "0f8fad5b-d9cb-469f-a165-70867728950e"

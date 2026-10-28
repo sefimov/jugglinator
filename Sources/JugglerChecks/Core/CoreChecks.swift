@@ -14,6 +14,7 @@ enum CoreChecks: CheckSuite {
         stalenessChecks(c)
         linkChecks(c)
         titleChecks(c)
+        sessionChecks(c)
     }
 }
 
