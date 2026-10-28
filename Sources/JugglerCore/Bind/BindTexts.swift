@@ -146,7 +146,28 @@ public enum BindTexts {
            и привяжите вкладку снова — macOS спросит разрешение.
         """
 
+    public static let terminalDeniedTitle = "Juggler не может управлять Терминалом"
+    public static let terminalDeniedMessage = """
+        macOS запретила Juggler управлять Терминалом (ошибка -1743). Без этого Juggler не знает id окна \
+        и вкладку (tty): окно Терминала привязывается как обычное окно, по заголовку, а при переходе \
+        нужная вкладка не выбирается.
+
+        Как включить:
+        1. Откройте Системные настройки → Конфиденциальность и безопасность → Автоматизация.
+        2. Найдите Juggler и включите переключатель «Терминал».
+        3. Если Juggler в списке нет, выполните в Терминале
+           tccutil reset AppleEvents com.sefimov.juggler
+           и нажмите «Разрешить…» в настройках Juggler (раздел «Разрешения») — macOS спросит разрешение.
+        """
+
     // MARK: Итоги активации
+
+    public static let terminalTabClosed = "Вкладка Терминала закрыта — открыто её окно."
+    public static let terminalFoundByTitle = "Окно Терминала найдено по заголовку."
+    public static let terminalWindowClosed = "Окно Терминала закрыто — открыт Терминал."
+    public static let terminalNoAccess = "Нет разрешения управлять Терминалом — открыт Терминал."
+    public static let terminalNoAccessByTitle = "Нет разрешения управлять Терминалом — окно найдено по заголовку, вкладка не выбрана."
+    public static let terminalLaunched = "Терминал был закрыт — он запущен, окна задачи нет."
 
     public static let chromeReopened = "Вкладка не найдена — адрес открыт заново в Chrome."
     public static let chromeReopenedNoAccess = "Нет разрешения управлять Chrome — адрес открыт заново."

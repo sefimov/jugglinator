@@ -17,6 +17,8 @@ import Foundation
 /// - чат Claude — тот же UUID (в Claude desktop или на claude.ai/chat/<uuid> в Chrome);
 /// - сессия Claude Code — тот же `local_<uuid>`;
 /// - тред ChatGPT — тот же id треда или, в окне ChatGPT, то же название треда (очищенный заголовок окна);
+/// - окно Терминала — та же вкладка (tty) или то же окно (id окна), если tty одной из сторон не известен;
+///   по заголовку без размера и оболочки — только когда AppleScript недоступен и в контексте нет ни tty, ни id;
 /// - окно приложения — тот же bundle id и тот же непустой заголовок окна, и только если
 ///   в переднем окне нет более точного id (вкладки, чата, сессии, треда): привязка к окну —
 ///   запасной путь, когда id неизвестен.
@@ -79,19 +81,32 @@ public enum ExactTaskMatcher {
             guard !bound.isEmpty, bound.caseInsensitiveCompare(current) == .orderedSame else { return nil }
             return .title
 
+        case .terminalWindow(let ref):
+            switch TerminalWindowMatch.evaluate(ref, context: context) {
+            case .tab?: return .id
+            case .window?: return .url
+            case .title?: return .title
+            case nil: return nil
+            }
+
         case .appWindow(let ref):
-            guard KnownBundleIDs.same(context.bundleID, ref.bundleID), !hasSpecificIdentity(context),
-                  sameWindowTitle(ref.windowTitle, context.windowTitle) else { return nil }
+            guard KnownBundleIDs.same(context.bundleID, ref.bundleID), !hasSpecificIdentity(context) else { return nil }
+            if KnownBundleIDs.same(ref.bundleID, KnownBundleIDs.terminal) {
+                // Терминал без AppleScript: размер и оболочка в заголовке меняются — сравнение без них.
+                return TerminalTitle.same(ref.windowTitle, context.windowTitle) ? .title : nil
+            }
+            guard sameWindowTitle(ref.windowTitle, context.windowTitle) else { return nil }
             return .title
         }
     }
 
-    /// В переднем окне есть id вкладки, чата, сессии или треда.
+    /// В переднем окне есть id вкладки, чата, сессии, треда или окна Терминала.
     static func hasSpecificIdentity(_ context: FrontmostContext) -> Bool {
         context.chromeTab != nil
             || !(context.claudeConversationID ?? "").isEmpty
             || !(context.claudeCodeSessionID ?? "").isEmpty
             || !(context.chatGPTThreadID ?? "").isEmpty
+            || (context.terminalWindow?.hasIdentity ?? false)
     }
 
     /// Тот же непустой заголовок: дословно (без краевых пробелов) или очищенный без учёта регистра.

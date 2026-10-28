@@ -1,6 +1,6 @@
 import Foundation
 
-/// Состояние управления приложением через Apple Events (AppleScript), сейчас — Chrome.
+/// Состояние управления приложением через Apple Events (AppleScript): Chrome и Терминал.
 public enum AutomationStatus: String, Codable, Equatable, Sendable {
     /// Разрешено, скрипт выполнился.
     case granted
@@ -55,6 +55,9 @@ public struct ContextDiagnostics: Codable, Equatable, Sendable {
     public var windowTitleRead: Bool
     public var chromeAutomation: AutomationStatus?
     public var chromeErrorCode: Int?
+    /// Управление Терминалом (окно и tty вкладки читаются только с ним).
+    public var terminalAutomation: AutomationStatus?
+    public var terminalErrorCode: Int?
     public var claudeChat: ClaudeChatReadStatus?
     /// Адреса, найденные в дереве Accessibility Claude (для отладки).
     public var claudeCandidateURLs: [String]
@@ -68,6 +71,8 @@ public struct ContextDiagnostics: Codable, Equatable, Sendable {
         windowTitleRead: Bool = false,
         chromeAutomation: AutomationStatus? = nil,
         chromeErrorCode: Int? = nil,
+        terminalAutomation: AutomationStatus? = nil,
+        terminalErrorCode: Int? = nil,
         claudeChat: ClaudeChatReadStatus? = nil,
         claudeCandidateURLs: [String] = [],
         chatGPTThread: ChatGPTThreadLookup? = nil,
@@ -78,6 +83,8 @@ public struct ContextDiagnostics: Codable, Equatable, Sendable {
         self.windowTitleRead = windowTitleRead
         self.chromeAutomation = chromeAutomation
         self.chromeErrorCode = chromeErrorCode
+        self.terminalAutomation = terminalAutomation
+        self.terminalErrorCode = terminalErrorCode
         self.claudeChat = claudeChat
         self.claudeCandidateURLs = claudeCandidateURLs
         self.chatGPTThread = chatGPTThread

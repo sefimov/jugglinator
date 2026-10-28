@@ -46,7 +46,7 @@ sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD_NUMBER/" \
 # Русская локализация: системные строки (меню, заголовок окна настроек) — на русском.
 cat > "$APP/Contents/Resources/ru.lproj/InfoPlist.strings" <<'STRINGS'
 "CFBundleDisplayName" = "Juggler";
-"NSAppleEventsUsageDescription" = "Juggler читает адрес и заголовок активной вкладки Google Chrome, чтобы привязать её к задаче, и переключает на эту вкладку при переходе между задачами.";
+"NSAppleEventsUsageDescription" = "Juggler читает адрес и заголовок активной вкладки Google Chrome, а в Терминале — окно и вкладку, чтобы привязать их к задаче, и переключает на них при переходе между задачами.";
 STRINGS
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 

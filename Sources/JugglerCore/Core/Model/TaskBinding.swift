@@ -7,6 +7,8 @@ public enum BindingSource: String, Codable, CaseIterable, Sendable {
     /// Сессия Claude Code на вкладке Code в Claude desktop.
     case claudeCodeSession
     case chatGPTThread
+    /// Окно и вкладка Terminal.app: id окна и tty вкладки из AppleScript.
+    case terminalWindow
     case appWindow
 
     /// Короткое название источника для интерфейса.
@@ -16,6 +18,7 @@ public enum BindingSource: String, Codable, CaseIterable, Sendable {
         case .claudeChat: return "Claude"
         case .claudeCodeSession: return "Claude Code"
         case .chatGPTThread: return "ChatGPT"
+        case .terminalWindow: return "Терминал"
         case .appWindow: return "Окно приложения"
         }
     }
@@ -27,6 +30,7 @@ public enum BindingSource: String, Codable, CaseIterable, Sendable {
         case .claudeChat: return "sparkles"
         case .claudeCodeSession: return "terminal"
         case .chatGPTThread: return "bubble.left.and.bubble.right"
+        case .terminalWindow: return "apple.terminal"
         case .appWindow: return "macwindow"
         }
     }
@@ -107,6 +111,45 @@ public struct ChatGPTThreadRef: Codable, Equatable, Hashable, Sendable {
     public var appURL: URL { ChatLinkParser.chatGPTAppURL(threadID: threadID) }
 }
 
+/// Окно и вкладка Terminal.app (`com.apple.Terminal`).
+///
+/// `windowID` — `id of window` из AppleScript, `tty` — `tty of tab` (например, `/dev/ttys003`).
+/// Оба живут до закрытия окна/вкладки или перезапуска Терминала, поэтому хранится и заголовок окна
+/// на момент привязки — запасной путь, когда ни tty, ни id уже не найти.
+public struct TerminalWindowRef: Equatable, Hashable, Sendable {
+    public var windowID: Int?
+    public var tty: String
+    public var title: String
+
+    public init(windowID: Int? = nil, tty: String = "", title: String = "") {
+        self.windowID = windowID
+        self.tty = tty.trimmingCharacters(in: .whitespacesAndNewlines)
+        self.title = title
+    }
+
+    /// Есть ли хоть один постоянный признак (tty или id окна).
+    public var hasIdentity: Bool { windowID != nil || !tty.isEmpty }
+}
+
+extension TerminalWindowRef: Codable {
+    private enum CodingKeys: String, CodingKey { case windowID, tty, title }
+
+    /// Все поля необязательны: недостающее читается пустым, а не ломает задачу.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(windowID: (try? c.decodeIfPresent(Int.self, forKey: .windowID)) ?? nil,
+                  tty: (try? c.decodeIfPresent(String.self, forKey: .tty)) ?? "",
+                  title: (try? c.decodeIfPresent(String.self, forKey: .title)) ?? "")
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encodeIfPresent(windowID, forKey: .windowID)
+        try c.encode(tty, forKey: .tty)
+        try c.encode(title, forKey: .title)
+    }
+}
+
 /// Окно любого приложения (Grok Bot и прочие): bundle id и заголовок окна.
 public struct AppWindowRef: Codable, Equatable, Hashable, Sendable {
     public var bundleID: String
@@ -130,6 +173,7 @@ public enum TaskBinding: Equatable, Hashable, Sendable {
     case claudeChat(ClaudeChatRef)
     case claudeCodeSession(ClaudeCodeSessionRef)
     case chatGPTThread(ChatGPTThreadRef)
+    case terminalWindow(TerminalWindowRef)
     case appWindow(AppWindowRef)
 
     public var source: BindingSource {
@@ -138,6 +182,7 @@ public enum TaskBinding: Equatable, Hashable, Sendable {
         case .claudeChat: return .claudeChat
         case .claudeCodeSession: return .claudeCodeSession
         case .chatGPTThread: return .chatGPTThread
+        case .terminalWindow: return .terminalWindow
         case .appWindow: return .appWindow
         }
     }
@@ -149,6 +194,7 @@ public enum TaskBinding: Equatable, Hashable, Sendable {
         case .claudeChat(let ref): return ref.title
         case .claudeCodeSession(let ref): return ref.title
         case .chatGPTThread(let ref): return ref.title
+        case .terminalWindow(let ref): return ref.title
         case .appWindow(let ref): return ref.windowTitle
         }
     }
@@ -156,7 +202,7 @@ public enum TaskBinding: Equatable, Hashable, Sendable {
 
 extension TaskBinding: Codable {
     private enum CodingKeys: String, CodingKey {
-        case kind, chromeTab, claudeChat, claudeCodeSession, chatGPTThread, appWindow
+        case kind, chromeTab, claudeChat, claudeCodeSession, chatGPTThread, terminalWindow, appWindow
     }
 
     public init(from decoder: Decoder) throws {
@@ -167,6 +213,7 @@ extension TaskBinding: Codable {
         case .claudeChat: self = .claudeChat(try c.decode(ClaudeChatRef.self, forKey: .claudeChat))
         case .claudeCodeSession: self = .claudeCodeSession(try c.decode(ClaudeCodeSessionRef.self, forKey: .claudeCodeSession))
         case .chatGPTThread: self = .chatGPTThread(try c.decode(ChatGPTThreadRef.self, forKey: .chatGPTThread))
+        case .terminalWindow: self = .terminalWindow(try c.decode(TerminalWindowRef.self, forKey: .terminalWindow))
         case .appWindow: self = .appWindow(try c.decode(AppWindowRef.self, forKey: .appWindow))
         case nil:
             throw DecodingError.dataCorruptedError(
@@ -182,6 +229,7 @@ extension TaskBinding: Codable {
         case .claudeChat(let ref): try c.encode(ref, forKey: .claudeChat)
         case .claudeCodeSession(let ref): try c.encode(ref, forKey: .claudeCodeSession)
         case .chatGPTThread(let ref): try c.encode(ref, forKey: .chatGPTThread)
+        case .terminalWindow(let ref): try c.encode(ref, forKey: .terminalWindow)
         case .appWindow(let ref): try c.encode(ref, forKey: .appWindow)
         }
     }
@@ -196,6 +244,7 @@ public enum KnownBundleIDs {
     /// Все bundle id ChatGPT desktop: текущий и старый `com.openai.chat`.
     public static let chatGPTAll = ["com.openai.codex", "com.openai.chat"]
     public static let grokBot = "com.anysphere.sand"
+    public static let terminal = "com.apple.Terminal"
 
     /// Это ChatGPT desktop (любой из известных bundle id)?
     public static func isChatGPT(_ bundleID: String?) -> Bool {

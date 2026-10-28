@@ -9,10 +9,12 @@ private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 @MainActor
 final class LiveBindingActivator: BindingActivating {
     private let chrome: ChromeController
+    private let terminal: TerminalController
     private let permissions: LivePermissions
 
-    init(chrome: ChromeController, permissions: LivePermissions) {
+    init(chrome: ChromeController, terminal: TerminalController, permissions: LivePermissions) {
         self.chrome = chrome
+        self.terminal = terminal
         self.permissions = permissions
     }
 
@@ -24,6 +26,7 @@ final class LiveBindingActivator: BindingActivating {
         // Локальная сессия Claude Code живёт только в Claude desktop: в браузере её не открыть.
         case .claudeCodeSession(let ref): result = openAppURL(ref.appURL, name: "Claude", webFallback: nil)
         case .chatGPTThread(let ref): result = openAppURL(ref.appURL, name: "ChatGPT", webFallback: nil)
+        case .terminalWindow(let ref): result = activateTerminal(ref)
         case .appWindow(let ref): result = activateWindow(ref)
         }
         log.info("Активация \(binding.source.rawValue, privacy: .public): \(String(describing: result), privacy: .public)")
@@ -80,6 +83,51 @@ final class LiveBindingActivator: BindingActivating {
             : .failed(BindTexts.appNotInstalled("Google Chrome"))
     }
 
+    // MARK: - Терминал
+
+    /// Вкладка по tty, затем окно по id, затем окно по заголовку без шума; иначе — просто Терминал.
+    /// Разрешение только проверяется (без запроса): переключение никогда не показывает системный диалог.
+    private func activateTerminal(_ ref: TerminalWindowRef) -> ActivationResult {
+        guard let app = terminal.runningApp else {
+            return launch(bundleID: terminal.bundleID, name: "Терминал") ? .fallback(BindTexts.terminalLaunched)
+                : .failed(BindTexts.appNotInstalled("Терминал"))
+        }
+        guard terminal.automationStatus().status == .granted else {
+            return activateTerminalWithoutAccess(ref, app: app)
+        }
+        let listing = terminal.tabListing()
+        guard listing.result.output != nil else {
+            log.info("Терминал: список вкладок не прочитан (\(listing.result.errorCode))")
+            return activateTerminalWithoutAccess(ref, app: app)
+        }
+        if let match = TerminalTabMatcher.find(ref, in: listing.entries) {
+            if terminal.focus(match).output != nil {
+                switch match.kind {
+                case .byTTY: return .activated
+                case .byWindowID: return ref.tty.isEmpty ? .activated : .fallback(BindTexts.terminalTabClosed)
+                case .byTitle: return .fallback(BindTexts.terminalFoundByTitle)
+                }
+            }
+        }
+        bringToFront(app, bundleID: terminal.bundleID)
+        return .fallback(BindTexts.terminalWindowClosed)
+    }
+
+    /// Без AppleScript: окно по заголовку через Accessibility (вкладку так не выбрать) и Терминал вперёд.
+    private func activateTerminalWithoutAccess(_ ref: TerminalWindowRef, app: NSRunningApplication) -> ActivationResult {
+        var raised = false
+        if AX.isTrusted, !ref.title.trimmingCharacters(in: .whitespaces).isEmpty {
+            let pid = app.processIdentifier
+            let windows = AX.windows(pid: pid)
+            let titles = windows.map { AX.title(of: $0) ?? "" }
+            if let index = WindowTitleMatcher.bestIndex(of: ref.title, in: titles, bundleID: terminal.bundleID) {
+                raised = AX.raise(windows[index], pid: pid)
+            }
+        }
+        bringToFront(app, bundleID: terminal.bundleID)
+        return .fallback(raised ? BindTexts.terminalNoAccessByTitle : BindTexts.terminalNoAccess)
+    }
+
     // MARK: - Claude, ChatGPT
 
     private func openAppURL(_ url: URL, name: String, webFallback: URL?) -> ActivationResult {
@@ -108,7 +156,7 @@ final class LiveBindingActivator: BindingActivating {
         if wantsWindow, AX.isTrusted {
             let windows = AX.windows(pid: pid)
             let titles = windows.map { AX.title(of: $0) ?? "" }
-            if let index = WindowTitleMatcher.bestIndex(of: ref.windowTitle, in: titles) {
+            if let index = WindowTitleMatcher.bestIndex(of: ref.windowTitle, in: titles, bundleID: ref.bundleID) {
                 raised = AX.raise(windows[index], pid: pid)
             }
         }

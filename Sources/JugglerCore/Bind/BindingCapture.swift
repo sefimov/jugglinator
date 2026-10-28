@@ -4,11 +4,17 @@ import Foundation
 public enum WindowTitleMatcher {
     /// Индекс окна с тем же заголовком: сначала точное совпадение, затем очищенный
     /// (`TitleCleaner`) заголовок без учёта регистра. Пустой искомый заголовок — `nil`.
-    public static func bestIndex(of target: String, in titles: [String]) -> Int? {
+    ///
+    /// Для Терминала (`bundleID`) после точного совпадения сравниваются заголовки без размера,
+    /// оболочки и прочего шума (`TerminalTitle`).
+    public static func bestIndex(of target: String, in titles: [String], bundleID: String? = nil) -> Int? {
         let raw = target.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty else { return nil }
         if let i = titles.firstIndex(where: { $0.trimmingCharacters(in: .whitespacesAndNewlines) == raw }) {
             return i
+        }
+        if KnownBundleIDs.same(bundleID, KnownBundleIDs.terminal) {
+            return titles.firstIndex { TerminalTitle.same(raw, $0) }
         }
         let cleaned = TitleCleaner.clean(raw)
         guard !cleaned.isEmpty else { return nil }
@@ -23,6 +29,8 @@ public enum BindingCapture {
     ///   (название — из метаданных сессии, иначе из заголовка окна); иначе запрос ссылки;
     /// - ChatGPT → тред, если id известен или тред однозначно найден по заголовку окна
     ///   в `~/.codex/session_index.jsonl` (`chatGPTLookup`; название — по треду), иначе запрос ссылки `codex://threads/<id>`;
+    /// - Терминал → окно и вкладка (id окна и tty из AppleScript); без разрешения — обычное окно;
+    ///   название — из заголовка без размера, оболочки и прочего шума (`TerminalTitle`);
     /// - Grok Bot и прочие → окно (bundle id и заголовок, заголовок может быть пустым без Accessibility).
     public static func capture(
         context: FrontmostContext,
@@ -70,6 +78,14 @@ public enum BindingCapture {
                 return .captured(.chatGPTThread(ref), suggestedTitle: TitleCleaner.suggestedTaskTitle(from: thread.name, fallback: title))
             }
             return .needsManualLink(.chatGPTThread, suggestedTitle: title)
+
+        case .terminal:
+            if let ref = TerminalWindowMatch.ref(from: context) {
+                return .captured(.terminalWindow(ref), suggestedTitle: TerminalTitle.taskTitle(from: ref.title))
+            }
+            let windowTitle = context.windowTitle ?? ""
+            return .captured(.appWindow(AppWindowRef(bundleID: bundleID, windowTitle: windowTitle, appName: context.appName ?? "")),
+                             suggestedTitle: TerminalTitle.taskTitle(from: windowTitle))
 
         case .other:
             let appName = context.appName ?? ""
@@ -158,9 +174,15 @@ public enum BindPlanner {
             return x.sessionID.lowercased() == y.sessionID.lowercased()
         case (.chatGPTThread(let x), .chatGPTThread(let y)):
             return x.threadID == y.threadID
+        case (.terminalWindow(let x), .terminalWindow(let y)):
+            if !x.tty.isEmpty, !y.tty.isEmpty { return x.tty == y.tty }
+            if let i = x.windowID, let j = y.windowID { return i == j }
+            return false
         case (.appWindow(let x), .appWindow(let y)):
             guard BindApps.same(x.bundleID, y.bundleID) else { return false }
-            let tx = TitleCleaner.clean(x.windowTitle), ty = TitleCleaner.clean(y.windowTitle)
+            let terminal = BindApps.same(x.bundleID, BindApps.terminal)
+            let tx = terminal ? TerminalTitle.clean(x.windowTitle) : TitleCleaner.clean(x.windowTitle)
+            let ty = terminal ? TerminalTitle.clean(y.windowTitle) : TitleCleaner.clean(y.windowTitle)
             return tx.caseInsensitiveCompare(ty) == .orderedSame
         default:
             return false

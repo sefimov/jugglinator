@@ -9,7 +9,9 @@ import os
 // точкой входа (App/JugglerApp.swift) и самопроверкой (App/SelfTest.swift).
 //
 // Состав:
-//   ChromeController          — AppleScript для Chrome, проверка Automation без запроса;
+//   AppleScriptController     — проверка Automation без запроса и выполнение AppleScript;
+//   ChromeController          — AppleScript для Chrome;
+//   TerminalController        — AppleScript для Терминала: окно, tty вкладки, переход;
 //   LiveFrontmostContextProvider — контекст переднего окна (NSWorkspace, AX, AppleScript);
 //   LiveBindingCapturer       — привязка по контексту (логика в JugglerCore/Bind);
 //   LiveBindingActivator      — открытие вкладки, чата, окна; запуск приложения;
@@ -20,12 +22,13 @@ import os
 enum BindModule {
     static func makeServices() -> BindServices {
         let chrome = ChromeController()
-        let provider = LiveFrontmostContextProvider(chrome: chrome)
-        let permissions = LivePermissions(chrome: chrome)
+        let terminal = TerminalController()
+        let provider = LiveFrontmostContextProvider(chrome: chrome, terminal: terminal)
+        let permissions = LivePermissions(chrome: chrome, terminal: terminal)
         return BindServices(
             contextProvider: provider,
             capturer: LiveBindingCapturer(provider: provider),
-            activator: LiveBindingActivator(chrome: chrome, permissions: permissions),
+            activator: LiveBindingActivator(chrome: chrome, terminal: terminal, permissions: permissions),
             permissions: permissions)
     }
 
@@ -44,13 +47,15 @@ enum BindModule {
 
     /// `Juggler --probe-frontmost [--delay <сек>] [--app <bundle id>] [--prompt] [--window-title <заголовок>]`:
     /// печатает JSON с контекстом, диагностикой и результатом привязки. Без `--prompt`
-    /// системных запросов не показывает. Для ChatGPT в `diagnostics.chatGPTThread` — поиск треда
+    /// системных запросов не показывает (с `--prompt` — запрос управления Chrome или Терминалом, если впереди он).
+    /// Для Терминала в `context.terminalWindow` — id окна и tty вкладки. Для ChatGPT в `diagnostics.chatGPTThread` — поиск треда
     /// по заголовку окна в `session_index.jsonl`; `--window-title` подставляет заголовок (проверка без Accessibility).
     /// Код выхода 0, если контекст прочитан.
     static func probeFrontmost(arguments: [String]) -> Int32 {
         let options = ProbeOptions.parse(arguments)
         let chrome = ChromeController()
-        let provider = LiveFrontmostContextProvider(chrome: chrome)
+        let terminal = TerminalController()
+        let provider = LiveFrontmostContextProvider(chrome: chrome, terminal: terminal)
         if options.delay > 0 {
             // Крутим цикл событий, чтобы NSWorkspace видел смену переднего приложения.
             RunLoop.main.run(until: Date().addingTimeInterval(options.delay))
@@ -58,6 +63,12 @@ enum BindModule {
         if options.allowPrompts, chrome.automationStatus().status == .requiresConsent {
             let code = ChromeController.determinePermission(bundleID: chrome.bundleID, ask: true)
             FileHandle.standardError.write("Automation Chrome: \(AutomationStatus.classify(code: code).rawValue) (\(code))\n".data(using: .utf8)!)
+        }
+        let probesTerminal = BindApps.same(options.bundleID, BindApps.terminal)
+            || (options.bundleID == nil && BindApps.same(NSWorkspace.shared.frontmostApplication?.bundleIdentifier, BindApps.terminal))
+        if options.allowPrompts, probesTerminal, terminal.automationStatus().status == .requiresConsent {
+            let code = TerminalController.determinePermission(bundleID: terminal.bundleID, ask: true)
+            FileHandle.standardError.write("Automation Терминала: \(AutomationStatus.classify(code: code).rawValue) (\(code))\n".data(using: .utf8)!)
         }
         let context = provider.context(interactive: true, bundleID: options.bundleID, windowTitleOverride: options.windowTitle)
         let capture = LiveBindingCapturer(provider: provider).captureBinding(from: context)
@@ -84,6 +95,23 @@ enum BindModule {
             let error = chrome.compileScripts()
             results.append(SelfTestResult("BIND: AppleScript для Chrome компилируется", passed: error == nil, detail: error ?? ""))
         }
+
+        let terminal = TerminalController()
+        if terminal.appURL == nil {
+            results.append(SelfTestResult("BIND: AppleScript для Терминала", passed: true, detail: "Терминал не установлен — пропущено"))
+        } else {
+            let error = terminal.compileScripts()
+            results.append(SelfTestResult("BIND: AppleScript для Терминала компилируется", passed: error == nil, detail: error ?? ""))
+        }
+        let front = TerminalScripts.parseFrontWindow("7\u{1F}/dev/ttys003\u{1F}juggler — -zsh — 214×24")
+        results.append(SelfTestResult("BIND: разбор ответа Терминала",
+                                      passed: front?.windowID == 7 && front?.tty == "/dev/ttys003"
+                                          && TerminalTitle.taskTitle(from: front?.title) == "juggler"))
+
+        let missingSymbols = BindingSource.allCases.filter { NSImage(systemSymbolName: $0.symbolName, accessibilityDescription: nil) == nil }
+        results.append(SelfTestResult("BIND: значки источников есть в SF Symbols", passed: missingSymbols.isEmpty,
+                                      detail: missingSymbols.isEmpty ? "\(BindingSource.allCases.count) источников"
+                                          : missingSymbols.map(\.symbolName).joined(separator: ", ")))
 
         let parsed = ChromeScripts.parseActiveTab("1\u{1F}2\u{1F}https://claude.ai/chat/x\u{1F}T")
         results.append(SelfTestResult("BIND: разбор ответа Chrome", passed: parsed?.tabID == 2 && parsed?.windowID == 1))

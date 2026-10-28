@@ -8,6 +8,8 @@ public enum BindAppKind: String, Codable, Equatable, Sendable {
     case chrome
     case claude
     case chatGPT
+    /// Terminal.app: окно и вкладка (id окна, tty).
+    case terminal
     /// Grok Bot и любое другое приложение: привязка к окну.
     case other
 }
@@ -21,6 +23,7 @@ public enum BindApps {
     public static let claude = KnownBundleIDs.claude
     public static let chatGPTBundleIDs = KnownBundleIDs.chatGPTAll
     public static let grokBot = KnownBundleIDs.grokBot
+    public static let terminal = KnownBundleIDs.terminal
     public static let juggler = "com.sefimov.juggler"
 
     public static func kind(of bundleID: String?) -> BindAppKind {
@@ -28,6 +31,7 @@ public enum BindApps {
         if same(bundleID, chrome) { return .chrome }
         if same(bundleID, claude) { return .claude }
         if chatGPTBundleIDs.contains(where: { same(bundleID, $0) }) { return .chatGPT }
+        if same(bundleID, terminal) { return .terminal }
         return .other
     }
 

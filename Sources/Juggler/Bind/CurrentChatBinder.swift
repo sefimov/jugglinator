@@ -143,8 +143,27 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
                 break
             }
         }
+        if kind == .terminal, context.terminalWindow == nil, diagnostics.terminalAutomation == .requiresConsent {
+            // Системный запрос управления Терминалом; после ответа привязываем заново:
+            // разрешили — окно и вкладку (id окна, tty), нет — как обычное окно, по заголовку.
+            permissions.requestTerminalAutomation { [weak self] status in
+                guard let self else { return }
+                var retry = context
+                var retryDiagnostics = diagnostics
+                if status == .granted {
+                    retry = self.provider.context(interactive: true, bundleID: BindApps.terminal)
+                    retryDiagnostics = self.provider.lastDiagnostics
+                }
+                // Не спрашивать по кругу: итог запроса уже известен.
+                if retryDiagnostics.terminalAutomation == .requiresConsent { retryDiagnostics.terminalAutomation = status }
+                self.proceed(context: retry, diagnostics: retryDiagnostics)
+            }
+            return
+        }
         // ChatGPT тоже: без Accessibility не прочитать заголовок окна, а по нему ищется тред.
-        if (kind == .claude || kind == .chatGPT || kind == .other), !diagnostics.accessibilityTrusted, context.bundleID != nil {
+        // Терминал без AppleScript привязывается по заголовку окна — тоже нужен Accessibility.
+        let needsTitle = kind == .claude || kind == .chatGPT || kind == .other || (kind == .terminal && context.terminalWindow == nil)
+        if needsTitle, !diagnostics.accessibilityTrusted, context.bundleID != nil {
             shownDialog = true
             if permissions.offerAccessibilityOnce() { return }
         }

@@ -6,7 +6,8 @@ import os
 private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
 /// Читает контекст переднего окна: приложение (NSWorkspace), заголовок окна (Accessibility),
-/// активную вкладку Chrome (AppleScript, только при выданном разрешении), id чата Claude
+/// активную вкладку Chrome и переднее окно Терминала с tty вкладки (AppleScript, только при выданном
+/// разрешении), id чата Claude
 /// или сессии Claude Code (Accessibility + `AXManualAccessibility`). Системных запросов не показывает.
 ///
 /// Название сессии Claude Code читается из её метаданных (`claude-code-sessions`, только чтение)
@@ -19,6 +20,7 @@ private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 @MainActor
 final class LiveFrontmostContextProvider: FrontmostContextProviding {
     let chrome: ChromeController
+    let terminal: TerminalController
     private(set) var lastDiagnostics = ContextDiagnostics()
     private var rememberedApp: AppIdentity?
     private var observer: NSObjectProtocol?
@@ -32,9 +34,11 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
     private let chatGPTIndexURL: URL?
 
     init(chrome: ChromeController,
+         terminal: TerminalController,
          claudeCodeSessionsRoot: URL? = ClaudeCodeSessionMetadata.defaultRoot(),
          chatGPTIndexURL: URL? = ChatGPTSessionIndex.defaultURL()) {
         self.chrome = chrome
+        self.terminal = terminal
         self.claudeCodeSessionsRoot = claudeCodeSessionsRoot
         self.chatGPTIndexURL = chatGPTIndexURL
         rememberIfExternal(NSWorkspace.shared.frontmostApplication)
@@ -122,6 +126,18 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
             diagnostics.chatGPTThread = lookup
             if let note = Self.note(for: lookup) { diagnostics.notes.append(note) }
             log.debug("ChatGPT: поиск треда \(lookup.status.rawValue, privacy: .public), совпадений \(lookup.matches.count)")
+
+        case .terminal:
+            let front = terminal.frontWindow()
+            context.terminalWindow = front.window
+            diagnostics.terminalAutomation = front.status
+            diagnostics.terminalErrorCode = front.code == 0 ? nil : front.code
+            if terminal.lastCheckTimedOut {
+                diagnostics.notes.append("Проверка разрешения Терминала не ответила: на экране ждёт системный запрос")
+            } else if front.status == .denied || front.status == .requiresConsent {
+                diagnostics.notes.append("Нет разрешения управлять Терминалом: окно привяжется как обычное, по заголовку")
+            }
+            if context.windowTitle == nil, let title = front.window?.title, !title.isEmpty { context.windowTitle = title }
 
         case .other:
             break

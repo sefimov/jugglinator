@@ -16,6 +16,8 @@ public struct FrontmostContext: Codable, Equatable, Sendable {
     public var claudeCodeSessionID: String?
     /// Название этой сессии из её метаданных Claude (`claude-code-sessions`), если найдено.
     public var claudeCodeSessionTitle: String?
+    /// Переднее окно и выбранная вкладка Терминала (id окна, tty), если AppleScript разрешён.
+    public var terminalWindow: TerminalWindowRef?
 
     public init(
         bundleID: String? = nil,
@@ -25,7 +27,8 @@ public struct FrontmostContext: Codable, Equatable, Sendable {
         claudeConversationID: String? = nil,
         chatGPTThreadID: String? = nil,
         claudeCodeSessionID: String? = nil,
-        claudeCodeSessionTitle: String? = nil
+        claudeCodeSessionTitle: String? = nil,
+        terminalWindow: TerminalWindowRef? = nil
     ) {
         self.bundleID = bundleID
         self.appName = appName
@@ -35,6 +38,7 @@ public struct FrontmostContext: Codable, Equatable, Sendable {
         self.chatGPTThreadID = chatGPTThreadID
         self.claudeCodeSessionID = claudeCodeSessionID
         self.claudeCodeSessionTitle = claudeCodeSessionTitle
+        self.terminalWindow = terminalWindow
     }
 
     /// Пустой контекст: ничего не известно (нет разрешений, нет окна).

@@ -6,25 +6,32 @@ import os
 
 private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
-/// Разрешения Accessibility и Automation (Chrome) и понятные пользователю запросы.
+/// Разрешения Accessibility и Automation (Chrome, Терминал) и понятные пользователю запросы.
 ///
 /// Ничего не запрашивается само по себе: только из действий пользователя
-/// (привязка, переключение на вкладку Chrome, кнопка в интерфейсе).
+/// (привязка, переключение на вкладку Chrome, кнопка в интерфейсе). Управление Терминалом
+/// запрашивается только при привязке окна Терминала и кнопкой в настройках — не при переключении.
 @MainActor
 final class LivePermissions: PermissionsProviding {
     private let chrome: ChromeController
+    let terminal: TerminalController
     private var chromeDeniedShown = false
     private var accessibilityAsked = false
     private var chromeRequestInFlight = false
+    private var terminalRequestInFlight = false
 
-    init(chrome: ChromeController) {
+    init(chrome: ChromeController, terminal: TerminalController) {
         self.chrome = chrome
+        self.terminal = terminal
     }
 
     var isAccessibilityTrusted: Bool { AX.isTrusted }
 
     /// Статус управления Chrome без запроса.
     var chromeAutomationStatus: AutomationStatus { chrome.automationStatus().status }
+
+    /// Статус управления Терминалом без запроса.
+    var terminalAutomationStatus: AutomationStatus { terminal.automationStatus().status }
 
     /// Объяснение и переход в настройки. Системный запрос `AXIsProcessTrustedWithOptions`
     /// добавляет Juggler в список «Универсальный доступ».
@@ -70,6 +77,31 @@ final class LivePermissions: PermissionsProviding {
             log.info("Запрос Automation Chrome: \(status.rawValue, privacy: .public) (\(code))")
             if status == .denied { self.reportChromeDenied(force: true) }
             completion?(status)
+        }
+    }
+
+    /// Системный запрос Automation для Терминала (в фоне). Инструкцию при отказе не показывает:
+    /// без разрешения окно Терминала просто привязывается как обычное окно.
+    func requestTerminalAutomation(completion: (@MainActor (AutomationStatus) -> Void)? = nil) {
+        guard !terminalRequestInFlight else { return }
+        terminalRequestInFlight = true
+        terminal.requestAutomation { [weak self] status, code in
+            guard let self else { return }
+            self.terminalRequestInFlight = false
+            log.info("Запрос Automation Терминала: \(status.rawValue, privacy: .public) (\(code))")
+            completion?(status)
+        }
+    }
+
+    static func showTerminalInstructions() {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = BindTexts.terminalDeniedTitle
+        alert.informativeText = BindTexts.terminalDeniedMessage
+        alert.addButton(withTitle: BindTexts.openSettingsButton)
+        alert.addButton(withTitle: BindTexts.laterButton)
+        if Dialogs.run(alert) == .alertFirstButtonReturn, let url = URL(string: BindTexts.automationSettingsURL) {
+            NSWorkspace.shared.open(url)
         }
     }
 

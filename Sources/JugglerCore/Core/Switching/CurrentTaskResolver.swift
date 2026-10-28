@@ -16,7 +16,8 @@ public enum CurrentTaskResolver {
         case sameTitle = 50
         /// Тот же адрес вкладки (без учёта фрагмента, регистра хоста и хвостового «/»).
         case sameURL = 80
-        /// Тот же id: вкладки Chrome, чата Claude, сессии Claude Code или треда ChatGPT.
+        /// Тот же id: вкладки Chrome, чата Claude, сессии Claude Code, треда ChatGPT или tty вкладки Терминала.
+        /// Для Терминала «то же окно» (id окна, tty не известен) — `sameURL`.
         case sameID = 100
 
         public static func < (lhs: Score, rhs: Score) -> Bool { lhs.rawValue < rhs.rawValue }
@@ -82,8 +83,21 @@ public enum CurrentTaskResolver {
             guard KnownBundleIDs.isChatGPT(context.bundleID) else { return .none }
             return titleScore(bound: ref.title, current: context.windowTitle)
 
+        case .terminalWindow(let ref):
+            guard KnownBundleIDs.same(context.bundleID, KnownBundleIDs.terminal) else { return .none }
+            switch TerminalWindowMatch.evaluate(ref, context: context) {
+            case .tab?: return .sameID
+            case .window?: return .sameURL
+            case .title?: return .sameTitle
+            case nil: return .sameApp
+            }
+
         case .appWindow(let ref):
             guard KnownBundleIDs.same(context.bundleID, ref.bundleID) else { return .none }
+            if KnownBundleIDs.same(ref.bundleID, KnownBundleIDs.terminal) {
+                // Окно Терминала без AppleScript: заголовок без размера и оболочки.
+                return TerminalTitle.same(ref.windowTitle, context.windowTitle) ? .sameTitle : .sameApp
+            }
             return titleScore(bound: ref.windowTitle, current: context.windowTitle)
         }
     }

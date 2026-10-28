@@ -2,7 +2,7 @@ import AppKit
 import JugglerCore
 import SwiftUI
 
-/// Раздел «Разрешения» окна настроек: состояние Accessibility и управления Chrome
+/// Раздел «Разрешения» окна настроек: состояние Accessibility, управления Chrome и Терминалом
 /// и кнопки запроса. Сам ничего не запрашивает — только по нажатию кнопки.
 struct PermissionsSection: View {
     let environment: AppEnvironment
@@ -41,6 +41,21 @@ struct PermissionsSection: View {
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
+
+        if state.canManageTerminal {
+            LabeledContent("Терминал") {
+                HStack {
+                    statusText(state.terminalText, ok: state.terminalStatus == .granted || state.terminalStatus == .noWindow)
+                    if state.terminalStatus != .granted, state.terminalStatus != .noWindow {
+                        Button(state.terminalStatus == .notRunning ? "Запустить Терминал" : "Разрешить…") { state.requestTerminal() }
+                    }
+                }
+            }
+            Text("Нужно, чтобы привязывать окно и вкладку Терминала и переключаться именно на них. Без него окно Терминала привязывается как обычное окно, по заголовку, а вкладка не выбирается.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func statusText(_ text: String, ok: Bool) -> some View {
@@ -53,6 +68,7 @@ struct PermissionsSection: View {
 final class PermissionsState: ObservableObject {
     @Published private(set) var accessibilityTrusted = false
     @Published private(set) var chromeStatus: AutomationStatus?
+    @Published private(set) var terminalStatus: AutomationStatus?
 
     private let permissions: PermissionsProviding
     private var observer: NSObjectProtocol?
@@ -74,12 +90,21 @@ final class PermissionsState: ObservableObject {
     /// Раздел Chrome показывается только с рабочими разрешениями BIND.
     var canManageChrome: Bool { permissions is LivePermissions }
 
-    var chromeText: String {
-        switch chromeStatus {
+    var chromeText: String { Self.text(chromeStatus, notRunning: "Chrome не запущен") }
+
+    /// Строка Терминала — только с рабочими разрешениями BIND и если Терминал установлен.
+    var canManageTerminal: Bool {
+        permissions is LivePermissions && NSWorkspace.shared.urlForApplication(withBundleIdentifier: KnownBundleIDs.terminal) != nil
+    }
+
+    var terminalText: String { Self.text(terminalStatus, notRunning: "Терминал не запущен") }
+
+    private static func text(_ status: AutomationStatus?, notRunning: String) -> String {
+        switch status {
         case .granted?: return "разрешено"
         case .denied?: return "запрещено"
         case .requiresConsent?: return "ещё не спрашивали"
-        case .notRunning?: return "Chrome не запущен"
+        case .notRunning?: return notRunning
         case .noWindow?: return "разрешено"
         case .failed?, nil: return "неизвестно"
         }
@@ -89,6 +114,7 @@ final class PermissionsState: ObservableObject {
         accessibilityTrusted = permissions.isAccessibilityTrusted
         // Проверка без запроса (с коротким таймаутом); Chrome должен быть запущен.
         chromeStatus = (permissions as? LivePermissions)?.chromeAutomationStatus
+        terminalStatus = (permissions as? LivePermissions)?.terminalAutomationStatus
     }
 
     func requestAccessibility() {
@@ -110,6 +136,23 @@ final class PermissionsState: ObservableObject {
             }
         default:
             live.requestChromeAutomation { [weak self] _ in self?.refresh() }
+        }
+    }
+
+    func requestTerminal() {
+        guard let live = permissions as? LivePermissions else { return }
+        switch terminalStatus {
+        case .denied?:
+            // Повторно система не спросит: только инструкция и переход в настройки.
+            LivePermissions.showTerminalInstructions()
+        case .notRunning?:
+            if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: KnownBundleIDs.terminal) {
+                NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration()) { _, _ in
+                    DispatchQueue.main.async { MainActor.assumeIsolated { self.refresh() } }
+                }
+            }
+        default:
+            live.requestTerminalAutomation { [weak self] _ in self?.refresh() }
         }
     }
 }
