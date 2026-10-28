@@ -54,7 +54,7 @@ public enum BindTexts {
     public static func manualLinkMessage(_ source: BindingSource, accessibilityTrusted: Bool) -> String {
         switch source {
         case .chatGPTThread:
-            return "Juggler не умеет сам читать id треда ChatGPT. Скопируйте ссылку на тред (codex://threads/<id>) и вставьте её сюда."
+            return chatGPTLinkMessage(lookup: nil, accessibilityTrusted: accessibilityTrusted)
         default:
             let reason = accessibilityTrusted
                 ? "Juggler не смог прочитать адрес чата из окна Claude."
@@ -65,6 +65,34 @@ public enum BindTexts {
                 + "вручную — ссылкой claude://claude.ai/epitaxy/local_<id>."
         }
     }
+
+    /// Почему тред ChatGPT не привязался сам и что делать: по итогу поиска в `session_index.jsonl`.
+    public static func chatGPTLinkMessage(lookup: ChatGPTThreadLookup?, accessibilityTrusted: Bool) -> String {
+        let howTo = "Скопируйте ссылку на тред (codex://threads/<id>) и вставьте её сюда."
+        let title = lookup?.windowTitle ?? ""
+        switch lookup?.status {
+        case .ambiguous?:
+            let count = lookup?.matches.count ?? 0
+            return "Тредов с названием «\(title)» несколько (\(count)). Вставлена ссылка на последний обновлённый — "
+                + "если это нужный тред, нажмите «Привязать». Иначе вставьте вместо неё ссылку на нужный тред (codex://threads/<id>)."
+        case .notFound?:
+            return "Тред «\(title)» не найден в списке тредов ChatGPT (\(chatGPTIndexPathHint)). "
+                + "Если тред только что создан или переименован, повторите чуть позже. " + howTo
+        case .indexMissing?:
+            return "Список тредов ChatGPT (\(chatGPTIndexPathHint)) не найден, поэтому тред не найти по названию. " + howTo
+        case .indexTooLarge?, .indexUnreadable?:
+            return "Список тредов ChatGPT (\(chatGPTIndexPathHint)) не читается, поэтому тред не найти по названию. " + howTo
+        case .found?:
+            return howTo
+        case .noWindowTitle?, nil:
+            let reason = accessibilityTrusted
+                ? "Juggler не смог прочитать заголовок окна ChatGPT, поэтому тред не найти по названию."
+                : "Без разрешения «Универсальный доступ» Juggler не видит заголовок окна ChatGPT и не может найти тред по названию."
+            return reason + " " + howTo
+        }
+    }
+
+    static let chatGPTIndexPathHint = "~/.codex/session_index.jsonl"
 
     public static let manualLinkPlaceholder = "Вставьте ссылку"
     public static let bindButton = "Привязать"

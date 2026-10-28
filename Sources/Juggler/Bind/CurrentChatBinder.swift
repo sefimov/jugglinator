@@ -18,14 +18,16 @@ final class LiveBindingCapturer: BindingCapturing {
         BindingCapture.capture(
             context: context,
             chromeStatus: provider.lastDiagnostics.chromeAutomation,
-            ownBundleID: Bundle.main.bundleIdentifier ?? BindApps.juggler)
+            ownBundleID: Bundle.main.bundleIdentifier ?? BindApps.juggler,
+            chatGPTLookup: provider.lastDiagnostics.chatGPTThread)
     }
 }
 
 /// «Сделать задачей текущий чат» (меню и ⌃⌥-хоткей).
 ///
 /// 1. Читает контекст переднего окна (если впереди Juggler — последнего активного приложения).
-/// 2. Строит привязку; для Claude без прочитанного id и для ChatGPT просит вставить ссылку.
+/// 2. Строит привязку; для Claude без прочитанного id и для ChatGPT, чей тред не найден по названию
+///    однозначно, просит вставить ссылку (при нескольких тредах — с уже вставленной ссылкой на последний).
 /// 3. Если чат уже привязан — делает ту задачу текущей; если у текущей задачи нет привязки —
 ///    предлагает привязать к ней; иначе создаёт новую задачу с очищенным заголовком.
 @MainActor
@@ -47,7 +49,7 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
         guard !isRunning else { return }
         let context = provider.context(interactive: true)
         let diagnostics = provider.lastDiagnostics
-        log.info("Привязка: \(context.bundleID ?? "-", privacy: .public), вкладка \(context.chromeTab != nil), Claude \(diagnostics.claudeChat?.rawValue ?? "-", privacy: .public)")
+        log.info("Привязка: \(context.bundleID ?? "-", privacy: .public), вкладка \(context.chromeTab != nil), Claude \(diagnostics.claudeChat?.rawValue ?? "-", privacy: .public), ChatGPT \(diagnostics.chatGPTThread?.status.rawValue ?? "-", privacy: .public)")
         isRunning = true
         // Диалоги — вне обработчика хоткея/меню.
         DispatchQueue.main.async {
@@ -85,7 +87,8 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
                 break
             }
         }
-        if (kind == .claude || kind == .other), !diagnostics.accessibilityTrusted, context.bundleID != nil {
+        // ChatGPT тоже: без Accessibility не прочитать заголовок окна, а по нему ищется тред.
+        if (kind == .claude || kind == .chatGPT || kind == .other), !diagnostics.accessibilityTrusted, context.bundleID != nil {
             shownDialog = true
             if permissions.offerAccessibilityOnce() { return }
         }
@@ -94,7 +97,7 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
         case .captured(let binding, let title):
             commit(binding, suggestedTitle: title)
         case .needsManualLink(let source, let title):
-            guard let binding = askForLink(source: source, context: context) else { return }
+            guard let binding = askForLink(source: source, context: context, chatGPTLookup: diagnostics.chatGPTThread) else { return }
             commit(binding, suggestedTitle: title)
         case .failed(let message):
             shownDialog = true
@@ -134,17 +137,26 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
 
     // MARK: - Запрос ссылки
 
-    /// Диалог со строкой ввода. Ссылка из буфера обмена подставляется, если она распознаётся.
+    /// Диалог со строкой ввода. Для ChatGPT с несколькими тредами того же названия вставлена ссылка
+    /// на последний обновлённый; иначе — ссылка из буфера обмена, если она распознаётся.
     /// «Привязать только окно» — запасной путь без id чата.
-    private func askForLink(source: BindingSource, context: FrontmostContext) -> TaskBinding? {
+    private func askForLink(source: BindingSource, context: FrontmostContext, chatGPTLookup: ChatGPTThreadLookup?) -> TaskBinding? {
         shownDialog = true
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 380, height: 24))
         field.placeholderString = BindTexts.manualLinkPlaceholder
-        if let clip = NSPasteboard.general.string(forType: .string),
+        let prefill = source == .chatGPTThread
+            ? BindingCapture.chatGPTPrefillLink(lookup: chatGPTLookup, windowTitle: context.windowTitle) : nil
+        if let prefill {
+            field.stringValue = prefill
+        } else if let clip = NSPasteboard.general.string(forType: .string),
            case .binding = BindingCapture.bindingFromManualLink(clip, expected: source, windowTitle: context.windowTitle) {
             field.stringValue = clip.trimmingCharacters(in: .whitespacesAndNewlines)
         }
-        var message = BindTexts.manualLinkMessage(source, accessibilityTrusted: AX.isTrusted)
+        let baseMessage = source == .chatGPTThread
+            ? BindTexts.chatGPTLinkMessage(lookup: chatGPTLookup?.applies(toWindowTitle: context.windowTitle) == true ? chatGPTLookup : nil,
+                                           accessibilityTrusted: AX.isTrusted)
+            : BindTexts.manualLinkMessage(source, accessibilityTrusted: AX.isTrusted)
+        var message = baseMessage
         while true {
             let alert = NSAlert()
             alert.messageText = BindTexts.manualLinkTitle(source)
@@ -158,7 +170,7 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
             case .alertFirstButtonReturn:
                 switch BindingCapture.bindingFromManualLink(field.stringValue, expected: source, windowTitle: context.windowTitle) {
                 case .binding(let binding): return binding
-                case .invalid(let error): message = error + "\n\n" + BindTexts.manualLinkMessage(source, accessibilityTrusted: AX.isTrusted)
+                case .invalid(let error): message = error + "\n\n" + baseMessage
                 }
             case .alertSecondButtonReturn:
                 guard let bundleID = context.bundleID else { return nil }

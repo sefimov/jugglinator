@@ -11,6 +11,9 @@ private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 ///
 /// Название сессии Claude Code читается из её метаданных (`claude-code-sessions`, только чтение)
 /// лишь в интерактивном режиме — при привязке; при переключении хватает id.
+/// Так же только при привязке тред ChatGPT ищется по заголовку окна в `~/.codex/session_index.jsonl`
+/// (только чтение; итог — в `lastDiagnostics.chatGPTThread`). При переключении ChatGPT, как и раньше,
+/// узнаётся по заголовку окна.
 ///
 /// Если впереди сам Juggler (меню в меню-баре), берётся последнее активное другое приложение.
 @MainActor
@@ -25,10 +28,15 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
     private var manualAccessibilityEnabled = Set<pid_t>()
     /// Папка метаданных сессий Claude Code.
     private let claudeCodeSessionsRoot: URL?
+    /// Список тредов ChatGPT (`session_index.jsonl`).
+    private let chatGPTIndexURL: URL?
 
-    init(chrome: ChromeController, claudeCodeSessionsRoot: URL? = ClaudeCodeSessionMetadata.defaultRoot()) {
+    init(chrome: ChromeController,
+         claudeCodeSessionsRoot: URL? = ClaudeCodeSessionMetadata.defaultRoot(),
+         chatGPTIndexURL: URL? = ChatGPTSessionIndex.defaultURL()) {
         self.chrome = chrome
         self.claudeCodeSessionsRoot = claudeCodeSessionsRoot
+        self.chatGPTIndexURL = chatGPTIndexURL
         rememberIfExternal(NSWorkspace.shared.frontmostApplication)
         observer = NSWorkspace.shared.notificationCenter.addObserver(
             forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main
@@ -48,7 +56,8 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
 
     /// `interactive` — сценарий привязки, запущенный пользователем: для Claude даём Electron
     /// чуть больше времени построить дерево веб-содержимого.
-    func context(interactive: Bool, bundleID: String? = nil) -> FrontmostContext {
+    /// `windowTitleOverride` — только для `--probe-frontmost --window-title`: заголовок вместо прочитанного.
+    func context(interactive: Bool, bundleID: String? = nil, windowTitleOverride: String? = nil) -> FrontmostContext {
         var diagnostics = ContextDiagnostics(accessibilityTrusted: AX.isTrusted)
         guard let app = targetApp(bundleID: bundleID, diagnostics: &diagnostics) else {
             diagnostics.notes.append("Переднее приложение не определено")
@@ -64,6 +73,10 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
             diagnostics.windowTitleRead = true
         } else if !diagnostics.accessibilityTrusted {
             diagnostics.notes.append("Нет разрешения «Универсальный доступ»: заголовок окна не прочитан")
+        }
+        if let windowTitleOverride {
+            context.windowTitle = windowTitleOverride
+            diagnostics.notes.append("Заголовок окна подставлен ключом --window-title")
         }
 
         switch BindApps.kind(of: app.bundleIdentifier) {
@@ -101,7 +114,14 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
             if !read.manualAccepted { diagnostics.notes.append("Claude не принял AXManualAccessibility") }
 
         case .chatGPT:
-            diagnostics.notes.append("Id треда ChatGPT автоматически не читается: нужна ссылка codex://threads/<id>")
+            guard interactive else { break }
+            let lookup = ChatGPTThreadMatcher.lookup(
+                windowTitle: context.windowTitle,
+                index: ChatGPTSessionIndex.read(url: chatGPTIndexURL),
+                indexPath: chatGPTIndexURL?.path)
+            diagnostics.chatGPTThread = lookup
+            if let note = Self.note(for: lookup) { diagnostics.notes.append(note) }
+            log.debug("ChatGPT: поиск треда \(lookup.status.rawValue, privacy: .public), совпадений \(lookup.matches.count)")
 
         case .other:
             break
@@ -111,6 +131,18 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
     }
 
     // MARK: - Внутреннее
+
+    private static func note(for lookup: ChatGPTThreadLookup) -> String? {
+        switch lookup.status {
+        case .found: return nil
+        case .ambiguous: return "Тредов ChatGPT с таким названием несколько (\(lookup.matches.count)): нужна проверка ссылки"
+        case .notFound: return "Тред ChatGPT с таким названием не найден в session_index.jsonl: нужна ссылка codex://threads/<id>"
+        case .noWindowTitle: return "Заголовок окна ChatGPT не прочитан: тред не найти по названию"
+        case .indexMissing: return "Нет файла session_index.jsonl: тред ChatGPT не найти по названию"
+        case .indexTooLarge: return "Файл session_index.jsonl слишком большой: не читается"
+        case .indexUnreadable: return "Файл session_index.jsonl не читается"
+        }
+    }
 
     private func rememberIfExternal(_ app: NSRunningApplication?) {
         guard let app, let identity = Self.identity(app),

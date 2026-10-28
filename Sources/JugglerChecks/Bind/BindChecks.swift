@@ -20,6 +20,7 @@ enum BindChecks: CheckSuite {
         planner(c)
         probe(c)
         sessions(c)
+        chatGPTThreads(c)
     }
 
     static let uuid = "0f8fad5b-d9cb-469f-a165-70867728950e"

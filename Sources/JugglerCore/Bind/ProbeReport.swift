@@ -42,7 +42,7 @@ public struct ProbeReport: Codable, Equatable, Sendable {
     }
 }
 
-/// Ключи `--probe-frontmost`: `--delay <сек>`, `--app <bundle id>`, `--prompt`.
+/// Ключи `--probe-frontmost`: `--delay <сек>`, `--app <bundle id>`, `--prompt`, `--window-title <заголовок>`.
 public struct ProbeOptions: Equatable, Sendable {
     /// Пауза перед чтением, чтобы успеть переключиться на нужное окно.
     public var delay: Double = 0
@@ -50,11 +50,14 @@ public struct ProbeOptions: Equatable, Sendable {
     public var bundleID: String?
     /// Разрешить системные запросы разрешений (Automation для Chrome).
     public var allowPrompts = false
+    /// Подставить этот заголовок окна вместо прочитанного: проверить поиск треда ChatGPT без Accessibility.
+    public var windowTitle: String?
 
-    public init(delay: Double = 0, bundleID: String? = nil, allowPrompts: Bool = false) {
+    public init(delay: Double = 0, bundleID: String? = nil, allowPrompts: Bool = false, windowTitle: String? = nil) {
         self.delay = delay
         self.bundleID = bundleID
         self.allowPrompts = allowPrompts
+        self.windowTitle = windowTitle
     }
 
     public static func parse(_ arguments: [String]) -> ProbeOptions {
@@ -70,6 +73,9 @@ public struct ProbeOptions: Equatable, Sendable {
                 i += 1
             case "--prompt":
                 options.allowPrompts = true
+            case "--window-title" where i + 1 < arguments.count:
+                options.windowTitle = arguments[i + 1]
+                i += 1
             default:
                 break
             }

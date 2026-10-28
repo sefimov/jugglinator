@@ -113,7 +113,15 @@ build/Juggler.app/Contents/MacOS/Juggler --self-test; echo $?
   - В диалоге ссылки сессию можно указать и вручную: `https://claude.ai/epitaxy/local_<uuid>`, `claude://claude.ai/epitaxy/local_<uuid>` или голый `local_<uuid>`.
   - В списке у такой задачи значок терминала и подпись «Claude Code».
   - Без разрешения «Универсальный доступ» id сессии не прочитать: Juggler покажет диалог ссылки.
-- **ChatGPT** (`com.openai.codex`, старый `com.openai.chat`) — Juggler просит вставить ссылку `codex://threads/<id>` и открывает тред по ней.
+- **ChatGPT** (`com.openai.codex`, старый `com.openai.chat`) — тред по id, открывается ссылкой `codex://threads/<id>`.
+  - Откуда id. Заголовок окна ChatGPT — название открытого треда; Juggler читает его через Accessibility. Список тредов ChatGPT хранит в `~/.codex/session_index.jsonl` (или `$CODEX_HOME/session_index.jsonl`): по строке JSON на изменение, `{"id": "…", "thread_name": "…", "updated_at": "…"}`. Один id встречается несколько раз, когда тред переименовывают, — берётся название с самым поздним `updated_at`. Juggler ищет тред с названием, как у окна, и берёт его `id`.
+  - Названия сравниваются без лишних пробелов; если точного совпадения нет — без учёта регистра и хвостов вида « - ChatGPT».
+  - Найден ровно один тред — ⌃⌥ и «Сделать задачей текущий чат» привязывают его сразу, без диалога. Название задачи — название треда.
+  - Не найден — прежний диалог ссылки: вставьте `codex://threads/<id>` или привяжите только окно.
+  - Несколько разных тредов с таким названием — тот же диалог, но ссылка на последний обновлённый тред уже вставлена. Если это нужный тред, нажмите «Привязать».
+  - Файл Juggler только читает и ищет в нём только при привязке. Нет файла, файл больше 16 МБ или битые строки — не ошибка: битые строки пропускаются, в худшем случае будет диалог ссылки.
+  - Без разрешения «Универсальный доступ» заголовок окна не прочитать, поэтому будет диалог ссылки.
+  - При переключении текущая задача ChatGPT, как и раньше, определяется по заголовку окна (id треда из переднего окна не читается). Если тред переименовали, по новому заголовку задача не узнаётся.
 - **Grok Bot** (`com.anysphere.sand`) и любое другое приложение — привязка к окну: bundle id и заголовок. При переходе поднимается окно с тем же заголовком, иначе просто активируется приложение.
 - Незапущенное приложение запускается.
 - Название новой задачи берётся из заголовка без хвостов вида « - Claude» и « - Google Chrome». Если у текущей задачи нет привязки, Juggler предложит привязать чат к ней.
@@ -193,12 +201,19 @@ build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost                 # п�
 build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost --delay 3       # через 3 с: успеть переключиться на чат
 build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost --app com.google.Chrome  # контекст конкретного приложения
 build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost --prompt        # разрешить системный запрос управления Chrome
+build/Juggler.app/Contents/MacOS/Juggler --probe-frontmost --app com.openai.codex --window-title "Название треда"  # поиск треда ChatGPT по заданному заголовку
+```
+
+Разрешение «Универсальный доступ» macOS применяет к `Juggler.app`, только если команда запущена через `open`:
+
+```sh
+open -n -W --stdout /tmp/probe.json build/Juggler.app --args --probe-frontmost --app com.openai.codex
 ```
 
 Команда печатает JSON из трёх частей:
 
 - `context` — bundle id, заголовок, вкладка Chrome, id чата;
-- `diagnostics` — есть ли Accessibility, статус управления Chrome, кандидаты адреса Claude, заметки. В `claudeChat` значение `read` — прочитан id чата, `codeSession` — впереди вкладка Code и прочитан id сессии (`context.claudeCodeSessionID`, название — `context.claudeCodeSessionTitle`);
+- `diagnostics` — есть ли Accessibility, статус управления Chrome, кандидаты адреса Claude, заметки. В `claudeChat` значение `read` — прочитан id чата, `codeSession` — впереди вкладка Code и прочитан id сессии (`context.claudeCodeSessionID`, название — `context.claudeCodeSessionTitle`). Для ChatGPT в `chatGPTThread` — поиск треда в `session_index.jsonl`: `status` (`found`, `ambiguous`, `notFound`, `noWindowTitle`, `indexMissing`, `indexTooLarge`, `indexUnreadable`), искомый заголовок, путь к файлу, число тредов, пропущенные строки и совпавшие треды (`matches`, сначала последний обновлённый);
 - `capture` — какая привязка получилась бы.
 
 Без `--prompt` системных запросов нет. Код выхода 0, если контекст прочитан. Разрешения проверяются у того процесса, из которого запущена команда: из `.app` — у Juggler, через `swift run` — у Терминала.

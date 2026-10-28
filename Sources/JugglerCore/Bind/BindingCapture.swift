@@ -21,12 +21,14 @@ public enum BindingCapture {
     /// - Chrome → вкладка (нужен AppleScript; без него — ошибка с пояснением);
     /// - Claude → чат, если id прочитан; сессия Claude Code (вкладка Code), если прочитан её id
     ///   (название — из метаданных сессии, иначе из заголовка окна); иначе запрос ссылки;
-    /// - ChatGPT → тред, если id известен, иначе запрос ссылки `codex://threads/<id>`;
+    /// - ChatGPT → тред, если id известен или тред однозначно найден по заголовку окна
+    ///   в `~/.codex/session_index.jsonl` (`chatGPTLookup`; название — по треду), иначе запрос ссылки `codex://threads/<id>`;
     /// - Grok Bot и прочие → окно (bundle id и заголовок, заголовок может быть пустым без Accessibility).
     public static func capture(
         context: FrontmostContext,
         chromeStatus: AutomationStatus? = nil,
-        ownBundleID: String? = BindApps.juggler
+        ownBundleID: String? = BindApps.juggler,
+        chatGPTLookup: ChatGPTThreadLookup? = nil
     ) -> BindingCaptureResult {
         guard let bundleID = context.bundleID, !bundleID.isEmpty else {
             return .failed(BindTexts.noFrontmostApp)
@@ -62,6 +64,11 @@ public enum BindingCapture {
             if let id = context.chatGPTThreadID, !id.isEmpty {
                 return .captured(.chatGPTThread(ChatGPTThreadRef(threadID: id, title: storedTitle(context.windowTitle))), suggestedTitle: title)
             }
+            if let lookup = chatGPTLookup, lookup.applies(toWindowTitle: context.windowTitle), let thread = lookup.uniqueMatch {
+                // В привязке — заголовок окна, как и при ручной ссылке: по нему текущая задача узнаётся при переключении.
+                let ref = ChatGPTThreadRef(threadID: thread.id, title: storedTitle(context.windowTitle))
+                return .captured(.chatGPTThread(ref), suggestedTitle: TitleCleaner.suggestedTaskTitle(from: thread.name, fallback: title))
+            }
             return .needsManualLink(.chatGPTThread, suggestedTitle: title)
 
         case .other:
@@ -96,6 +103,13 @@ public enum BindingCapture {
             if ChatLinkParser.isClaudeShareLink(trimmed) { return .invalid(BindTexts.shareLinkNotSupported) }
             return .invalid(BindTexts.unrecognizedLink(expected))
         }
+    }
+
+    /// Ссылка, заранее вставленная в диалог ссылки ChatGPT: при нескольких тредах с названием окна —
+    /// на последний обновлённый. Иначе `nil` (тогда подставляется ссылка из буфера обмена, если подходит).
+    public static func chatGPTPrefillLink(lookup: ChatGPTThreadLookup?, windowTitle: String?) -> String? {
+        guard let lookup, lookup.applies(toWindowTitle: windowTitle) else { return nil }
+        return lookup.prefillLink
     }
 
     /// Заголовок, сохраняемый в привязке: исходный заголовок окна без лишних пробелов.

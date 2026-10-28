@@ -58,6 +58,8 @@ public struct ContextDiagnostics: Codable, Equatable, Sendable {
     public var claudeChat: ClaudeChatReadStatus?
     /// Адреса, найденные в дереве Accessibility Claude (для отладки).
     public var claudeCandidateURLs: [String]
+    /// Поиск треда ChatGPT по заголовку окна в `~/.codex/session_index.jsonl` (только при привязке).
+    public var chatGPTThread: ChatGPTThreadLookup?
     public var notes: [String]
 
     public init(
@@ -68,6 +70,7 @@ public struct ContextDiagnostics: Codable, Equatable, Sendable {
         chromeErrorCode: Int? = nil,
         claudeChat: ClaudeChatReadStatus? = nil,
         claudeCandidateURLs: [String] = [],
+        chatGPTThread: ChatGPTThreadLookup? = nil,
         notes: [String] = []
     ) {
         self.accessibilityTrusted = accessibilityTrusted
@@ -77,6 +80,7 @@ public struct ContextDiagnostics: Codable, Equatable, Sendable {
         self.chromeErrorCode = chromeErrorCode
         self.claudeChat = claudeChat
         self.claudeCandidateURLs = claudeCandidateURLs
+        self.chatGPTThread = chatGPTThread
         self.notes = notes
     }
 }

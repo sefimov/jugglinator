@@ -38,9 +38,11 @@ enum BindModule {
         return LiveCurrentChatBinder(model: model, provider: provider, capturer: services.capturer, permissions: permissions)
     }
 
-    /// `Juggler --probe-frontmost [--delay <сек>] [--app <bundle id>] [--prompt]`:
+    /// `Juggler --probe-frontmost [--delay <сек>] [--app <bundle id>] [--prompt] [--window-title <заголовок>]`:
     /// печатает JSON с контекстом, диагностикой и результатом привязки. Без `--prompt`
-    /// системных запросов не показывает. Код выхода 0, если контекст прочитан.
+    /// системных запросов не показывает. Для ChatGPT в `diagnostics.chatGPTThread` — поиск треда
+    /// по заголовку окна в `session_index.jsonl`; `--window-title` подставляет заголовок (проверка без Accessibility).
+    /// Код выхода 0, если контекст прочитан.
     static func probeFrontmost(arguments: [String]) -> Int32 {
         let options = ProbeOptions.parse(arguments)
         let chrome = ChromeController()
@@ -53,7 +55,7 @@ enum BindModule {
             let code = ChromeController.determinePermission(bundleID: chrome.bundleID, ask: true)
             FileHandle.standardError.write("Automation Chrome: \(AutomationStatus.classify(code: code).rawValue) (\(code))\n".data(using: .utf8)!)
         }
-        let context = provider.context(interactive: true, bundleID: options.bundleID)
+        let context = provider.context(interactive: true, bundleID: options.bundleID, windowTitleOverride: options.windowTitle)
         let capture = LiveBindingCapturer(provider: provider).captureBinding(from: context)
         print(ProbeReport(context: context, diagnostics: provider.lastDiagnostics, capture: capture).json())
         return context.bundleID == nil ? 1 : 0
@@ -93,6 +95,17 @@ enum BindModule {
         let sessionsFound = sessionsRoot.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
         results.append(SelfTestResult("BIND: метаданные сессий Claude Code", passed: true,
                                       detail: sessionsFound ? "папка найдена" : "папки нет — названия сессий возьмутся из заголовка окна"))
+
+        // Только чтение: список тредов ChatGPT (его отсутствие — не ошибка).
+        let indexURL = ChatGPTSessionIndex.defaultURL()
+        let indexDetail: String
+        switch ChatGPTSessionIndex.read(url: indexURL) {
+        case .loaded(let threads, let skipped): indexDetail = "тредов: \(threads.count)" + (skipped > 0 ? ", битых строк: \(skipped)" : "")
+        case .missing: indexDetail = "файла нет — тред ChatGPT привяжется по ссылке"
+        case .tooLarge: indexDetail = "файл слишком большой — не читается"
+        case .unreadable: indexDetail = "файл не читается"
+        }
+        results.append(SelfTestResult("BIND: список тредов ChatGPT (session_index.jsonl)", passed: true, detail: indexDetail))
 
         let binder = makeCurrentChatBinder(model: AppModel(store: TaskStore(fileURL: FileManager.default.temporaryDirectory
             .appendingPathComponent("juggler-bind-self-test-\(UUID().uuidString).json"))), services: services)
