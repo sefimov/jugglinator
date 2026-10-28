@@ -12,7 +12,7 @@
 Проверяется:
 - в каждой Localizable.strings ровно ключи из кода (плюс «%@, %@» из сводки);
 - в каждом переводе те же спецификаторы, что в ключе (позиционные %1$@ допустимы);
-- в Localizable.stringsdict есть summary.tasks и summary.done, в InfoPlist.strings —
+- в Localizable.stringsdict есть summary.tasks, summary.done и clearAll.confirm, в InfoPlist.strings —
   NSAppleEventsUsageDescription;
 - CFBundleLocalizations в scripts/Info.plist совпадает с набором .lproj.
 """
@@ -31,7 +31,7 @@ CALL = re.compile(
     r'\.help\(|\.navigationTitle\(|\.accessibilityLabel\()\s*"')
 SPEC = re.compile(r"%(?:\d+\$)?(?:lld|d|@)")
 EXTRA_KEYS = {"%@, %@"}
-PLURAL_KEYS = {"summary.tasks", "summary.done"}
+PLURAL_KEYS = {"summary.tasks", "summary.done", "clearAll.confirm"}
 
 
 def single_literal(src, i):

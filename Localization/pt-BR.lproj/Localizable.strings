@@ -179,3 +179,5 @@
 "Перезапустить сейчас" = "Reiniciar agora";
 "Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "A reinicialização só funciona no aplicativo Juggler.app. Feche o Juggler e abra-o novamente.";
 "Не удалось перезапустить Juggler: %@" = "Não foi possível reiniciar o Juggler: %@";
+"Очистить все задачи" = "Limpar todas as tarefas";
+"Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "As tarefas, as notas e os vínculos serão excluídos. Esta ação não pode ser desfeita.";

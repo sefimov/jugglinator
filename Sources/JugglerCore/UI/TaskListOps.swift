@@ -82,6 +82,15 @@ public enum TaskListOps {
         return true
     }
 
+    /// Удаляет все задачи и снимает отметку текущей. Возвращает, сколько задач было удалено.
+    @discardableResult
+    public static func clearAll(_ document: inout TasksDocument) -> Int {
+        let count = document.tasks.count
+        document.tasks.removeAll()
+        document.lastActiveTaskID = nil
+        return count
+    }
+
     /// Ставит или снимает отметку «сделано».
     @discardableResult
     public static func setDone(_ document: inout TasksDocument, id: UUID, _ done: Bool) -> Bool {

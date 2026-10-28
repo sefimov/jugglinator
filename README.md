@@ -107,13 +107,14 @@ It initializes the store, the composition root and the UI, SWITCH and BIND modul
 
 ⌃⌥§ ("Add or Remove Current Window" in the hotkey settings) and the menu item work as a toggle. The menu item's label depends on the window that was frontmost before the menu opened: not a task — "Add Current Window", already a task — "Remove Current Window". The window is read when the menu opens, without system prompts; if it cannot be read, the item is labeled "Add Current Window".
 
-Below the task list, under a separator, in a column: "Add Current Window" or "Remove Current Window", "Restore Removed Task" (only when there is something to restore), "Settings…", "Quit".
+Below the task list, under a separator, in a column: "Add Current Window" or "Remove Current Window", "Restore Removed Task" (only when there is something to restore), "Clear All Tasks" (only when the list has tasks), "Settings…", "Quit".
 
 - **The frontmost window is already a task** — the task is removed from the list, and the removal is saved to `tasks.json` right away. A card appears: "Task N “…” removed — ⌃⌥§ within 5 s restores it". It stays visible for the full 5 seconds.
 - **Pressing ⌃⌥§ again within those 5 s** puts the task back in its old place — with the same number, note, "done" mark, binding and visit time. It does not matter where focus is at that moment.
 - **The "Remove Current Window" menu item** does the same as the hotkey: the same card, the same restore with a second ⌃⌥§ within 5 s. The menu item itself does not restore the task during those 5 s: that is what "Restore Removed Task" is for, and the item's label always matches what it does.
 - **After 5 s** ⌃⌥§ is an ordinary toggle again: the window that used to be a task is added again as a new task.
 - **The "Restore Removed Task" menu item** appears after a removal and restores the last removed task — whether it was removed with ⌃⌥§ or from the list. Only the last one is remembered, and only until Juggler quits.
+- **The "Clear All Tasks" menu item** is for resetting at the start of the day. It asks inline "Delete all N tasks?" (the word form follows the language's plural rules) with "Cancel" and "Delete" buttons; nothing is removed until you confirm. After confirming, the list is empty, the current task is cleared and the change is saved to `tasks.json` right away. Cleared tasks cannot be brought back: "Restore Removed Task" disappears and does not restore a task removed before the clear.
 - **The frontmost window is not a task** — the existing "Make current chat a task" behavior: the window becomes a new task or is bound to the current task if it has no binding, see "Bindings".
 
 The frontmost window counts as a task only on an exact match. The fallback "last active task" used when cycling is not used here. If nothing matches, nothing is removed.
@@ -291,7 +292,7 @@ The interface is translated into 12 languages: `ar`, `de`, `en`, `es`, `fr`, `hi
 - Source strings in the code stay in Russian and serve as translation keys: `String(localized: "Задача \(number)")` or a SwiftUI literal (`Text("…")`, `Button("…")`, `.help("…")`).
 - Translations live in `Localization/<language>.lproj/`:
   - `Localizable.strings` — interface strings. Interpolation becomes a format specifier: `Int` → `%lld`, `Int32` → `%d`, anything else → `%@`. If a translation needs a different order, use positional specifiers: `%1$@`, `%2$lld`;
-  - `Localizable.stringsdict` — plural forms for the "3 tasks, 1 done" summary;
+  - `Localizable.stringsdict` — plural forms for the "3 tasks, 1 done" summary and the "Delete all N tasks?" question;
   - `InfoPlist.strings` — the text of the request to control Chrome.
 - `scripts/bundle.sh` copies these folders into the `.app`. Without the `.app` (`swift run`, `JugglerChecks`) there are no tables, so the Russian text is shown. The checks compare exactly that text.
 - `scripts/check-localization.py` verifies that every table has exactly the keys from the code with the same specifiers, and that `CFBundleLocalizations` matches the folders. The script is run from `bundle.sh`. `--keys` prints the keys with their location in the code.

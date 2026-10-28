@@ -119,6 +119,20 @@ public enum TaskListPresenter {
         return String(localized: "Удалить задачу «\(shown)»?")
     }
 
+    /// Вопрос перед очисткой списка: «Удалить все 5 задач?» (форма слова — по `clearAll.confirm`).
+    public static func clearAllConfirmation(count: Int) -> String {
+        LocalizedPlural.format("clearAll.confirm", count) ?? {
+            switch RussianPlural.form(count, one: "one", few: "few", many: "many") {
+            case "one": return "Удалить \(count) задачу?"
+            case "few": return "Удалить все \(count) задачи?"
+            default: return "Удалить все \(count) задач?"
+            }
+        }()
+    }
+
+    /// Пояснение под вопросом об очистке.
+    public static let clearAllWarning = String(localized: "Задачи, заметки и привязки будут удалены. Это нельзя отменить.")
+
     /// Сообщение о восстановлении `tasks.json` после загрузки или `nil`, если всё в порядке.
     public static func loadNotice(_ outcome: TaskStore.LoadOutcome?) -> String? {
         switch outcome {

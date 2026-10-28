@@ -13,6 +13,7 @@ enum UIChecks: CheckSuite {
         checkAdd(c)
         checkEdit(c)
         checkDelete(c)
+        checkClearAll(c)
         checkDone(c)
         checkMoveOffsets(c)
         checkMoveByAndBefore(c)
