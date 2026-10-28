@@ -24,7 +24,7 @@ enum SwitchModule {
         PanelCardPresenter()
     }
 
-    /// Текущее сочетание «добавить или удалить текущую задачу» (⌃⌥§ по умолчанию) для подсказок и карточек.
+    /// Текущее сочетание «добавить или удалить текущее окно» (⌃⌥§ по умолчанию) для подсказок и карточек.
     static func bindHotkey() -> Hotkey? {
         preferences.assignments[.bindCurrentChat]
     }

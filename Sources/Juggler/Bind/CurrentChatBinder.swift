@@ -23,7 +23,7 @@ final class LiveBindingCapturer: BindingCapturing {
     }
 }
 
-/// Итог ⌃⌥§ «добавить или удалить текущую задачу» (D15): удаление и возврат с карточкой.
+/// Итог ⌃⌥§ «добавить или удалить текущее окно» (D15): удаление и возврат с карточкой.
 /// Логика решения — `TaskToggle` (JugglerCore); здесь только применение к модели и показ карточки.
 @MainActor
 enum TaskToggleApplier {
@@ -53,7 +53,7 @@ enum TaskToggleApplier {
     }
 }
 
-/// «Сделать задачей текущий чат»; через `toggleCurrentChat` — и ⌃⌥§ «добавить или удалить текущую задачу».
+/// «Сделать задачей текущий чат»; через `toggleCurrentChat` — и ⌃⌥§ «добавить или удалить текущее окно».
 ///
 /// Переключатель: в течение 5 с после удаления ⌃⌥§ возвращает задачу; если переднее окно точно
 /// совпадает с задачей (`ExactTaskMatcher`) — удаляет её с карточкой; иначе — привязка, как ниже.
@@ -88,9 +88,14 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
         start(context: provider.context(interactive: true))
     }
 
-    func toggleCurrentChat() {
+    func toggleCurrentChat() { toggle(allowRestore: true) }
+
+    func toggleCurrentWindow() { toggle(allowRestore: false) }
+
+    private func toggle(allowRestore: Bool) {
         guard !isRunning else { return }
-        let decision = TaskToggle.decide(document: model.document, lastRemoved: model.lastRemoved, now: model.clock()) {
+        let decision = TaskToggle.decide(document: model.document, lastRemoved: model.lastRemoved, now: model.clock(),
+                                         allowRestore: allowRestore) {
             provider.context(interactive: true)
         }
         guard let context = TaskToggleApplier.apply(decision, model: model, card: card, hotkey: toggleHotkey()) else { return }

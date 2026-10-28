@@ -27,11 +27,17 @@ enum UIActions {
         }
     }
 
-    /// «Добавить или удалить текущую задачу» (BIND) — то же, что ⌃⌥§: переднее окно уже задача —
-    /// удалить её (с карточкой и возвратом), иначе — «сделать задачей текущий чат».
-    static func toggleCurrentTask(environment: AppEnvironment, dismiss: () -> Void) {
+    /// Контекст окна, которое было впереди до открытия меню (если впереди сам Juggler — последнего
+    /// активного другого приложения). Системных запросов не показывает: без разрешений вернёт то, что удалось.
+    static func readWindowContext(environment: AppEnvironment) -> FrontmostContext {
+        environment.bind.contextProvider.currentContext()
+    }
+
+    /// «Добавить/Удалить текущее окно» (D16): окно уже задача — удалить её (карточка и возврат, как у ⌃⌥§),
+    /// иначе — сделать задачей текущий чат. Окно отмены не учитывается: возврат — отдельный пункт.
+    static func toggleCurrentWindow(environment: AppEnvironment, dismiss: () -> Void) {
         afterClosingMenu(dismiss) {
-            environment.perform(.bindCurrentChat)
+            environment.binder.toggleCurrentWindow()
         }
     }
 

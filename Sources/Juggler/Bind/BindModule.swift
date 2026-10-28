@@ -14,7 +14,7 @@ import os
 //   LiveBindingCapturer       — привязка по контексту (логика в JugglerCore/Bind);
 //   LiveBindingActivator      — открытие вкладки, чата, окна; запуск приложения;
 //   LivePermissions           — Accessibility, Automation, инструкции;
-//   LiveCurrentChatBinder     — «Сделать задачей текущий чат» и ⌃⌥§ «добавить или удалить текущую задачу».
+//   LiveCurrentChatBinder     — «Сделать задачей текущий чат» и ⌃⌥§ «добавить или удалить текущее окно».
 
 @MainActor
 enum BindModule {
@@ -29,7 +29,7 @@ enum BindModule {
             permissions: permissions)
     }
 
-    /// `card` и `toggleHotkey` — для карточек ⌃⌥§ «добавить или удалить текущую задачу» (удалена / возвращена).
+    /// `card` и `toggleHotkey` — для карточек ⌃⌥§ «добавить или удалить текущее окно» (удалена / возвращена).
     static func makeCurrentChatBinder(model: AppModel, services: BindServices,
                                       card: TransitionCardPresenting? = nil,
                                       toggleHotkey: @escaping () -> Hotkey? = { nil }) -> CurrentChatBinding {
@@ -139,8 +139,13 @@ private final class MinimalCurrentChatBinder: CurrentChatBinding {
         bind(context: services.contextProvider.currentContext())
     }
 
-    func toggleCurrentChat() {
-        let decision = TaskToggle.decide(document: model.document, lastRemoved: model.lastRemoved, now: model.clock()) {
+    func toggleCurrentChat() { toggle(allowRestore: true) }
+
+    func toggleCurrentWindow() { toggle(allowRestore: false) }
+
+    private func toggle(allowRestore: Bool) {
+        let decision = TaskToggle.decide(document: model.document, lastRemoved: model.lastRemoved, now: model.clock(),
+                                         allowRestore: allowRestore) {
             services.contextProvider.currentContext()
         }
         guard let context = TaskToggleApplier.apply(decision, model: model, card: card, hotkey: toggleHotkey()) else { return }

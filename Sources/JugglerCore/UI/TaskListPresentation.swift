@@ -57,7 +57,7 @@ public enum TaskListPresenter {
 
     /// Справка о привязке: «Chrome: Заголовок вкладки» или «Без привязки…».
     public static func bindingHelp(_ binding: TaskBinding?) -> String {
-        guard let binding else { return "Без привязки: откройте чат и выберите «\(TaskToggleTexts.actionTitle)»" }
+        guard let binding else { return "Без привязки: откройте чат и выберите «\(TaskToggleTexts.menuAddTitle)»" }
         let title = binding.title.trimmingCharacters(in: .whitespacesAndNewlines)
         return title.isEmpty ? binding.source.displayName : "\(binding.source.displayName): \(title)"
     }

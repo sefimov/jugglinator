@@ -242,7 +242,7 @@ enum SwitchChecks: CheckSuite {
             c.expectEqual(free?.hint, "Нет привязки: откройте чат и нажмите ⌃⌥§", "подсказка с текущим хоткеем привязки")
             c.expectEqual(
                 TransitionCardBuilder.content(for: unbound.id, in: doc, now: now, bindHotkey: nil)?.hint,
-                "Нет привязки: откройте чат и выберите в меню «Добавить или удалить текущую задачу»",
+                "Нет привязки: откройте чат и выберите в меню «Добавить текущее окно»",
                 "хоткей не назначен — подсказка про меню")
             c.expectEqual(
                 TransitionCardBuilder.content(for: unbound.id, in: doc, now: now,

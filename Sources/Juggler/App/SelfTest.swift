@@ -100,7 +100,7 @@ enum SelfTest {
         fake.hotkeys.press(.previousTask)
         let prevOK = fake.card.shown.last?.number == 1 && fake.activator.activated == [b2, b1]
             && model.document.lastActiveTaskID == t1.id
-        // ⌃⌥§ — добавить или удалить текущую задачу.
+        // ⌃⌥§ — добавить или удалить текущее окно.
         fake.hotkeys.press(.bindCurrentChat)
         let bindOK = fake.binder.toggles == 1 && fake.binder.calls == 0
         env.stop()
@@ -111,7 +111,7 @@ enum SelfTest {
             SelfTestResult("Связка: «следующая» и «предыдущая» → переключатель, карточка, привязка",
                            passed: nextOK && prevOK,
                            detail: "карточки: \(fake.card.shown.map { "\($0.number)" }.joined(separator: "→"))"),
-            SelfTestResult("Связка: ⌃⌥ → «добавить или удалить текущую задачу»", passed: bindOK),
+            SelfTestResult("Связка: ⌃⌥ → «добавить или удалить текущее окно»", passed: bindOK),
             toggleResult(),
         ]
     }
@@ -150,9 +150,16 @@ enum SelfTest {
         let restoredOK = model.document == before && store.load().document == before
             && fake.card.messages.last == "Задача 2 «Вторая» возвращена" && model.lastRemoved == nil
 
+        // Пункт меню «Добавить/Удалить текущее окно»: окно уже задача — удаляет её с той же карточкой.
+        fake.provider.context = FrontmostContext(bundleID: KnownBundleIDs.chatGPT, windowTitle: "Два - ChatGPT")
+        binder.toggleCurrentWindow()
+        let menuRemovedOK = model.document.tasks.map(\.id) == [t1.id, t3.id]
+            && fake.card.messages.last == "Задача 2 «Вторая» удалена — ⌃⌥§ в течение 5 с вернёт"
+            && model.lastRemoved?.undoableByToggle == true
+
         return SelfTestResult(
-            "Связка: ⌃⌥§ удаляет задачу переднего окна и возвращает её повтором в 5 с",
-            passed: removedOK && restoredOK,
+            "Связка: ⌃⌥§ удаляет задачу переднего окна и возвращает её повтором в 5 с; пункт меню удаляет так же",
+            passed: removedOK && restoredOK && menuRemovedOK,
             detail: removedText)
     }
 
@@ -220,8 +227,10 @@ private final class WiringFakes {
     final class Binder: CurrentChatBinding {
         var calls = 0
         var toggles = 0
+        var menuToggles = 0
         func bindCurrentChat() { calls += 1 }
         func toggleCurrentChat() { toggles += 1 }
+        func toggleCurrentWindow() { menuToggles += 1 }
     }
 
     final class Hotkeys: HotkeyRegistering {

@@ -1,9 +1,10 @@
 import Foundation
 
-// ⌃⌥§ «добавить или удалить текущую задачу» (D15): чистая логика переключателя.
+// ⌃⌥§ «добавить или удалить текущее окно» (D15, D16): чистая логика переключателя.
 //   - ExactTaskMatcher — переднее окно — это задача, только при точном совпадении;
 //   - TaskRemoval      — удаление с запоминанием места и возврат «как было»;
 //   - TaskToggle       — что делать по нажатию: вернуть, удалить или добавить;
+//   - CurrentWindowMenuAction — подпись и действие пункта меню по окну, что было впереди;
 //   - TaskToggleTexts  — тексты карточки и меню.
 
 /// Точное совпадение переднего окна с задачей.
@@ -164,7 +165,7 @@ public enum TaskRemoval {
     }
 }
 
-/// Что делает ⌃⌥§ «добавить или удалить текущую задачу».
+/// Что делает ⌃⌥§ «добавить или удалить текущее окно».
 public enum ToggleDecision: Equatable, Sendable {
     /// Повтор в окне отмены: вернуть только что удалённую задачу.
     case restore(RemovedTask)
@@ -176,11 +177,13 @@ public enum ToggleDecision: Equatable, Sendable {
 
 public enum TaskToggle {
     /// Сначала окно отмены (контекст тогда не читается вовсе), затем точное совпадение, иначе — добавить.
+    /// `allowRestore: false` — пункт меню «Добавить/Удалить текущее окно»: возврат у него отдельный
+    /// пункт, поэтому окно отмены не учитывается, и действие всегда совпадает с подписью пункта.
     public static func decide(
-        document: TasksDocument, lastRemoved: RemovedTask?, now: Date,
+        document: TasksDocument, lastRemoved: RemovedTask?, now: Date, allowRestore: Bool = true,
         context: () -> FrontmostContext
     ) -> ToggleDecision {
-        if let removed = lastRemoved, TaskRemoval.canUndoByToggle(removed, now: now),
+        if allowRestore, let removed = lastRemoved, TaskRemoval.canUndoByToggle(removed, now: now),
            document.index(of: removed.task.id) == nil {
             return .restore(removed)
         }
@@ -192,11 +195,59 @@ public enum TaskToggle {
     }
 }
 
+/// Что делает пункт меню «Добавить/Удалить текущее окно» для окна, которое было впереди до открытия меню.
+public enum CurrentWindowMenuAction: Equatable, Sendable {
+    /// Окно не задача (или контекст не прочитан): добавить.
+    case add
+    /// Окно точно совпало с задачей: удалить её.
+    case remove(taskID: UUID, number: Int)
+
+    public var isRemove: Bool {
+        if case .remove = self { return true }
+        return false
+    }
+
+    /// Подпись пункта меню.
+    public var title: String {
+        switch self {
+        case .add: return TaskToggleTexts.menuAddTitle
+        case .remove: return TaskToggleTexts.menuRemoveTitle
+        }
+    }
+
+    /// Точное совпадение (`ExactTaskMatcher`) — удалить, иначе (в том числе без контекста) — добавить.
+    public static func decide(context: FrontmostContext?, document: TasksDocument) -> CurrentWindowMenuAction {
+        guard let context, let id = ExactTaskMatcher.match(context: context, document: document),
+              let number = document.number(of: id) else { return .add }
+        return .remove(taskID: id, number: number)
+    }
+}
+
+/// Пункты меню под списком задач, сверху вниз (D16).
+public enum MenuFooterItem: Equatable, Sendable {
+    /// «Добавить текущее окно» или «Удалить текущее окно» (подпись — `CurrentWindowMenuAction.title`).
+    case currentWindow
+    case restoreRemoved
+    case settings
+    case quit
+
+    /// Столбик под разделителем; «Вернуть удалённую задачу» — только если есть что вернуть.
+    public static func items(canRestore: Bool) -> [MenuFooterItem] {
+        (canRestore ? [.currentWindow, .restoreRemoved] : [.currentWindow]) + [.settings, .quit]
+    }
+}
+
 /// Тексты переключателя: карточка и меню.
 public enum TaskToggleTexts {
-    /// Название действия ⌃⌥§: меню, настройки хоткеев, README.
-    public static let actionTitle = "Добавить или удалить текущую задачу"
+    /// Название действия ⌃⌥§: настройки хоткеев, README.
+    public static let actionTitle = "Добавить или удалить текущее окно"
+    /// Пункт меню: переднее окно не задача.
+    public static let menuAddTitle = "Добавить текущее окно"
+    /// Пункт меню: переднее окно уже задача.
+    public static let menuRemoveTitle = "Удалить текущее окно"
     public static let restoreMenuTitle = "Вернуть удалённую задачу"
+    public static let settingsMenuTitle = "Настройки…"
+    public static let quitMenuTitle = "Выйти"
 
     /// Карточка после удаления: «Задача 2 «Название» удалена — ⌃⌥§ в течение 5 с вернёт».
     public static func removedCard(number: Int, title: String, hotkey: Hotkey?, window: TimeInterval = TaskRemoval.undoWindow) -> String {

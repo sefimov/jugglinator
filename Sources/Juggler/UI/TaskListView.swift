@@ -2,7 +2,7 @@ import AppKit
 import JugglerCore
 import SwiftUI
 
-/// Панель меню-бара: список задач, правка, добавление и действия.
+/// Панель меню-бара: список задач, правка и действия под списком.
 struct TaskListView: View {
     let environment: AppEnvironment
     @ObservedObject var model: AppModel
@@ -18,12 +18,30 @@ struct TaskListView: View {
             TimelineView(.periodic(from: .now, by: 30)) { context in
                 taskList(now: context.date)
             }
-            bottomPanel
+            editorPanel
             Divider()
             footer
         }
         .padding(12)
         .frame(width: 380)
+        .background(WindowKeyObserver(onBecomeKey: refreshWindowContext, onResignKey: { state.resetWindowContext() }))
+        .onAppear(perform: refreshWindowContext)
+    }
+
+    /// Прочитать окно, бывшее впереди до открытия меню. Откладывается на следующий проход цикла
+    /// событий, чтобы панель успела появиться; разрешений не запрашивает.
+    private func refreshWindowContext() {
+        state.resetWindowContext()
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                state.setWindowContext(UIActions.readWindowContext(environment: environment))
+            }
+        }
+    }
+
+    /// Что делает пункт «Добавить/Удалить текущее окно» сейчас.
+    private var windowAction: CurrentWindowMenuAction {
+        CurrentWindowMenuAction.decide(context: state.windowContext, document: model.document)
     }
 
     // MARK: - Заголовок и уведомления
@@ -62,7 +80,7 @@ struct TaskListView: View {
         if rows.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Задач пока нет.")
-                Text("Откройте чат и выберите «\(TaskToggleTexts.actionTitle)» или добавьте задачу ниже.")
+                Text("Откройте чат и выберите «\(TaskToggleTexts.menuAddTitle)» ниже.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -103,10 +121,10 @@ struct TaskListView: View {
             delete: { state.askDelete(id) })
     }
 
-    // MARK: - Правка, удаление, добавление
+    // MARK: - Правка и удаление
 
     @ViewBuilder
-    private var bottomPanel: some View {
+    private var editorPanel: some View {
         if let editing = state.editing, let task = model.document.task(withID: editing.taskID),
            let number = model.document.number(of: task.id) {
             TaskEditorView(
@@ -128,66 +146,92 @@ struct TaskListView: View {
                     state.cancel()
                 },
                 onCancel: { state.cancel() })
-        } else {
-            addField
         }
     }
 
-    private var addField: some View {
-        HStack(spacing: 6) {
-            TextField("Новая задача", text: $state.newTitle)
-                .textFieldStyle(.roundedBorder)
-                .onSubmit(addTask)
-            Button(action: addTask) {
-                Image(systemName: "plus")
-            }
-            .help("Добавить задачу без привязки")
-        }
-    }
+    // MARK: - Под списком
 
-    private func addTask() {
-        let title = state.newTitle
-        let now = model.clock()
-        model.update { TaskListOps.add(&$0, title: title, now: now) }
-        state.newTitle = ""
-    }
-
-    // MARK: - Нижние кнопки
-
+    /// Столбиком: текущее окно, возврат удалённой, настройки, выход (порядок — `MenuFooterItem.items`).
     private var footer: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Button {
-                UIActions.toggleCurrentTask(environment: environment, dismiss: { dismiss() })
-            } label: {
-                Label(TaskToggleTexts.actionTitle, systemImage: "link.badge.plus")
-            }
-            .buttonStyle(.borderless)
-            .help("Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)")
-
-            if let removed = model.lastRemoved {
-                Button {
-                    model.restoreLastRemoved()
-                } label: {
-                    Label(TaskToggleTexts.restoreMenuTitle, systemImage: "arrow.uturn.backward")
-                }
-                .buttonStyle(.borderless)
-                .help(TaskToggleTexts.restoreHelp(removed))
-            }
-
-            HStack {
-                Button("Настройки…") {
-                    UIActions.activateForSettings()
-                    openSettings()
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut(",", modifiers: .command)
-                Spacer()
-                Button("Выйти из Juggler") {
-                    NSApp.terminate(nil)
-                }
-                .buttonStyle(.borderless)
-                .keyboardShortcut("q", modifiers: .command)
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(MenuFooterItem.items(canRestore: model.lastRemoved != nil), id: \.self) { item in
+                footerItem(item)
             }
         }
+    }
+
+    @ViewBuilder
+    private func footerItem(_ item: MenuFooterItem) -> some View {
+        switch item {
+        case .currentWindow:
+            let action = windowAction
+            footerButton(action.title, systemImage: action.isRemove ? "minus.circle" : "plus.circle") {
+                UIActions.toggleCurrentWindow(environment: environment, dismiss: { dismiss() })
+            }
+            .disabled(!state.windowContextLoaded)
+            .help("Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)")
+        case .restoreRemoved:
+            footerButton(TaskToggleTexts.restoreMenuTitle, systemImage: "arrow.uturn.backward") {
+                model.restoreLastRemoved()
+            }
+            .help(model.lastRemoved.map(TaskToggleTexts.restoreHelp) ?? "")
+        case .settings:
+            footerButton(TaskToggleTexts.settingsMenuTitle, systemImage: "gearshape") {
+                UIActions.activateForSettings()
+                openSettings()
+            }
+            .keyboardShortcut(",", modifiers: .command)
+        case .quit:
+            footerButton(TaskToggleTexts.quitMenuTitle, systemImage: "power") {
+                NSApp.terminate(nil)
+            }
+            .keyboardShortcut("q", modifiers: .command)
+        }
+    }
+
+    private func footerButton(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: systemImage)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.borderless)
+        .padding(.vertical, 3)
+    }
+}
+
+/// Сообщает, когда окно панели меню-бара становится ключевым (меню открыто) и перестаёт им быть.
+/// Нужен, потому что `onAppear` у панели `MenuBarExtra` не срабатывает при каждом открытии.
+private struct WindowKeyObserver: NSViewRepresentable {
+    let onBecomeKey: () -> Void
+    let onResignKey: () -> Void
+
+    func makeNSView(context: Context) -> ObserverView { ObserverView() }
+
+    func updateNSView(_ view: ObserverView, context: Context) {
+        view.onBecomeKey = onBecomeKey
+        view.onResignKey = onResignKey
+    }
+
+    final class ObserverView: NSView {
+        var onBecomeKey: () -> Void = {}
+        var onResignKey: () -> Void = {}
+        private var tokens: [NSObjectProtocol] = []
+
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            tokens.forEach(NotificationCenter.default.removeObserver)
+            tokens = []
+            guard let window else { return }
+            let center = NotificationCenter.default
+            tokens.append(center.addObserver(forName: NSWindow.didBecomeKeyNotification, object: window, queue: .main) { [weak self] _ in
+                self?.onBecomeKey()
+            })
+            tokens.append(center.addObserver(forName: NSWindow.didResignKeyNotification, object: window, queue: .main) { [weak self] _ in
+                self?.onResignKey()
+            })
+        }
+
+        deinit { tokens.forEach(NotificationCenter.default.removeObserver) }
     }
 }

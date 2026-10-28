@@ -1,7 +1,7 @@
 import Foundation
 import JugglerCore
 
-// ⌃⌥§ «добавить или удалить текущую задачу» (задача TOGGLE, D15): точное совпадение,
+// ⌃⌥§ «добавить или удалить текущее окно» (задача TOGGLE, D15): точное совпадение,
 // решение переключателя, удаление с возвратом, окно отмены и тексты.
 
 extension CoreChecks {
@@ -15,6 +15,7 @@ extension CoreChecks {
         toggleUndoWindow(c)
         toggleDecision(c)
         toggleTexts(c)
+        toggleMenuItem(c)
     }
 
     private static let toggleUUID = "0f8fad5b-d9cb-469f-a165-70867728950e"
@@ -265,10 +266,56 @@ extension CoreChecks {
                           "Задача 1 «Без названия» удалена — вернуть: «Вернуть удалённую задачу» в меню Juggler",
                           "без назначенного хоткея — пункт меню")
             c.expectEqual(TaskToggleTexts.restoredCard(number: 3, title: "Тред"), "Задача 3 «Тред» возвращена", "карточка возврата")
-            c.expectEqual(HotkeyAction.bindCurrentChat.displayName, "Добавить или удалить текущую задачу", "подпись в настройках хоткеев")
+            c.expectEqual(HotkeyAction.bindCurrentChat.displayName, "Добавить или удалить текущее окно", "подпись в настройках хоткеев")
             c.expectEqual(TaskToggleTexts.restoreMenuTitle, "Вернуть удалённую задачу", "пункт меню возврата")
             let removed = RemovedTask(task: Fixture.task("Тред"), index: 1, wasActive: false, removedAt: Fixture.t0, undoableByToggle: true)
             c.expectEqual(TaskToggleTexts.restoreHelp(removed), "Вернуть «Тред» на место 2", "подсказка пункта возврата")
+        }
+    }
+
+    /// Пункт меню «Добавить/Удалить текущее окно» (TUNE, D16).
+    static func toggleMenuItem(_ c: CheckRunner) {
+        c.group("меню: пункт «Добавить/Удалить текущее окно»") {
+            let t0 = Fixture.t0
+            let binding = TaskBinding.appWindow(AppWindowRef(bundleID: "com.example.one", windowTitle: "Один"))
+            let d = doc([nil, binding])
+            let front = FrontmostContext(bundleID: "com.example.one", windowTitle: "Один")
+            let elsewhere = FrontmostContext(bundleID: "com.example.two", windowTitle: "Два")
+
+            c.expectEqual(CurrentWindowMenuAction.decide(context: elsewhere, document: d), .add, "окно не задача → добавить")
+            c.expectEqual(CurrentWindowMenuAction.decide(context: front, document: d),
+                          .remove(taskID: d.tasks[1].id, number: 2), "окно уже задача (точное совпадение) → удалить")
+            c.expectEqual(CurrentWindowMenuAction.decide(context: nil, document: d), .add, "контекст не прочитан → добавить")
+            let weak = FrontmostContext(bundleID: "com.example.one", windowTitle: "Другой")
+            c.expectEqual(CurrentWindowMenuAction.decide(context: weak, document: d), .add,
+                          "то же приложение, другой заголовок — не задача (без запасной «последней активной»)")
+            let lastActive = doc([nil, binding], active: 1)
+            c.expectEqual(CurrentWindowMenuAction.decide(context: elsewhere, document: lastActive), .add,
+                          "последняя активная задача не делает окно задачей")
+            c.expectEqual(CurrentWindowMenuAction.add.title, "Добавить текущее окно", "подпись «добавить»")
+            c.expectEqual(CurrentWindowMenuAction.decide(context: front, document: d).title, "Удалить текущее окно", "подпись «удалить»")
+
+            // После удаления пункт снова «Добавить» (документ изменился, контекст тот же).
+            var after = d
+            _ = TaskRemoval.remove(&after, id: d.tasks[1].id, now: t0, undoableByToggle: true)
+            c.expectEqual(CurrentWindowMenuAction.decide(context: front, document: after), .add, "после удаления — «Добавить»")
+
+            // Пункт меню не возвращает удалённую задачу: возврат — отдельный пункт, действие совпадает с подписью.
+            var removedDoc = d
+            let removed = TaskRemoval.remove(&removedDoc, id: d.tasks[1].id, now: t0, undoableByToggle: true)
+            c.expectEqual(TaskToggle.decide(document: removedDoc, lastRemoved: removed, now: t0.addingTimeInterval(2), allowRestore: false) { front },
+                          .add(front), "из меню в окне отмены окно добавляется, а не возвращается")
+            c.expectEqual(TaskToggle.decide(document: removedDoc, lastRemoved: removed, now: t0.addingTimeInterval(2)) { front },
+                          .restore(removed!), "хоткей в окне отмены по-прежнему возвращает")
+            c.expectEqual(TaskToggle.decide(document: d, lastRemoved: nil, now: t0, allowRestore: false) { front },
+                          .remove(taskID: d.tasks[1].id, number: 2), "из меню: окно — задача → удалить")
+
+            c.expectEqual(MenuFooterItem.items(canRestore: false), [.currentWindow, .settings, .quit],
+                          "под списком без возврата: окно, настройки, выход")
+            c.expectEqual(MenuFooterItem.items(canRestore: true), [.currentWindow, .restoreRemoved, .settings, .quit],
+                          "под списком: окно, возврат, настройки, выход")
+            c.expectEqual(TaskToggleTexts.settingsMenuTitle, "Настройки…", "пункт «Настройки…»")
+            c.expectEqual(TaskToggleTexts.quitMenuTitle, "Выйти", "«Выйти из Juggler» → «Выйти»")
         }
     }
 }
