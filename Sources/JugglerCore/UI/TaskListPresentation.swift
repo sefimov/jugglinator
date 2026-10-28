@@ -75,29 +75,6 @@ public enum TaskListPresenter {
         return title.isEmpty ? binding.source.displayName : "\(binding.source.displayName): \(title)"
     }
 
-    /// Текст иконки меню-бара: номер текущей задачи или «–», если её нет.
-    public static func menuBarText(currentNumber: Int?) -> String {
-        guard let currentNumber, currentNumber > 0 else { return "–" }
-        return String(currentNumber)
-    }
-
-    /// SF Symbol с номером текущей задачи (есть для 1…50) или `nil`, тогда показывается текст.
-    public static func menuBarSymbol(currentNumber: Int?) -> String? {
-        guard let currentNumber, (1...50).contains(currentNumber) else { return nil }
-        return "\(currentNumber).square.fill"
-    }
-
-    /// Значок меню-бара, когда текущей задачи нет.
-    public static let menuBarEmptySymbol = "square.dashed"
-
-    /// Подсказка к иконке меню-бара.
-    public static func menuBarHelp(document: TasksDocument) -> String {
-        guard let task = document.lastActiveTask, let number = document.number(of: task.id) else {
-            return String(localized: "Juggler: текущей задачи нет")
-        }
-        return String(localized: "Juggler: задача \(number) — \(task.title)")
-    }
-
     /// Сводка под заголовком: «3 задачи, 1 сделана». Формы слов — из `Localizable.stringsdict`
     /// пакета .app; без таблиц (проверки, `swift run`) — русские по `RussianPlural`.
     public static func summary(for document: TasksDocument) -> String {

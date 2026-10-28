@@ -58,11 +58,13 @@ enum UISelfTest {
     }
 
     private static func menuBarSymbols() -> SelfTestResult {
-        let names = [1, 2, 9, 10, 50].compactMap { TaskListPresenter.menuBarSymbol(currentNumber: $0) }
-            + [TaskListPresenter.menuBarEmptySymbol]
-        let missing = names.filter { NSImage(systemSymbolName: $0, accessibilityDescription: nil) == nil }
-        return SelfTestResult("UI: значки меню-бара есть в SF Symbols", passed: missing.isEmpty,
-                              detail: missing.isEmpty ? "" : "нет: \(missing.joined(separator: ", "))")
+        let appearances: [MenuBarDot.Appearance] = [.outline] + MenuBarDotColor.allCases.map { .filled($0) }
+        let images = appearances.map { MenuBarDotImage.image(for: $0) }
+        // Серый контур — шаблон (красится системой), цветные кружки — нет (иначе потеряют цвет).
+        let ok = images.first?.isTemplate == true
+            && images.dropFirst().allSatisfy { !$0.isTemplate && $0.size.width > 0 }
+        return SelfTestResult("UI: кружок меню-бара рисуется (контур — шаблон, цветные — нет)", passed: ok,
+                              detail: ok ? "" : "признаки шаблона: \(images.map(\.isTemplate))")
     }
 
     private static func loginItemStatus() -> SelfTestResult {

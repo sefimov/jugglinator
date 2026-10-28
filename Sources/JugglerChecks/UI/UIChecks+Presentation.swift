@@ -41,19 +41,8 @@ extension UIChecks {
     }
 
     static func checkTexts(_ c: CheckRunner) {
-        c.group("тексты меню-бара") {
-            c.expectEqual(TaskListPresenter.menuBarText(currentNumber: 3), "3", "иконка: номер текущей")
-            c.expectEqual(TaskListPresenter.menuBarText(currentNumber: nil), "–", "иконка без текущей")
-            c.expectEqual(TaskListPresenter.menuBarText(currentNumber: 0), "–", "номер 0 не показывается")
-            c.expectEqual(TaskListPresenter.menuBarSymbol(currentNumber: 1), "1.square.fill", "символ для 1")
-            c.expectEqual(TaskListPresenter.menuBarSymbol(currentNumber: 50), "50.square.fill", "символ для 50")
-            c.expectNil(TaskListPresenter.menuBarSymbol(currentNumber: 51), "для 51 символа нет — текст")
-            c.expectNil(TaskListPresenter.menuBarSymbol(currentNumber: nil), "без текущей — нет символа с номером")
-
-            var (doc, ids) = sample()
-            c.expectEqual(TaskListPresenter.menuBarHelp(document: doc), "Juggler: текущей задачи нет", "подсказка без текущей")
-            doc.lastActiveTaskID = ids[1]
-            c.expectEqual(TaskListPresenter.menuBarHelp(document: doc), "Juggler: задача 2 — B", "подсказка с текущей")
+        c.group("тексты списка") {
+            var (doc, _) = sample()
 
             c.expectEqual(TaskListPresenter.summary(for: TasksDocument()), "Задач пока нет", "сводка: пусто")
             c.expectEqual(TaskListPresenter.summary(for: doc), "4 задачи", "сводка: 4 задачи")

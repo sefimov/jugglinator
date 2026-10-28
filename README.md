@@ -10,7 +10,7 @@ A macOS menu bar app. It keeps a list of parallel chat tasks and cycles through 
 
 ```sh
 scripts/bundle.sh            # build, sign and self-test build/Juggler.app
-open build/Juggler.app       # launch: an icon with the task number appears in the menu bar
+open build/Juggler.app       # launch: a colored circle appears in the menu bar
 ```
 
 Then:
@@ -136,6 +136,24 @@ If several tasks match, a match by id wins, then by URL, then by name. On a tie,
 - **First press** marks the task done; a card appears: "Task N “…” done". **A second press** takes the mark off: "Task N “…” is back in progress". The change is saved to `tasks.json` right away.
 - **No tasks** — nothing changes: a short beep and a card "No tasks yet: add a task from the Juggler menu". If there are tasks but none is current and the window matches none of them, there is also a beep and a card explaining it.
 - The hotkey is reassigned like the others (Settings → "Hotkeys"). An old `hotkeys.json` without this action still loads, and ⌃⌥D stays the default; the key in the file is `toggleDone`.
+
+## Menu bar circle
+
+The menu bar icon is a circle. Its color shows the not-done task you have been away from the longest; the current task (▸) is not counted, so it does not turn red while you work in it.
+
+| Circle | Meaning |
+|---|---|
+| green | the longest-waiting task was visited less than 10 minutes ago, or the current task is the only one in progress |
+| yellow | 10 to 30 minutes |
+| orange | 30 to 60 minutes |
+| red | an hour or more |
+| grey outline | no tasks, or all of them are done |
+
+- The thresholds are the same as the "away N min" colors in the list. A task that has never been opened counts from the moment it was created.
+- The color is recomputed right after switching, marking done, adding and removing a task, and at least once a minute (also after the Mac wakes up).
+- Hovering the icon shows which task it is and how long you have been away from it, for example "Task 3 — Report, away 12 min". The tooltip is localized. SwiftUI `.help` on a `MenuBarExtra` label does not reach the status item, so the text is also set directly on the status item button (`StatusItemTooltip`).
+- The colored circle is a regular (non-template) image, so the menu bar does not tint it black or white; the grey outline is a template image and follows the light or dark menu bar.
+- The logic (choosing the task, level to color, tooltip text) is in `Sources/JugglerCore/UI/MenuBarDot.swift`, checked by `UIChecks+MenuBarDot.swift`.
 
 ## Bindings
 

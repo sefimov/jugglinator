@@ -151,8 +151,6 @@
 "Нет привязки: откройте чат и нажмите %@" = "Not bound: open a chat and press %@";
 "Нет привязки: откройте чат и выберите в меню «%@»" = "Not bound: open a chat and choose “%@” in the menu";
 "Без привязки: откройте чат и выберите «%@»" = "Not bound: open a chat and choose “%@”";
-"Juggler: текущей задачи нет" = "Juggler: no current task";
-"Juggler: задача %lld — %@" = "Juggler: task %lld — %@";
 "Задач пока нет" = "No tasks yet";
 "Удалить задачу «%@»?" = "Delete task “%@”?";
 "Файл задач был повреждён или пропал. Список восстановлен из резервной копии." = "The tasks file was damaged or missing. The list was restored from a backup.";
@@ -181,3 +179,6 @@
 "Не удалось перезапустить Juggler: %@" = "Couldn’t restart Juggler: %@";
 "Очистить все задачи" = "Clear All Tasks";
 "Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "Tasks, notes and bindings will be deleted. This can't be undone.";
+"Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: task %lld has waited longest — %@, %@";
+"Juggler: других задач в работе нет" = "Juggler: no other tasks in progress";
+"Juggler: нет задач в работе" = "Juggler: no tasks in progress";

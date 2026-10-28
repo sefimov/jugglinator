@@ -151,8 +151,6 @@
 "Нет привязки: откройте чат и нажмите %@" = "Sem vínculo: abra um chat e pressione %@";
 "Нет привязки: откройте чат и выберите в меню «%@»" = "Sem vínculo: abra um chat e escolha “%@” no menu";
 "Без привязки: откройте чат и выберите «%@»" = "Sem vínculo: abra um chat e escolha “%@”";
-"Juggler: текущей задачи нет" = "Juggler: nenhuma tarefa atual";
-"Juggler: задача %lld — %@" = "Juggler: tarefa %lld — %@";
 "Задач пока нет" = "Ainda não há tarefas";
 "Удалить задачу «%@»?" = "Excluir a tarefa “%@”?";
 "Файл задач был повреждён или пропал. Список восстановлен из резервной копии." = "O arquivo de tarefas estava danificado ou sumiu. A lista foi restaurada a partir de um backup.";
@@ -181,3 +179,6 @@
 "Не удалось перезапустить Juggler: %@" = "Não foi possível reiniciar o Juggler: %@";
 "Очистить все задачи" = "Limpar todas as tarefas";
 "Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "As tarefas, as notas e os vínculos serão excluídos. Esta ação não pode ser desfeita.";
+"Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: a tarefa %lld espera há mais tempo — %@, %@";
+"Juggler: других задач в работе нет" = "Juggler: não há outras tarefas em andamento";
+"Juggler: нет задач в работе" = "Juggler: não há tarefas em andamento";

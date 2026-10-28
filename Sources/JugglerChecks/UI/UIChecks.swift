@@ -19,6 +19,7 @@ enum UIChecks: CheckSuite {
         checkMoveByAndBefore(c)
         checkRows(c)
         checkTexts(c)
+        checkMenuBarDot(c)
         checkLoginItem(c)
         checkPersistence(c)
         checkSessionRows(c)
