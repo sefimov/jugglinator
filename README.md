@@ -4,7 +4,7 @@ A macOS menu bar app. It keeps a list of parallel chat tasks and cycles through 
 
 - Bundle id: `com.sefimov.juggler`.
 - Requires macOS 14 or later.
-- The interface is available in 12 languages: Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish. The language follows the macOS settings and falls back to English for anything else; you can change it for Juggler alone in Settings → Language. See "Localization" for details.
+- The interface is available in 12 languages: Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish. The language follows the macOS settings and falls back to English for anything else; you can change it for Juggler alone in Settings → Language, and Juggler's texts switch right away, without a restart. See "Localization" for details.
 
 ## Quick start
 
@@ -305,25 +305,28 @@ How we work around them:
 
 ## Localization
 
-The interface is translated into 12 languages: `ar`, `de`, `en`, `es`, `fr`, `hi`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `zh-Hans`. macOS picks the language from System Settings → General → Language & Region, or from the language chosen for Juggler there. If none of the languages fit, the interface is in English (`CFBundleDevelopmentRegion` is `en`).
+The interface is translated into 12 languages: `ar`, `de`, `en`, `es`, `fr`, `hi`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `zh-Hans`. The language is the one chosen in Juggler settings or, with "Same as system", the first language from System Settings → General → Language & Region that has a translation. If none of the languages fit, the interface is in English (`CFBundleDevelopmentRegion` is `en`).
 
-- Source strings in the code stay in Russian and serve as translation keys: `String(localized: "Задача \(number)")` or a SwiftUI literal (`Text("…")`, `Button("…")`, `.help("…")`).
+- Source strings in the code stay in Russian and serve as translation keys, always written as a literal inside `loc(...)`: `loc("Задача \(number)")`, `Text(loc("…"))`, `Button(loc("…"))`, `.help(loc("…"))`. `loc` (`Sources/JugglerCore/UI/Localizer.swift`) translates into the language selected *now*, not the launch language: it reads `<language>.lproj/Localizable.strings` and `.stringsdict` directly through `Bundle(url:)` of that folder. Do not use `String(localized:)` or bare SwiftUI literals (`Text("…")`): they resolve against the launch language and would not switch until a restart; `check-localization.py` reports them as errors.
+- Lookup order: the selected language, then English (the development language), then the key itself (the Russian text). For Russian, English is skipped. Plurals (`LocalizedPlural`, `Localizer.plural`) use the plural rules of the table's language.
 - Translations live in `Localization/<language>.lproj/`:
   - `Localizable.strings` — interface strings. Interpolation becomes a format specifier: `Int` → `%lld`, `Int32` → `%d`, anything else → `%@`. If a translation needs a different order, use positional specifiers: `%1$@`, `%2$lld`;
   - `Localizable.stringsdict` — plural forms for the "3 tasks, 1 done" summary and the "Delete all N tasks?" question;
   - `InfoPlist.strings` — the text of the request to control Chrome.
-- `scripts/bundle.sh` copies these folders into the `.app`. Without the `.app` (`swift run`, `JugglerChecks`) there are no tables, so the Russian text is shown. The checks compare exactly that text.
-- `scripts/check-localization.py` verifies that every table has exactly the keys from the code with the same specifiers, and that `CFBundleLocalizations` matches the folders. The script is run from `bundle.sh`. `--keys` prints the keys with their location in the code.
+- `scripts/bundle.sh` copies these folders into the `.app`. Without the `.app` (`swift run`, `JugglerChecks`) `Localizer` looks for the repository's `Localization/` next to the build (`.build/<platform>/debug/…` → up to the repository root); if it is not found, the Russian keys are shown. `JugglerChecks` pins the language to Russian, so the checks compare Russian text regardless of the system language; the live-language checks (`UIChecks+LiveLanguage.swift`) switch languages on separate `Localizer` instances or restore the shared one.
+- `scripts/check-localization.py` verifies that every table has exactly the keys found in `loc(...)` with the same specifiers, that no Cyrillic literal is left in `String(localized:)` or a bare SwiftUI literal, and that `CFBundleLocalizations` matches the folders. The script is run from `bundle.sh`. `--keys` prints the keys with their location in the code.
 
 ### Changing the language in settings
 
 Juggler settings → "Language": "Same as system" and the 12 languages, each labeled with its own name ("Русский", "English", "Deutsch", "日本語" …). The current choice is shown.
 
 - The choice applies to Juggler only: the `AppleLanguages` key in Juggler's own defaults domain `com.sefimov.juggler` (the same as the per-app language in System Settings). The system language is not changed. "Same as system" removes this value. To view it: `defaults read com.sefimov.juggler AppleLanguages`; to reset it manually: `defaults delete com.sefimov.juggler AppleLanguages`.
-- The new language takes effect on the next launch. After choosing, the hint "The language will change after a restart" and a "Restart now" button appear: the button quits Juggler and opens it again right away; tasks are preserved (`tasks.json` is written on every change). If you switch back to the language Juggler is running in, the hint disappears.
+- Juggler's own texts switch immediately: the menu, the Settings window, hotkey labels and the menu bar icon tooltip are redrawn in the new language (their root views follow `LanguageController.shared` via `followsLanguage()`, which rebuilds them when the language changes); cards, dialogs and alerts shown after the change are in the new language too.
+- macOS system labels (the Settings window title, standard buttons and menus, and the `InfoPlist.strings` texts such as the Automation permission request) are chosen by AppKit at launch, so they change only after a restart. After choosing a language other than the launch one, a hint says so and a "Restart now" button appears: the button quits Juggler and opens it again right away; tasks are preserved (`tasks.json` is written on every change). If you switch back to the choice Juggler was launched with, the hint disappears.
+- Messages that were already on screen before the change (for example, a save error) keep their language until they are shown again.
 - The button works only in the built `.app`. Under `swift run` it is disabled; quit and relaunch Juggler manually.
 - Language names in the list are not translated; they live in the code (`AppLanguage.all`), not in `Localizable.strings`. A new language must be added both there and to `CFBundleLocalizations`.
-- The logic (the list, selection from `AppleLanguages`, writing and clearing, the restart command) is in `Sources/JugglerCore/UI/LanguageSettings.swift`; the checks are in `UIChecks+Language.swift` and use a separate defaults domain, leaving the real settings untouched.
+- The logic (the list, selection from `AppleLanguages`, the effective language for "Same as system", writing and clearing, the restart command) is in `Sources/JugglerCore/UI/LanguageSettings.swift`, translation in `Localizer.swift`; the checks are in `UIChecks+Language.swift` and `UIChecks+LiveLanguage.swift` and use a separate defaults domain, leaving the real settings untouched. The `--self-test` language check also uses a temporary domain and its own `Localizer`.
 
 To add or change a string: change the text in the code, then add the key to `Localizable.strings` for all 12 languages (for `ru`, the value equals the key) and run `scripts/check-localization.py`. To add a language: create a `Localization/<language>.lproj` folder with the three files, and add the language to `CFBundleLocalizations` in `scripts/Info.plist` and to `AppLanguage.all` (the picker list in settings).
 
@@ -443,5 +446,5 @@ Each task works only in its own folders:
 8. **The self-test** `--self-test` must not request permissions or show windows. Each area returns `[SelfTestResult]` from its `selfTest()`.
 9. **Constraints:**
    - no `#Preview`, `.xcassets`, `.storyboard`/`.xib` or third-party dependencies;
-   - interface strings are written in Russian via `String(localized:)` or a SwiftUI literal, with translations in `Localization/*.lproj`, see "Localization";
+   - interface strings are written in Russian via `loc("…")` (also inside SwiftUI: `Text(loc("…"))`), with translations in `Localization/*.lproj`, see "Localization";
    - logging goes through `Logger(subsystem: JugglerLog.subsystem, category: "<area>")`.

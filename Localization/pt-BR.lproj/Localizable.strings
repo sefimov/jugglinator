@@ -173,7 +173,7 @@
 "Язык" = "Idioma";
 "Язык интерфейса" = "Idioma da interface";
 "Как в системе" = "Igual ao sistema";
-"Язык сменится после перезапуска" = "O idioma mudará após a reinicialização";
+"Тексты Juggler уже на новом языке. Системные надписи macOS — заголовок окна настроек, стандартные кнопки, тексты запросов разрешений — сменятся после перезапуска." = "Os textos do Juggler já estão no novo idioma. Os textos do sistema macOS — título da janela de ajustes, botões padrão, textos dos pedidos de permissão — mudarão após a reinicialização.";
 "Перезапустить сейчас" = "Reiniciar agora";
 "Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "A reinicialização só funciona no aplicativo Juggler.app. Feche o Juggler e abra-o novamente.";
 "Не удалось перезапустить Juggler: %@" = "Não foi possível reiniciar o Juggler: %@";

@@ -29,8 +29,8 @@ final class CycleTaskSwitcher: TaskSwitching {
         guard let target = SwitchPlanner.target(direction: direction, context: context, document: model.document) else {
             beep()
             let text = model.tasks.isEmpty
-                ? String(localized: "Задач пока нет: добавьте задачу в меню Juggler")
-                : String(localized: "Все задачи отмечены «сделано»")
+                ? loc("Задач пока нет: добавьте задачу в меню Juggler")
+                : loc("Все задачи отмечены «сделано»")
             (card as? TransitionMessagePresenting)?.showMessage(text)
             return
         }

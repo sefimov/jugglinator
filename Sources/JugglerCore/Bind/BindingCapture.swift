@@ -90,7 +90,7 @@ public enum BindingCapture {
         case .other:
             let appName = context.appName ?? ""
             let windowTitle = context.windowTitle ?? ""
-            let title = TitleCleaner.suggestedTaskTitle(from: windowTitle, fallback: appName.isEmpty ? String(localized: "Новая задача") : appName)
+            let title = TitleCleaner.suggestedTaskTitle(from: windowTitle, fallback: appName.isEmpty ? loc("Новая задача") : appName)
             return .captured(.appWindow(AppWindowRef(bundleID: bundleID, windowTitle: windowTitle, appName: appName)), suggestedTitle: title)
         }
     }
@@ -193,7 +193,7 @@ public enum BindPlanner {
     @discardableResult
     public static func createTask(in document: inout TasksDocument, title: String, binding: TaskBinding, now: Date) -> UUID {
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let task = JugglerTask(title: cleanTitle.isEmpty ? String(localized: "Новая задача") : cleanTitle, createdAt: now, binding: binding)
+        let task = JugglerTask(title: cleanTitle.isEmpty ? loc("Новая задача") : cleanTitle, createdAt: now, binding: binding)
         document.tasks.append(task)
         document.markVisited(task.id, at: now)
         return task.id

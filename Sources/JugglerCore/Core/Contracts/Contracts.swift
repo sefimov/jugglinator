@@ -70,8 +70,8 @@ public enum HotkeyAction: String, Codable, CaseIterable, Sendable {
 
     public var displayName: String {
         switch self {
-        case .nextTask: return String(localized: "Следующая задача")
-        case .previousTask: return String(localized: "Предыдущая задача")
+        case .nextTask: return loc("Следующая задача")
+        case .previousTask: return loc("Предыдущая задача")
         case .bindCurrentChat: return TaskToggleTexts.actionTitle
         case .toggleDone: return DoneToggleTexts.actionTitle
         }

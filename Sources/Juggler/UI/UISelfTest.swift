@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import Foundation
 import JugglerCore
 import ServiceManagement
@@ -72,20 +73,43 @@ enum UISelfTest {
         return SelfTestResult("UI: статус запуска при входе читается", passed: true, detail: state.rawValue)
     }
 
-    /// Выбор языка на временном домене настроек: настоящий `com.sefimov.juggler` не затрагивается.
+    /// Выбор языка на временном домене настроек и отдельном переводчике: настоящий `com.sefimov.juggler`
+    /// и язык приложения не затрагиваются. Тексты переключаются сразу, без перезапуска.
     private static func languageSelection() -> SelfTestResult {
         let suite = "com.sefimov.juggler.self-test.language.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suite) else {
             return SelfTestResult("UI: выбор языка", passed: false, detail: "нет временного домена настроек")
         }
         defer { defaults.removePersistentDomain(forName: suite) }
-        let controller = LanguageController(settings: LanguageSettings(defaults: defaults, domain: suite))
+        let realBefore = LanguageSettings.app.storedOverride
+        let localizer = Localizer(resourcesURL: Localizer.shared.resourcesURL, language: "ru")
+        let controller = LanguageController(
+            settings: LanguageSettings(defaults: defaults, domain: suite),
+            localizer: localizer,
+            systemLanguages: { ["de-DE"] })
+        var published = 0
+        let subscription = controller.objectWillChange.sink { published += 1 }
+        defer { subscription.cancel() }
+        let hasTables = localizer.resourcesURL != nil
+
         let start = controller.choice == .system && !controller.needsRestart
-        controller.select(.language("de"))
-        let changed = controller.needsRestart && defaults.persistentDomain(forName: suite)?[LanguageSettings.key] as? [String] == ["de"]
+            && controller.language == "de" && localizer.language == "de"
+            && (!hasTables || localizer.string("Выйти") == "Beenden")
+        controller.select(.language("ja"))
+        let changed = controller.needsRestart && published > 0
+            && defaults.persistentDomain(forName: suite)?[LanguageSettings.key] as? [String] == ["ja"]
+            && controller.language == "ja"
+            && (!hasTables || localizer.string("Выйти") == "終了")
         controller.select(.system)
         let reset = !controller.needsRestart && defaults.persistentDomain(forName: suite)?[LanguageSettings.key] == nil
-        let ok = start && changed && reset && AppLanguage.all.count == 12
-        return SelfTestResult("UI: выбор языка", passed: ok, detail: "временный домен, настоящие настройки не тронуты")
+            && controller.language == "de"
+            && (!hasTables || (localizer.string("Выйти") == "Beenden" && localizer.plural("summary.tasks", 2) == "2 Aufgaben"))
+        let untouched = LanguageSettings.app.storedOverride == realBefore
+        let expected = LanguageSettings.app.effectiveLanguage(systemPreferred: LanguageSettings.systemPreferredLanguages())
+        let sharedOK = Localizer.shared.language == expected
+        let ok = start && changed && reset && untouched && sharedOK && AppLanguage.all.count == 12
+        let detail = "язык приложения \(Localizer.shared.language), таблицы \(hasTables ? "есть" : "нет"); временный домен, настоящие настройки не тронуты"
+        return SelfTestResult("UI: выбор языка и смена без перезапуска", passed: ok,
+                              detail: ok ? detail : "start \(start) changed \(changed) reset \(reset) untouched \(untouched) shared \(sharedOK)")
     }
 }

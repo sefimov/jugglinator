@@ -46,18 +46,18 @@ public enum DoneToggle {
 /// Тексты ⌃⌥D: карточка и настройки хоткеев.
 public enum DoneToggleTexts {
     /// Название действия ⌃⌥D: настройки хоткеев, README.
-    public static let actionTitle = String(localized: "Отметить сделанной / вернуть в работу")
+    public static var actionTitle: String { loc("Отметить сделанной / вернуть в работу") }
     /// Карточка при пустом списке.
-    public static let noTasksMessage = String(localized: "Задач пока нет: добавьте задачу в меню Juggler")
+    public static var noTasksMessage: String { loc("Задач пока нет: добавьте задачу в меню Juggler") }
     /// Карточка, когда задачи есть, но текущая не выбрана.
-    public static let noCurrentTaskMessage = String(localized: "Текущей задачи нет: перейдите к одной из задач")
+    public static var noCurrentTaskMessage: String { loc("Текущей задачи нет: перейдите к одной из задач") }
 
     /// «Задача 2 «Название» сделана» / «Задача 2 «Название» вернулась в работу».
     public static func card(number: Int, title: String, isDone: Bool) -> String {
         let shown = TransitionCardBuilder.title(title)
         return isDone
-            ? String(localized: "Задача \(number) «\(shown)» сделана")
-            : String(localized: "Задача \(number) «\(shown)» вернулась в работу")
+            ? loc("Задача \(number) «\(shown)» сделана")
+            : loc("Задача \(number) «\(shown)» вернулась в работу")
     }
 
     /// Текст карточки по итогу.

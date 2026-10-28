@@ -100,7 +100,7 @@ final class AppModel: ObservableObject {
             try store.save(document)
             lastSaveError = nil
         } catch {
-            lastSaveError = String(localized: "Не удалось сохранить задачи: \(error.localizedDescription)")
+            lastSaveError = loc("Не удалось сохранить задачи: \(error.localizedDescription)")
             JugglerLog.app.error("Ошибка записи tasks.json: \(error.localizedDescription, privacy: .public)")
         }
     }

@@ -106,9 +106,10 @@ public enum KeyCode {
 
     /// Имя физической клавиши (по американской раскладке) для показа.
     public static func displayName(_ code: UInt32) -> String {
+        if code == 0x31 { return loc("Пробел") } // переводится на выбранный сейчас язык, не кэшируется
         if let name = names[code] { return name }
         if let f = functionKeys[code] { return "F\(f)" }
-        return String(localized: "Клавиша \(Int(code))")
+        return loc("Клавиша \(Int(code))")
     }
 
     /// Код клавиши по имени: символ («§», «A», «1»), слово («space», «f5»)
@@ -151,7 +152,7 @@ public enum KeyCode {
         0x18: "=", 0x19: "9", 0x1A: "7", 0x1B: "-", 0x1C: "8", 0x1D: "0", 0x1E: "]", 0x1F: "O",
         0x20: "U", 0x21: "[", 0x22: "I", 0x23: "P", 0x24: "↩", 0x25: "L", 0x26: "J", 0x27: "'",
         0x28: "K", 0x29: ";", 0x2A: "\\", 0x2B: ",", 0x2C: "/", 0x2D: "N", 0x2E: "M", 0x2F: ".",
-        0x30: "⇥", 0x31: String(localized: "Пробел"), 0x32: "`", 0x33: "⌫", 0x35: "⎋",
+        0x30: "⇥", 0x32: "`", 0x33: "⌫", 0x35: "⎋",
         0x41: "Num .", 0x43: "Num *", 0x45: "Num +", 0x47: "Num Clear", 0x4B: "Num /",
         0x4C: "Num ↩", 0x4E: "Num -", 0x51: "Num =",
         0x52: "Num 0", 0x53: "Num 1", 0x54: "Num 2", 0x55: "Num 3", 0x56: "Num 4",
@@ -288,10 +289,10 @@ public enum HotkeyValidationError: Equatable, Sendable {
 
     public var message: String {
         switch self {
-        case .modifierOnly: return String(localized: "Нажмите клавишу вместе с модификатором.")
-        case .needsModifier: return String(localized: "Добавьте ⌃, ⌥ или ⌘ — иначе сочетание будет мешать набору текста.")
-        case .invalidKey: return String(localized: "Эту клавишу нельзя назначить.")
-        case .conflict(let action): return String(localized: "Это сочетание уже назначено: «\(action.displayName)».")
+        case .modifierOnly: return loc("Нажмите клавишу вместе с модификатором.")
+        case .needsModifier: return loc("Добавьте ⌃, ⌥ или ⌘ — иначе сочетание будет мешать набору текста.")
+        case .invalidKey: return loc("Эту клавишу нельзя назначить.")
+        case .conflict(let action): return loc("Это сочетание уже назначено: «\(action.displayName)».")
         }
     }
 }

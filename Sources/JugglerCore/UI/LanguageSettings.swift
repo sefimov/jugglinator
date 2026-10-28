@@ -69,9 +69,25 @@ public enum LanguageChoice: Equatable, Hashable, Sendable {
 
 /// Хранение выбранного языка только для Juggler: ключ `AppleLanguages` в собственном домене
 /// настроек приложения (`com.sefimov.juggler`). Глобальный язык системы не меняется.
-/// Новый язык подхватывается при следующем запуске приложения.
+/// Тексты Juggler переключаются сразу (`Localizer`); системные надписи AppKit и Info.plist
+/// берут это значение только при следующем запуске.
 public struct LanguageSettings {
     public static let key = "AppleLanguages"
+
+    /// Настоящий домен приложения. Под `swift run` пакета нет, берётся имя процесса.
+    public static var app: LanguageSettings {
+        LanguageSettings(
+            defaults: .standard,
+            domain: Bundle.main.bundleIdentifier ?? ProcessInfo.processInfo.processName)
+    }
+
+    /// Языки системы (глобальный домен, без значения из домена Juggler), по порядку предпочтения.
+    public static func systemPreferredLanguages(defaults: UserDefaults = .standard) -> [String] {
+        if let global = defaults.persistentDomain(forName: UserDefaults.globalDomain)?[key] as? [String], !global.isEmpty {
+            return global
+        }
+        return Locale.preferredLanguages
+    }
 
     private let defaults: UserDefaults
     private let domain: String
@@ -93,6 +109,23 @@ public struct LanguageSettings {
     public var choice: LanguageChoice {
         guard let stored = storedOverride, !stored.isEmpty else { return .system }
         return LanguageChoice.resolving(preferred: stored)
+    }
+
+    /// Код языка, на котором показывать тексты: выбранный или, при «Как в системе», первый из языков
+    /// системы, для которого есть перевод (иначе английский).
+    public func effectiveLanguage(systemPreferred: [String]) -> String {
+        Self.code(for: choice, systemPreferred: systemPreferred)
+    }
+
+    public static func code(for choice: LanguageChoice, systemPreferred: [String]) -> String {
+        switch choice {
+        case .language(let code): return code
+        case .system:
+            guard case .language(let code) = LanguageChoice.resolving(preferred: systemPreferred) else {
+                return Localizer.developmentLanguage
+            }
+            return code
+        }
     }
 
     /// «Как в системе» убирает значение, язык — записывает его одним элементом.

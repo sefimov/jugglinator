@@ -25,7 +25,7 @@ public enum TaskListOps {
 
     /// Название по умолчанию для новой задачи: «Задача N», где N — её будущий номер.
     public static func defaultTitle(for document: TasksDocument) -> String {
-        String(localized: "Задача \(document.tasks.count + 1)")
+        loc("Задача \(document.tasks.count + 1)")
     }
 
     // MARK: - Добавление, правка, удаление

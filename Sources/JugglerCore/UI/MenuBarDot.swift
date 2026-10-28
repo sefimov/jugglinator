@@ -60,21 +60,21 @@ public enum MenuBarDotPresenter {
             let since = task.lastVisitedAt ?? task.createdAt
             let level = Staleness.level(lastVisited: since, now: now, thresholds: thresholds)
             let number = document.number(of: task.id) ?? 0
-            let title = task.title.isEmpty ? String(localized: "Без названия") : task.title
+            let title = task.title.isEmpty ? loc("Без названия") : task.title
             let absence = Staleness.absenceText(lastVisited: since, now: now)
             return MenuBarDot(
                 appearance: .filled(MenuBarDotColor.color(for: level)),
                 taskID: task.id,
-                tooltip: String(localized: "Juggler: дольше всех ждёт задача \(number) — \(title), \(absence)"))
+                tooltip: loc("Juggler: дольше всех ждёт задача \(number) — \(title), \(absence)"))
         }
         // Других несделанных задач нет. Если текущая ещё в работе — всё спокойно.
         if let current = document.lastActiveTask, !current.isDone {
             return MenuBarDot(
                 appearance: .filled(.green), taskID: nil,
-                tooltip: String(localized: "Juggler: других задач в работе нет"))
+                tooltip: loc("Juggler: других задач в работе нет"))
         }
         return MenuBarDot(
             appearance: .outline, taskID: nil,
-            tooltip: String(localized: "Juggler: нет задач в работе"))
+            tooltip: loc("Juggler: нет задач в работе"))
     }
 }

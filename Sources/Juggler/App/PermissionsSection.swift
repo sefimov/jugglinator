@@ -14,44 +14,44 @@ struct PermissionsSection: View {
     }
 
     var body: some View {
-        LabeledContent("Универсальный доступ") {
+        LabeledContent(loc("Универсальный доступ")) {
             HStack {
-                statusText(state.accessibilityTrusted ? String(localized: "разрешён") : String(localized: "не разрешён"), ok: state.accessibilityTrusted)
+                statusText(state.accessibilityTrusted ? loc("разрешён") : loc("не разрешён"), ok: state.accessibilityTrusted)
                 if !state.accessibilityTrusted {
-                    Button("Запросить…") { state.requestAccessibility() }
+                    Button(loc("Запросить…")) { state.requestAccessibility() }
                 }
             }
         }
-        Text("Нужен, чтобы читать заголовки окон, адрес чата Claude и поднимать нужное окно.")
+        Text(loc("Нужен, чтобы читать заголовки окон, адрес чата Claude и поднимать нужное окно."))
             .font(.caption)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
 
         if state.canManageChrome {
-            LabeledContent("Управление Google Chrome") {
+            LabeledContent(loc("Управление Google Chrome")) {
                 HStack {
                     statusText(state.chromeText, ok: state.chromeStatus == .granted)
                     if state.chromeStatus != .granted {
-                        Button(state.chromeStatus == .notRunning ? String(localized: "Запустить Chrome") : String(localized: "Разрешить…")) { state.requestChrome() }
+                        Button(state.chromeStatus == .notRunning ? loc("Запустить Chrome") : loc("Разрешить…")) { state.requestChrome() }
                     }
                 }
             }
-            Text("Нужно, чтобы привязывать вкладки и переключаться на них. Без него Juggler открывает адрес заново — в Chrome появляются дубли вкладок.")
+            Text(loc("Нужно, чтобы привязывать вкладки и переключаться на них. Без него Juggler открывает адрес заново — в Chrome появляются дубли вкладок."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
 
         if state.canManageTerminal {
-            LabeledContent("Терминал") {
+            LabeledContent(loc("Терминал")) {
                 HStack {
                     statusText(state.terminalText, ok: state.terminalStatus == .granted || state.terminalStatus == .noWindow)
                     if state.terminalStatus != .granted, state.terminalStatus != .noWindow {
-                        Button(state.terminalStatus == .notRunning ? String(localized: "Запустить Терминал") : String(localized: "Разрешить…")) { state.requestTerminal() }
+                        Button(state.terminalStatus == .notRunning ? loc("Запустить Терминал") : loc("Разрешить…")) { state.requestTerminal() }
                     }
                 }
             }
-            Text("Нужно, чтобы привязывать окно и вкладку Терминала и переключаться именно на них. Без него окно Терминала привязывается как обычное окно, по заголовку, а вкладка не выбирается.")
+            Text(loc("Нужно, чтобы привязывать окно и вкладку Терминала и переключаться именно на них. Без него окно Терминала привязывается как обычное окно, по заголовку, а вкладка не выбирается."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -90,23 +90,23 @@ final class PermissionsState: ObservableObject {
     /// Раздел Chrome показывается только с рабочими разрешениями BIND.
     var canManageChrome: Bool { permissions is LivePermissions }
 
-    var chromeText: String { Self.text(chromeStatus, notRunning: String(localized: "Chrome не запущен")) }
+    var chromeText: String { Self.text(chromeStatus, notRunning: loc("Chrome не запущен")) }
 
     /// Строка Терминала — только с рабочими разрешениями BIND и если Терминал установлен.
     var canManageTerminal: Bool {
         permissions is LivePermissions && NSWorkspace.shared.urlForApplication(withBundleIdentifier: KnownBundleIDs.terminal) != nil
     }
 
-    var terminalText: String { Self.text(terminalStatus, notRunning: String(localized: "Терминал не запущен")) }
+    var terminalText: String { Self.text(terminalStatus, notRunning: loc("Терминал не запущен")) }
 
     private static func text(_ status: AutomationStatus?, notRunning: String) -> String {
         switch status {
-        case .granted?: return String(localized: "разрешено")
-        case .denied?: return String(localized: "запрещено")
-        case .requiresConsent?: return String(localized: "ещё не спрашивали")
+        case .granted?: return loc("разрешено")
+        case .denied?: return loc("запрещено")
+        case .requiresConsent?: return loc("ещё не спрашивали")
         case .notRunning?: return notRunning
-        case .noWindow?: return String(localized: "разрешено")
-        case .failed?, nil: return String(localized: "неизвестно")
+        case .noWindow?: return loc("разрешено")
+        case .failed?, nil: return loc("неизвестно")
         }
     }
 

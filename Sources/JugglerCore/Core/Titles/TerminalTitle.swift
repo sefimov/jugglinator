@@ -33,7 +33,7 @@ public enum TerminalTitle {
         TitleCleaner.suggestedTaskTitle(from: clean(title ?? ""), fallback: fallback)
     }
 
-    public static let defaultTaskTitle = String(localized: "Терминал")
+    public static var defaultTaskTitle: String { loc("Терминал") }
 
     /// Тот же заголовок без учёта шума (размера, оболочки…) и регистра. Пустые не совпадают ни с чем.
     /// Это запасное сравнение: когда ни tty, ни id окна не известны.

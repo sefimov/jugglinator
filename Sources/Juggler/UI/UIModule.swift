@@ -14,6 +14,7 @@ enum UIModule {
     static func scenes(environment: AppEnvironment) -> some Scene {
         MenuBarExtra {
             TaskListView(environment: environment, model: environment.model)
+                .followsLanguage()
         } label: {
             MenuBarLabel(model: environment.model)
         }
@@ -21,6 +22,7 @@ enum UIModule {
 
         Settings {
             SettingsView(environment: environment)
+                .followsLanguage()
         }
     }
 

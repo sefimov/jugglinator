@@ -79,8 +79,8 @@ struct TaskListView: View {
         let rows = TaskListPresenter.rows(for: model.document, now: now)
         if rows.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Задач пока нет.")
-                Text("Откройте чат и выберите «\(TaskToggleTexts.menuAddTitle)» ниже.")
+                Text(loc("Задач пока нет."))
+                Text(loc("Откройте чат и выберите «\(TaskToggleTexts.menuAddTitle)» ниже."))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -174,7 +174,7 @@ struct TaskListView: View {
                 UIActions.toggleCurrentWindow(environment: environment, dismiss: { dismiss() })
             }
             .disabled(!state.windowContextLoaded)
-            .help("Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)")
+            .help(loc("Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)"))
         case .restoreRemoved:
             footerButton(TaskToggleTexts.restoreMenuTitle, systemImage: "arrow.uturn.backward") {
                 model.restoreLastRemoved()

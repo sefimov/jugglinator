@@ -22,12 +22,12 @@ struct HotkeySettingsSection: View {
                         .frame(minWidth: 170, alignment: .leading)
                     Spacer(minLength: 8)
                     HotkeyRecorderField(action: action, preferences: preferences, recorder: recorder)
-                    Button("По умолчанию") { recorder.reset(action) }
+                    Button(loc("По умолчанию")) { recorder.reset(action) }
                         .disabled(!preferences.isCustom(action))
-                        .help("Вернуть сочетание по умолчанию: \(preferences.defaults[action]?.displayString ?? "—")")
+                        .help(loc("Вернуть сочетание по умолчанию: \(preferences.defaults[action]?.displayString ?? "—")"))
                 }
                 if let status = preferences.registrationErrors[action] {
-                    Text("Не удалось зарегистрировать (код \(status)). Возможно, сочетание занято системой — выберите другое.")
+                    Text(loc("Не удалось зарегистрировать (код \(status)). Возможно, сочетание занято системой — выберите другое."))
                         .font(.caption)
                         .foregroundStyle(.red)
                 }
@@ -46,7 +46,7 @@ struct HotkeySettingsSection: View {
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Spacer()
-                Button("Вернуть все по умолчанию") { recorder.resetAll() }
+                Button(loc("Вернуть все по умолчанию")) { recorder.resetAll() }
                     .disabled(preferences.overrides.hotkeys.isEmpty)
             }
         }
@@ -55,7 +55,7 @@ struct HotkeySettingsSection: View {
 
     private var aboveTabNote: String {
         let key = KeyCode.displayName(preferences.keyboard.keyAboveTab)
-        return String(localized: """
+        return loc("""
             Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). \
             \(key) — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена.
             """)
@@ -73,12 +73,12 @@ struct HotkeyRecorderField: View {
         Button {
             if isRecording { recorder.cancel() } else { recorder.begin(action) }
         } label: {
-            Text(isRecording ? String(localized: "Нажмите сочетание…") : (preferences.assignments[action]?.displayString ?? String(localized: "Не задано")))
+            Text(isRecording ? loc("Нажмите сочетание…") : (preferences.assignments[action]?.displayString ?? loc("Не задано")))
                 .font(.system(.body, design: .rounded).monospacedDigit())
                 .frame(minWidth: 150)
                 .foregroundStyle(isRecording ? Color.accentColor : Color.primary)
         }
-        .help(isRecording ? String(localized: "Нажмите новое сочетание или Esc для отмены") : String(localized: "Нажмите, чтобы записать новое сочетание"))
+        .help(isRecording ? loc("Нажмите новое сочетание или Esc для отмены") : loc("Нажмите, чтобы записать новое сочетание"))
     }
 }
 

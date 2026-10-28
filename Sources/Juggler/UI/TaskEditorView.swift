@@ -26,12 +26,12 @@ struct TaskEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Задача \(number)").font(.subheadline.weight(.semibold))
-            TextField("Название", text: $title)
+            Text(loc("Задача \(number)")).font(.subheadline.weight(.semibold))
+            TextField(loc("Название"), text: $title)
                 .textFieldStyle(.roundedBorder)
                 .focused($focus, equals: .title)
                 .onSubmit(save)
-            Text("Заметка — зачем / что дальше")
+            Text(loc("Заметка — зачем / что дальше"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
             TextEditor(text: $note)
@@ -41,16 +41,16 @@ struct TaskEditorView: View {
                 .overlay(RoundedRectangle(cornerRadius: 5).stroke(Color.secondary.opacity(0.35)))
             HStack {
                 if TaskListOps.cleanTitle(title).isEmpty {
-                    Text("Пустое название не сохранится")
+                    Text(loc("Пустое название не сохранится"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Отмена", action: onCancel)
+                Button(loc("Отмена"), action: onCancel)
                     .keyboardShortcut(.cancelAction)
-                Button("Сохранить", action: save)
+                Button(loc("Сохранить"), action: save)
                     .keyboardShortcut(.return, modifiers: .command)
-                    .help("Сохранить (⌘↩)")
+                    .help(loc("Сохранить (⌘↩)"))
             }
         }
         .onAppear {
@@ -74,15 +74,15 @@ struct DeleteConfirmationView: View {
             Text(TaskListPresenter.deleteConfirmation(title: title))
                 .font(.subheadline.weight(.semibold))
                 .fixedSize(horizontal: false, vertical: true)
-            Text("Задача, заметка и привязка будут удалены. Это нельзя отменить.")
+            Text(loc("Задача, заметка и привязка будут удалены. Это нельзя отменить."))
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Spacer()
-                Button("Отмена", action: onCancel)
+                Button(loc("Отмена"), action: onCancel)
                     .keyboardShortcut(.cancelAction)
-                Button("Удалить", role: .destructive, action: onDelete)
+                Button(loc("Удалить"), role: .destructive, action: onDelete)
                     .tint(.red)
             }
         }
@@ -106,9 +106,9 @@ struct ClearAllConfirmationView: View {
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
                 Spacer()
-                Button("Отмена", action: onCancel)
+                Button(loc("Отмена"), action: onCancel)
                     .keyboardShortcut(.cancelAction)
-                Button("Удалить", role: .destructive, action: onClear)
+                Button(loc("Удалить"), role: .destructive, action: onClear)
                     .tint(.red)
             }
         }
