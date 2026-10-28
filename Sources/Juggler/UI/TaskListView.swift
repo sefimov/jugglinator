@@ -177,8 +177,12 @@ struct TaskListView: View {
             .help(model.lastRemoved.map(TaskToggleTexts.restoreHelp) ?? "")
         case .settings:
             footerButton(TaskToggleTexts.settingsMenuTitle, systemImage: "gearshape") {
-                UIActions.activateForSettings()
-                openSettings()
+                // Сначала закрыть меню, затем открыть настройки и вывести их вперёд.
+                let open = openSettings
+                UIActions.afterClosingMenu({ dismiss() }) {
+                    UIActions.activateForSettings()
+                    open()
+                }
             }
             .keyboardShortcut(",", modifiers: .command)
         case .quit:
