@@ -168,3 +168,10 @@
 "Нет разрешения управлять Терминалом — открыт Терминал." = "Pas d’autorisation pour contrôler Terminal — Terminal a été ouvert.";
 "Нет разрешения управлять Терминалом — окно найдено по заголовку, вкладка не выбрана." = "Pas d’autorisation pour contrôler Terminal — fenêtre trouvée par son titre, onglet non sélectionné.";
 "Терминал был закрыт — он запущен, окна задачи нет." = "Terminal était fermé — il a été lancé, la fenêtre de la tâche n’existe plus.";
+"Язык" = "Langue";
+"Язык интерфейса" = "Langue de l’interface";
+"Как в системе" = "Comme le système";
+"Язык сменится после перезапуска" = "La langue changera après le redémarrage";
+"Перезапустить сейчас" = "Redémarrer maintenant";
+"Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "Le redémarrage ne fonctionne que dans l’application Juggler.app. Quittez Juggler et rouvrez-le.";
+"Не удалось перезапустить Juggler: %@" = "Impossible de redémarrer Juggler : %@";

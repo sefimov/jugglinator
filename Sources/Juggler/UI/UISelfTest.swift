@@ -9,7 +9,7 @@ import ServiceManagement
 @MainActor
 enum UISelfTest {
     static func run() -> [SelfTestResult] {
-        [listOperations(), persistenceAcrossRestart(), menuBarSymbols(), loginItemStatus()]
+        [listOperations(), persistenceAcrossRestart(), menuBarSymbols(), loginItemStatus(), languageSelection()]
     }
 
     private static func listOperations() -> SelfTestResult {
@@ -68,5 +68,22 @@ enum UISelfTest {
     private static func loginItemStatus() -> SelfTestResult {
         let state = LoginItemController.map(SMAppService.mainApp.status)
         return SelfTestResult("UI: статус запуска при входе читается", passed: true, detail: state.rawValue)
+    }
+
+    /// Выбор языка на временном домене настроек: настоящий `com.sefimov.juggler` не затрагивается.
+    private static func languageSelection() -> SelfTestResult {
+        let suite = "com.sefimov.juggler.self-test.language.\(UUID().uuidString)"
+        guard let defaults = UserDefaults(suiteName: suite) else {
+            return SelfTestResult("UI: выбор языка", passed: false, detail: "нет временного домена настроек")
+        }
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let controller = LanguageController(settings: LanguageSettings(defaults: defaults, domain: suite))
+        let start = controller.choice == .system && !controller.needsRestart
+        controller.select(.language("de"))
+        let changed = controller.needsRestart && defaults.persistentDomain(forName: suite)?[LanguageSettings.key] as? [String] == ["de"]
+        controller.select(.system)
+        let reset = !controller.needsRestart && defaults.persistentDomain(forName: suite)?[LanguageSettings.key] == nil
+        let ok = start && changed && reset && AppLanguage.all.count == 12
+        return SelfTestResult("UI: выбор языка", passed: ok, detail: "временный домен, настоящие настройки не тронуты")
     }
 }

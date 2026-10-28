@@ -5,7 +5,7 @@
     scripts/check-localization.py --keys   напечатать ключи, найденные в коде
 
 Ключ перевода — русская строка из кода: литерал в String(localized:) или в SwiftUI
-(Text, Button, Toggle, Section, LabeledContent, TextField, Label, .help, .navigationTitle,
+(Text, Button, Toggle, Section, Picker, LabeledContent, TextField, Label, .help, .navigationTitle,
 .accessibilityLabel) с кириллицей. Интерполяции \\(...) сравниваются с %@, %lld, %d без учёта
 типа: тип спецификатора (Int → %lld, Int32 → %d, остальное → %@) проверяйте сами.
 
@@ -27,7 +27,7 @@ import sys
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CYRILLIC = re.compile("[А-Яа-яЁё]")
 CALL = re.compile(
-    r'(String\(localized: |\b(?:Text|Button|Toggle|Section|LabeledContent|TextField|Label)\(|'
+    r'(String\(localized: |\b(?:Text|Button|Toggle|Section|Picker|LabeledContent|TextField|Label)\(|'
     r'\.help\(|\.navigationTitle\(|\.accessibilityLabel\()\s*"')
 SPEC = re.compile(r"%(?:\d+\$)?(?:lld|d|@)")
 EXTRA_KEYS = {"%@, %@"}

@@ -168,3 +168,10 @@
 "Нет разрешения управлять Терминалом — открыт Терминал." = "No permission to control Terminal — Terminal was brought forward.";
 "Нет разрешения управлять Терминалом — окно найдено по заголовку, вкладка не выбрана." = "No permission to control Terminal — the window was found by title, the tab wasn't selected.";
 "Терминал был закрыт — он запущен, окна задачи нет." = "Terminal was closed — it has been launched, but the task's window is gone.";
+"Язык" = "Language";
+"Язык интерфейса" = "Interface language";
+"Как в системе" = "Same as system";
+"Язык сменится после перезапуска" = "The language will change after a restart";
+"Перезапустить сейчас" = "Restart now";
+"Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "Restart only works in the Juggler.app application. Quit Juggler and open it again.";
+"Не удалось перезапустить Juggler: %@" = "Couldn’t restart Juggler: %@";

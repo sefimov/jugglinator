@@ -3,7 +3,7 @@ import JugglerCore
 import ServiceManagement
 import SwiftUI
 
-/// Окно настроек: раздел хоткеев (компонент SWITCH), запуск при входе, файл данных.
+/// Окно настроек: раздел хоткеев (компонент SWITCH), язык интерфейса, запуск при входе, файл данных.
 struct SettingsView: View {
     let environment: AppEnvironment
     @StateObject private var loginItem = LoginItemController()
@@ -17,6 +17,8 @@ struct SettingsView: View {
             Section("Разрешения") {
                 PermissionsSection(environment: environment)
             }
+
+            LanguageSection()
 
             Section("Запуск") {
                 Toggle("Запускать Juggler при входе в систему", isOn: Binding(
