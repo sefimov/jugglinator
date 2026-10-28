@@ -30,7 +30,7 @@ extension BindChecks {
             c.expectEqual(BindingSource.terminalWindow.displayName, "Терминал", "название источника")
             let symbols = BindingSource.allCases.map(\.symbolName)
             c.expectEqual(Set(symbols).count, symbols.count, "у каждого источника свой значок")
-            c.expectEqual(BindingSource.terminalWindow.symbolName, "apple.terminal", "значок Терминала")
+            c.expectEqual(BindingSource.terminalWindow.symbolName, "bubble.left.and.bubble.right.fill", "значок Терминала")
 
             let ref = TerminalWindowRef(windowID: 7, tty: " /dev/ttys003\n", title: terminalTitle)
             c.expectEqual(ref.tty, "/dev/ttys003", "tty без пробелов")
