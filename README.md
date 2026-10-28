@@ -1,4 +1,35 @@
-# Juggler
+<p align="center"><img src="Resources/AppIcon-1024.png" width="128" alt=""></p>
+
+<h1 align="center">Juggler</h1>
+
+<p align="center">
+For people with a million tabs and windows.<br>
+Switch between the ones you actually need — almost like ⌘Tab,<br>
+but with <b>⌃§</b> (Control + the key above Tab).
+</p>
+
+<p align="center">
+  <a href="https://github.com/sefimov/juggler/releases/latest/download/Juggler.app.zip"><img src="https://img.shields.io/badge/Download_for_macOS-14%2B-black?style=for-the-badge&logo=apple" height="44" alt="Download for macOS 14+"></a>
+  <br>
+  <sub>The app is not notarized yet: on first launch see <a href="#first-launch">First launch</a>.</sub>
+</p>
+
+| Hotkey | Action |
+|---|---|
+| ⌃§ | Next task |
+| ⌃⇧§ | Previous task |
+| ⌃⌥§ | Add or remove the current window |
+| ⌃⌥D | Mark done / back to work |
+
+On an ANSI keyboard (no § key) use ⌃\` instead of ⌃§. All hotkeys can be changed in Settings → Hotkeys.
+
+### First launch
+
+1. Unzip `Juggler.app.zip` and move `Juggler.app` to Applications.
+2. Open it. macOS says it cannot verify the developer: open System Settings → Privacy & Security and click "Open Anyway". Or run `xattr -dr com.apple.quarantine /Applications/Juggler.app` once.
+3. On the first binding Juggler asks for Accessibility and Automation permissions, see [Permissions](#permissions).
+
+---
 
 A macOS menu bar app. It keeps a list of parallel chat tasks and cycles through them with a hotkey. On each switch it opens the bound chat in Claude, a Claude Code session, a ChatGPT thread, a Grok Bot window, a Chrome tab, or a Terminal window and tab.
 
