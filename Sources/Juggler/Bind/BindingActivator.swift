@@ -68,7 +68,7 @@ final class LiveBindingActivator: BindingActivating {
         if let match = ChromeTabMatcher.find(ref, in: listing.entries) {
             let focus = chrome.focus(match.entry)
             if focus.output != nil {
-                return match.kind == .byID ? .activated : .fallback("Вкладка найдена по адресу.")
+                return match.kind == .byID ? .activated : .fallback(String(localized: "Вкладка найдена по адресу."))
             }
             if AutomationStatus.isPermissionDenied(code: focus.errorCode) { permissions.reportChromeDenied() }
         }
@@ -89,8 +89,8 @@ final class LiveBindingActivator: BindingActivating {
     /// Разрешение только проверяется (без запроса): переключение никогда не показывает системный диалог.
     private func activateTerminal(_ ref: TerminalWindowRef) -> ActivationResult {
         guard let app = terminal.runningApp else {
-            return launch(bundleID: terminal.bundleID, name: "Терминал") ? .fallback(BindTexts.terminalLaunched)
-                : .failed(BindTexts.appNotInstalled("Терминал"))
+            return launch(bundleID: terminal.bundleID, name: String(localized: "Терминал")) ? .fallback(BindTexts.terminalLaunched)
+                : .failed(BindTexts.appNotInstalled(String(localized: "Терминал")))
         }
         guard terminal.automationStatus().status == .granted else {
             return activateTerminalWithoutAccess(ref, app: app)
@@ -137,7 +137,7 @@ final class LiveBindingActivator: BindingActivating {
         }
         if let webFallback {
             NSWorkspace.shared.open(webFallback)
-            return .fallback("Приложение \(name) не найдено — чат открыт в браузере.")
+            return .fallback(String(localized: "Приложение \(name) не найдено — чат открыт в браузере."))
         }
         return .failed(BindTexts.urlNotHandled(name))
     }

@@ -55,8 +55,10 @@ struct HotkeySettingsSection: View {
 
     private var aboveTabNote: String {
         let key = KeyCode.displayName(preferences.keyboard.keyAboveTab)
-        return "Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). "
-            + "\(key) — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена."
+        return String(localized: """
+            Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). \
+            \(key) — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена.
+            """)
     }
 }
 
@@ -71,12 +73,12 @@ struct HotkeyRecorderField: View {
         Button {
             if isRecording { recorder.cancel() } else { recorder.begin(action) }
         } label: {
-            Text(isRecording ? "Нажмите сочетание…" : (preferences.assignments[action]?.displayString ?? "Не задано"))
+            Text(isRecording ? String(localized: "Нажмите сочетание…") : (preferences.assignments[action]?.displayString ?? String(localized: "Не задано")))
                 .font(.system(.body, design: .rounded).monospacedDigit())
                 .frame(minWidth: 150)
                 .foregroundStyle(isRecording ? Color.accentColor : Color.primary)
         }
-        .help(isRecording ? "Нажмите новое сочетание или Esc для отмены" : "Нажмите, чтобы записать новое сочетание")
+        .help(isRecording ? String(localized: "Нажмите новое сочетание или Esc для отмены") : String(localized: "Нажмите, чтобы записать новое сочетание"))
     }
 }
 

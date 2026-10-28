@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Сводка в меню: «3 задачи, 1 сделана» (TaskListPresenter.summary). -->
+<plist version="1.0">
+<dict>
+	<key>summary.tasks</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>other</key>
+			<string>%lld 个任务</string>
+		</dict>
+	</dict>
+	<key>summary.done</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@done@</string>
+		<key>done</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>other</key>
+			<string>%lld 个已完成</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

@@ -18,8 +18,8 @@ public enum BindingSource: String, Codable, CaseIterable, Sendable {
         case .claudeChat: return "Claude"
         case .claudeCodeSession: return "Claude Code"
         case .chatGPTThread: return "ChatGPT"
-        case .terminalWindow: return "Терминал"
-        case .appWindow: return "Окно приложения"
+        case .terminalWindow: return String(localized: "Терминал")
+        case .appWindow: return String(localized: "Окно приложения")
         }
     }
 

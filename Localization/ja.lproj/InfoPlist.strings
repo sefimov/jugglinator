@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Juggler";
+"NSAppleEventsUsageDescription" = "Jugglerは、Google Chromeのアクティブなタブのアドレスとタイトル、およびターミナルのウインドウとタブを読み取ってタスクに紐づけ、タスクを切り替えるときにそこへ切り替えます。";

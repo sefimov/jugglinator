@@ -58,14 +58,14 @@ public enum Staleness {
     /// - до суток → «не был 2 ч» / «не был 1 ч 5 мин»
     /// - дальше → «не был 3 дн»
     public static func absenceText(lastVisited: Date?, now: Date) -> String {
-        guard let minutes = minutesSince(lastVisited, now: now) else { return "ещё не был" }
-        if minutes < 1 { return "был только что" }
-        if minutes < 60 { return "не был \(minutes) мин" }
+        guard let minutes = minutesSince(lastVisited, now: now) else { return String(localized: "ещё не был") }
+        if minutes < 1 { return String(localized: "был только что") }
+        if minutes < 60 { return String(localized: "не был \(minutes) мин") }
         if minutes < 24 * 60 {
             let hours = minutes / 60
             let rest = minutes % 60
-            return rest == 0 ? "не был \(hours) ч" : "не был \(hours) ч \(rest) мин"
+            return rest == 0 ? String(localized: "не был \(hours) ч") : String(localized: "не был \(hours) ч \(rest) мин")
         }
-        return "не был \(minutes / (24 * 60)) дн"
+        return String(localized: "не был \(minutes / (24 * 60)) дн")
     }
 }

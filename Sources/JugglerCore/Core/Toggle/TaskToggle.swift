@@ -255,29 +255,29 @@ public enum MenuFooterItem: Equatable, Sendable {
 /// Тексты переключателя: карточка и меню.
 public enum TaskToggleTexts {
     /// Название действия ⌃⌥§: настройки хоткеев, README.
-    public static let actionTitle = "Добавить или удалить текущее окно"
+    public static let actionTitle = String(localized: "Добавить или удалить текущее окно")
     /// Пункт меню: переднее окно не задача.
-    public static let menuAddTitle = "Добавить текущее окно"
+    public static let menuAddTitle = String(localized: "Добавить текущее окно")
     /// Пункт меню: переднее окно уже задача.
-    public static let menuRemoveTitle = "Удалить текущее окно"
-    public static let restoreMenuTitle = "Вернуть удалённую задачу"
-    public static let settingsMenuTitle = "Настройки…"
-    public static let quitMenuTitle = "Выйти"
+    public static let menuRemoveTitle = String(localized: "Удалить текущее окно")
+    public static let restoreMenuTitle = String(localized: "Вернуть удалённую задачу")
+    public static let settingsMenuTitle = String(localized: "Настройки…")
+    public static let quitMenuTitle = String(localized: "Выйти")
 
     /// Карточка после удаления: «Задача 2 «Название» удалена — ⌃⌥§ в течение 5 с вернёт».
     public static func removedCard(number: Int, title: String, hotkey: Hotkey?, window: TimeInterval = TaskRemoval.undoWindow) -> String {
-        let head = "Задача \(number) «\(TransitionCardBuilder.title(title))» удалена"
-        guard let hotkey else { return "\(head) — вернуть: «\(restoreMenuTitle)» в меню Juggler" }
-        return "\(head) — \(hotkey.displayString) в течение \(Int(window.rounded())) с вернёт"
+        let head = String(localized: "Задача \(number) «\(TransitionCardBuilder.title(title))» удалена")
+        guard let hotkey else { return String(localized: "\(head) — вернуть: «\(restoreMenuTitle)» в меню Juggler") }
+        return String(localized: "\(head) — \(hotkey.displayString) в течение \(Int(window.rounded())) с вернёт")
     }
 
     /// Карточка после возврата: «Задача 2 «Название» возвращена».
     public static func restoredCard(number: Int, title: String) -> String {
-        "Задача \(number) «\(TransitionCardBuilder.title(title))» возвращена"
+        String(localized: "Задача \(number) «\(TransitionCardBuilder.title(title))» возвращена")
     }
 
     /// Подсказка к пункту «Вернуть удалённую задачу».
     public static func restoreHelp(_ removed: RemovedTask) -> String {
-        "Вернуть «\(TransitionCardBuilder.title(removed.task.title))» на место \(removed.index + 1)"
+        String(localized: "Вернуть «\(TransitionCardBuilder.title(removed.task.title))» на место \(removed.index + 1)")
     }
 }

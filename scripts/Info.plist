@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!-- Шаблон Info.plist для build/Juggler.app. scripts/bundle.sh подставляет
-     __VERSION__ и __BUILD__ и копирует результат в Contents/Info.plist. -->
+     __VERSION__ и __BUILD__ и копирует результат в Contents/Info.plist.
+     Языки — папки Localization/*.lproj (scripts/check-localization.py сверяет список);
+     для языков вне списка — английский. -->
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
@@ -21,10 +23,21 @@
 	<key>CFBundleVersion</key>
 	<string>__BUILD__</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>ru</string>
+	<string>en</string>
 	<key>CFBundleLocalizations</key>
 	<array>
+		<string>ar</string>
+		<string>de</string>
+		<string>en</string>
+		<string>es</string>
+		<string>fr</string>
+		<string>hi</string>
+		<string>it</string>
+		<string>ja</string>
+		<string>ko</string>
+		<string>pt-BR</string>
 		<string>ru</string>
+		<string>zh-Hans</string>
 	</array>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
@@ -35,6 +48,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Juggler читает адрес и заголовок активной вкладки Google Chrome, а в Терминале — окно и вкладку, чтобы привязать их к задаче, и переключает на них при переходе между задачами.</string>
+	<string>Juggler reads the address and title of the active Google Chrome tab and the window and tab in Terminal to bind them to a task, and switches to them when you move between tasks.</string>
 </dict>
 </plist>

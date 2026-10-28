@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Сводка в меню: «3 задачи, 1 сделана» (TaskListPresenter.summary). -->
+<plist version="1.0">
+<dict>
+	<key>summary.tasks</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>%lld مهمة</string>
+			<key>one</key>
+			<string>مهمة واحدة</string>
+			<key>two</key>
+			<string>مهمتان</string>
+			<key>few</key>
+			<string>%lld مهام</string>
+			<key>many</key>
+			<string>%lld مهمة</string>
+			<key>other</key>
+			<string>%lld مهمة</string>
+		</dict>
+	</dict>
+	<key>summary.done</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@done@</string>
+		<key>done</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>%lld تم</string>
+			<key>one</key>
+			<string>%lld تمت</string>
+			<key>two</key>
+			<string>%lld تمتا</string>
+			<key>few</key>
+			<string>%lld تمت</string>
+			<key>many</key>
+			<string>%lld تمت</string>
+			<key>other</key>
+			<string>%lld تمت</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

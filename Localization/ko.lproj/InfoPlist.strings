@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Juggler";
+"NSAppleEventsUsageDescription" = "Juggler는 Google Chrome의 활성 탭 주소와 제목, 터미널의 윈도우와 탭을 읽어 작업에 연결하고, 작업을 전환할 때 해당 위치로 전환합니다.";

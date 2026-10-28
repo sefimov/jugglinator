@@ -72,7 +72,7 @@ final class HotkeyPreferences: ObservableObject {
             try store.save(new)
             lastSaveError = nil
         } catch {
-            lastSaveError = "Не удалось сохранить хоткеи: \(error.localizedDescription)"
+            lastSaveError = String(localized: "Не удалось сохранить хоткеи: \(error.localizedDescription)")
             switchLog.error("Ошибка записи hotkeys.json: \(error.localizedDescription, privacy: .public)")
         }
     }

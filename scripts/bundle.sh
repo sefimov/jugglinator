@@ -37,22 +37,22 @@ BIN_DIR="$(swift build -c release --show-bin-path)"
 BINARY="$BIN_DIR/$APP_NAME"
 [ -x "$BINARY" ] || { echo "Не найден исполняемый файл: $BINARY" >&2; exit 1; }
 
+step "Проверка локализации (scripts/check-localization.py)"
+python3 -I "$ROOT/scripts/check-localization.py"
+
 step "Сборка $APP"
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/ru.lproj"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BINARY" "$APP/Contents/MacOS/$APP_NAME"
 sed -e "s/__VERSION__/$VERSION/" -e "s/__BUILD__/$BUILD_NUMBER/" \
     "$ROOT/scripts/Info.plist" > "$APP/Contents/Info.plist"
-# Русская локализация: системные строки (меню, заголовок окна настроек) — на русском.
-cat > "$APP/Contents/Resources/ru.lproj/InfoPlist.strings" <<'STRINGS'
-"CFBundleDisplayName" = "Juggler";
-"NSAppleEventsUsageDescription" = "Juggler читает адрес и заголовок активной вкладки Google Chrome, а в Терминале — окно и вкладку, чтобы привязать их к задаче, и переключает на них при переходе между задачами.";
-STRINGS
+# Переводы интерфейса и Info.plist; системные строки (меню, окно настроек) — на языке системы.
+cp -R "$ROOT"/Localization/*.lproj "$APP/Contents/Resources/"
 printf 'APPL????' > "$APP/Contents/PkgInfo"
 
-step "Проверка Info.plist (plutil -lint)"
+step "Проверка Info.plist и таблиц перевода (plutil -lint)"
 plutil -lint "$APP/Contents/Info.plist"
-plutil -lint "$APP/Contents/Resources/ru.lproj/InfoPlist.strings"
+plutil -lint -s "$APP"/Contents/Resources/*.lproj/* && echo "Таблицы перевода: OK"
 [ "$(plutil -extract CFBundleIdentifier raw "$APP/Contents/Info.plist")" = "$BUNDLE_ID" ] \
     || { echo "CFBundleIdentifier не $BUNDLE_ID" >&2; exit 1; }
 

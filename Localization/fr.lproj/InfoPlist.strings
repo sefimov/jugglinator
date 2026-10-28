@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Juggler";
+"NSAppleEventsUsageDescription" = "Juggler lit l’adresse et le titre de l’onglet actif de Google Chrome ainsi que la fenêtre et l’onglet de Terminal pour les associer à une tâche, et y bascule lorsque vous passez d’une tâche à l’autre.";

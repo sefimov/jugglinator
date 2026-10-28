@@ -4,7 +4,7 @@
 
 - Bundle id: `com.sefimov.juggler`.
 - Требуется macOS 14 или новее.
-- Интерфейс на русском.
+- Интерфейс на 12 языках: английский, арабский, испанский, итальянский, китайский (упрощённый), корейский, немецкий, португальский (Бразилия), русский, французский, хинди, японский. Язык берётся из настроек macOS, для остальных языков — английский. Подробнее — в разделе «Локализация».
 
 ## Быстрый старт
 
@@ -56,8 +56,8 @@ JUGGLER_VERSION=0.2.0 scripts/bundle.sh             # своя версия (п�
    - `CFBundleIdentifier` — `com.sefimov.juggler`;
    - `LSUIElement` — значка в Dock нет, только меню-бар;
    - `LSMinimumSystemVersion` — 14.0;
-   - `NSAppleEventsUsageDescription` — объяснение на русском для запроса управления Chrome и Терминалом;
-   - `CFBundleDevelopmentRegion` — `ru` и локализация `ru.lproj`, поэтому системные строки (меню, заголовок окна настроек) тоже на русском;
+   - `NSAppleEventsUsageDescription` — объяснение для запроса управления Chrome и Терминалом, переводы — в `InfoPlist.strings`;
+   - `CFBundleDevelopmentRegion` — `en`, `CFBundleLocalizations` — 12 языков из `Localization/*.lproj`, которые копируются в `Contents/Resources`;
    - `CFBundleVersion` — число коммитов в `git`.
 3. Проверяет `Info.plist` через `plutil -lint`.
 4. Подписывает: идентичностью из `JUGGLER_SIGN_IDENTITY`, по умолчанию ad-hoc (`-`).
@@ -272,6 +272,20 @@ open -n -W --stdout /tmp/probe.json build/Juggler.app --args --probe-frontmost -
 - Для состояния используем `ObservableObject` и `@Published`. Макросы вроде `@Observable` на Command Line Tools не проверялись.
 - Сторонних зависимостей нет.
 
+## Локализация
+
+Интерфейс переведён на 12 языков: `ar`, `de`, `en`, `es`, `fr`, `hi`, `it`, `ja`, `ko`, `pt-BR`, `ru`, `zh-Hans`. macOS выбирает язык по списку «Системные настройки → Основные → Язык и регион» или по языку, выбранному для Juggler там же. Если ни один язык не подошёл, интерфейс будет на английском (`CFBundleDevelopmentRegion` — `en`).
+
+- Исходные тексты в коде остаются на русском и служат ключами перевода: `String(localized: "Задача \(number)")` или литерал SwiftUI (`Text("…")`, `Button("…")`, `.help("…")`).
+- Переводы лежат в `Localization/<язык>.lproj/`:
+  - `Localizable.strings` — строки интерфейса. Интерполяция становится спецификатором: `Int` → `%lld`, `Int32` → `%d`, остальное → `%@`. Если в переводе другой порядок, используйте позиционные спецификаторы: `%1$@`, `%2$lld`;
+  - `Localizable.stringsdict` — формы множественного числа для сводки «3 задачи, 1 сделана»;
+  - `InfoPlist.strings` — текст запроса на управление Chrome.
+- `scripts/bundle.sh` копирует эти папки в `.app`. Без `.app` (`swift run`, `JugglerChecks`) таблиц нет, поэтому показывается русский текст. Проверки сравнивают именно его.
+- `scripts/check-localization.py` проверяет, что в каждой таблице есть ровно все ключи из кода с теми же спецификаторами и что `CFBundleLocalizations` совпадает с папками. Скрипт запускается из `bundle.sh`. `--keys` печатает ключи с местом в коде.
+
+Как добавить или изменить строку: поменяйте текст в коде, затем добавьте ключ в `Localizable.strings` всех 12 языков (для `ru` — ключ равен значению) и запустите `scripts/check-localization.py`. Как добавить язык: создайте папку `Localization/<язык>.lproj` с тремя файлами и допишите язык в `CFBundleLocalizations` в `scripts/Info.plist`.
+
 ## Структура пакета
 
 ```
@@ -369,5 +383,5 @@ scripts/
 8. **Самопроверка** `--self-test` не должна запрашивать разрешения или показывать окна. Каждая область возвращает `[SelfTestResult]` из своего `selfTest()`.
 9. **Ограничения:**
    - нельзя использовать `#Preview`, `.xcassets`, `.storyboard`/`.xib` и сторонние зависимости;
-   - весь интерфейс на русском;
+   - тексты интерфейса пишутся по-русски через `String(localized:)` или литералом SwiftUI, перевод — в `Localization/*.lproj`, см. «Локализация»;
    - журнал пишется через `Logger(subsystem: JugglerLog.subsystem, category: "<область>")`.

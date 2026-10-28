@@ -103,8 +103,8 @@ final class LoginItemController: ObservableObject {
             errorText = nil
         } catch {
             errorText = enabled
-                ? "Не удалось включить запуск при входе: \(error.localizedDescription)"
-                : "Не удалось выключить запуск при входе: \(error.localizedDescription)"
+                ? String(localized: "Не удалось включить запуск при входе: \(error.localizedDescription)")
+                : String(localized: "Не удалось выключить запуск при входе: \(error.localizedDescription)")
             uiLog.error("SMAppService: \(error.localizedDescription, privacy: .public)")
         }
         refresh()

@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Juggler";
+"NSAppleEventsUsageDescription" = "يقرأ Juggler عنوان علامة التبويب النشطة في Google Chrome واسمها، والنافذة وعلامة التبويب في Terminal، لربطها بمهمة، ويبدّل إليها عند الانتقال بين المهام.";

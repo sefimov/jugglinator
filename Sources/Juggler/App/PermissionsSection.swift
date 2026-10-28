@@ -16,7 +16,7 @@ struct PermissionsSection: View {
     var body: some View {
         LabeledContent("Универсальный доступ") {
             HStack {
-                statusText(state.accessibilityTrusted ? "разрешён" : "не разрешён", ok: state.accessibilityTrusted)
+                statusText(state.accessibilityTrusted ? String(localized: "разрешён") : String(localized: "не разрешён"), ok: state.accessibilityTrusted)
                 if !state.accessibilityTrusted {
                     Button("Запросить…") { state.requestAccessibility() }
                 }
@@ -32,7 +32,7 @@ struct PermissionsSection: View {
                 HStack {
                     statusText(state.chromeText, ok: state.chromeStatus == .granted)
                     if state.chromeStatus != .granted {
-                        Button(state.chromeStatus == .notRunning ? "Запустить Chrome" : "Разрешить…") { state.requestChrome() }
+                        Button(state.chromeStatus == .notRunning ? String(localized: "Запустить Chrome") : String(localized: "Разрешить…")) { state.requestChrome() }
                     }
                 }
             }
@@ -47,7 +47,7 @@ struct PermissionsSection: View {
                 HStack {
                     statusText(state.terminalText, ok: state.terminalStatus == .granted || state.terminalStatus == .noWindow)
                     if state.terminalStatus != .granted, state.terminalStatus != .noWindow {
-                        Button(state.terminalStatus == .notRunning ? "Запустить Терминал" : "Разрешить…") { state.requestTerminal() }
+                        Button(state.terminalStatus == .notRunning ? String(localized: "Запустить Терминал") : String(localized: "Разрешить…")) { state.requestTerminal() }
                     }
                 }
             }
@@ -90,23 +90,23 @@ final class PermissionsState: ObservableObject {
     /// Раздел Chrome показывается только с рабочими разрешениями BIND.
     var canManageChrome: Bool { permissions is LivePermissions }
 
-    var chromeText: String { Self.text(chromeStatus, notRunning: "Chrome не запущен") }
+    var chromeText: String { Self.text(chromeStatus, notRunning: String(localized: "Chrome не запущен")) }
 
     /// Строка Терминала — только с рабочими разрешениями BIND и если Терминал установлен.
     var canManageTerminal: Bool {
         permissions is LivePermissions && NSWorkspace.shared.urlForApplication(withBundleIdentifier: KnownBundleIDs.terminal) != nil
     }
 
-    var terminalText: String { Self.text(terminalStatus, notRunning: "Терминал не запущен") }
+    var terminalText: String { Self.text(terminalStatus, notRunning: String(localized: "Терминал не запущен")) }
 
     private static func text(_ status: AutomationStatus?, notRunning: String) -> String {
         switch status {
-        case .granted?: return "разрешено"
-        case .denied?: return "запрещено"
-        case .requiresConsent?: return "ещё не спрашивали"
+        case .granted?: return String(localized: "разрешено")
+        case .denied?: return String(localized: "запрещено")
+        case .requiresConsent?: return String(localized: "ещё не спрашивали")
         case .notRunning?: return notRunning
-        case .noWindow?: return "разрешено"
-        case .failed?, nil: return "неизвестно"
+        case .noWindow?: return String(localized: "разрешено")
+        case .failed?, nil: return String(localized: "неизвестно")
         }
     }
 

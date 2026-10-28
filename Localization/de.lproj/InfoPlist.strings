@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Juggler";
+"NSAppleEventsUsageDescription" = "Juggler liest Adresse und Titel des aktiven Google Chrome-Tabs sowie Fenster und Tab im Terminal, um sie mit einer Aufgabe zu verknüpfen, und wechselt beim Aufgabenwechsel dorthin.";

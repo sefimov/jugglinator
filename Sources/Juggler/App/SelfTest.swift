@@ -141,20 +141,20 @@ enum SelfTest {
         let removedText = fake.card.messages.last ?? ""
         let removedOK = model.document.tasks.map(\.id) == [t1.id, t3.id]
             && store.load().document.tasks.map(\.id) == [t1.id, t3.id]
-            && removedText == "Задача 2 «Вторая» удалена — ⌃⌥§ в течение 5 с вернёт"
+            && removedText == TaskToggleTexts.removedCard(number: 2, title: "Вторая", hotkey: hotkey)
             && fake.card.durations.last == TaskRemoval.undoWindow
 
         now = t0.addingTimeInterval(3)
         fake.provider.context = FrontmostContext(bundleID: "com.unknown")
         binder.toggleCurrentChat()
         let restoredOK = model.document == before && store.load().document == before
-            && fake.card.messages.last == "Задача 2 «Вторая» возвращена" && model.lastRemoved == nil
+            && fake.card.messages.last == TaskToggleTexts.restoredCard(number: 2, title: "Вторая") && model.lastRemoved == nil
 
         // Пункт меню «Добавить/Удалить текущее окно»: окно уже задача — удаляет её с той же карточкой.
         fake.provider.context = FrontmostContext(bundleID: KnownBundleIDs.chatGPT, windowTitle: "Два - ChatGPT")
         binder.toggleCurrentWindow()
         let menuRemovedOK = model.document.tasks.map(\.id) == [t1.id, t3.id]
-            && fake.card.messages.last == "Задача 2 «Вторая» удалена — ⌃⌥§ в течение 5 с вернёт"
+            && fake.card.messages.last == TaskToggleTexts.removedCard(number: 2, title: "Вторая", hotkey: hotkey)
             && model.lastRemoved?.undoableByToggle == true
 
         return SelfTestResult(
@@ -174,16 +174,16 @@ enum SelfTest {
         if bundle.bundleIdentifier != JugglerLog.subsystem { problems.append("bundle id \(bundle.bundleIdentifier ?? "нет")") }
         if (info["LSUIElement"] as? Bool) != true { problems.append("нет LSUIElement") }
         if (info["LSMinimumSystemVersion"] as? String) != "14.0" { problems.append("LSMinimumSystemVersion не 14.0") }
-        let appleEvents = bundle.object(forInfoDictionaryKey: "NSAppleEventsUsageDescription") as? String ?? ""
-        if appleEvents.range(of: "\\p{Cyrillic}", options: .regularExpression) == nil {
-            problems.append("NSAppleEventsUsageDescription не на русском")
-        }
+        if (info["NSAppleEventsUsageDescription"] as? String ?? "").isEmpty { problems.append("нет NSAppleEventsUsageDescription") }
+        let declared = info["CFBundleLocalizations"] as? [String] ?? []
+        let missing = declared.filter { bundle.path(forResource: "Localizable", ofType: "strings", inDirectory: nil, forLocalization: $0) == nil }
+        if declared.isEmpty || !missing.isEmpty { problems.append("нет переводов: \(missing.isEmpty ? "CFBundleLocalizations" : missing.joined(separator: ", "))") }
         let version = info["CFBundleShortVersionString"] as? String ?? "?"
         let build = info["CFBundleVersion"] as? String ?? "?"
         return [SelfTestResult(
             "Пакет .app: Info.plist",
             passed: problems.isEmpty,
-            detail: problems.isEmpty ? "\(bundle.bundleIdentifier ?? "") \(version) (\(build)), локализация \(bundle.preferredLocalizations.first ?? "?")"
+            detail: problems.isEmpty ? "\(bundle.bundleIdentifier ?? "") \(version) (\(build)), языков \(declared.count), выбран \(bundle.preferredLocalizations.first ?? "?")"
                                      : problems.joined(separator: ", "))]
     }
 }

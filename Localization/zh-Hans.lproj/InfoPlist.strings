@@ -1,0 +1,2 @@
+"CFBundleDisplayName" = "Juggler";
+"NSAppleEventsUsageDescription" = "Juggler 会读取 Google Chrome 当前标签页的地址和标题，以及“终端”中的窗口和标签页，将它们绑定到任务，并在切换任务时切换到它们。";
