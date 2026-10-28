@@ -4,15 +4,18 @@
     scripts/check-localization.py          проверить; код 0 — всё в порядке
     scripts/check-localization.py --keys   напечатать ключи, найденные в коде
 
-Ключ перевода — русская строка из кода: литерал в String(localized:) или в SwiftUI
-(Text, Button, Toggle, Section, LabeledContent, TextField, Label, .help, .navigationTitle,
-.accessibilityLabel) с кириллицей. Интерполяции \\(...) сравниваются с %@, %lld, %d без учёта
+Ключ перевода — русская строка из кода: литерал с кириллицей в loc(...) (JugglerCore, Localizer.swift:
+переводит на язык, выбранный сейчас). Интерполяции \\(...) сравниваются с %@, %lld, %d без учёта
 типа: тип спецификатора (Int → %lld, Int32 → %d, остальное → %@) проверяйте сами.
+
+Кириллический литерал в String(localized:) или прямо в SwiftUI (Text, Button, Toggle, Section, Picker,
+LabeledContent, TextField, Label, .help, .navigationTitle, .accessibilityLabel) — ошибка: такие строки
+берут язык запуска и не переключаются без перезапуска. Оберните литерал в loc(...).
 
 Проверяется:
 - в каждой Localizable.strings ровно ключи из кода (плюс «%@, %@» из сводки);
 - в каждом переводе те же спецификаторы, что в ключе (позиционные %1$@ допустимы);
-- в Localizable.stringsdict есть summary.tasks и summary.done, в InfoPlist.strings —
+- в Localizable.stringsdict есть summary.tasks, summary.done и clearAll.confirm, в InfoPlist.strings —
   NSAppleEventsUsageDescription;
 - CFBundleLocalizations в scripts/Info.plist совпадает с набором .lproj.
 """
@@ -26,12 +29,13 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CYRILLIC = re.compile("[А-Яа-яЁё]")
-CALL = re.compile(
-    r'(String\(localized: |\b(?:Text|Button|Toggle|Section|LabeledContent|TextField|Label)\(|'
+CALL = re.compile(r'\bloc\(\s*"')
+LEGACY = re.compile(
+    r'(String\(localized: |\b(?:Text|Button|Toggle|Section|Picker|LabeledContent|TextField|Label)\(|'
     r'\.help\(|\.navigationTitle\(|\.accessibilityLabel\()\s*"')
 SPEC = re.compile(r"%(?:\d+\$)?(?:lld|d|@)")
 EXTRA_KEYS = {"%@, %@"}
-PLURAL_KEYS = {"summary.tasks", "summary.done"}
+PLURAL_KEYS = {"summary.tasks", "summary.done", "clearAll.confirm"}
 
 
 def single_literal(src, i):
@@ -93,18 +97,23 @@ def normalize(body):
     return out
 
 
-def code_keys():
+def literals(pattern):
+    """Литералы с кириллицей сразу после pattern: {ключ: «файл:строка»}."""
     keys = {}
     for path in sorted(glob.glob(os.path.join(ROOT, "Sources/Juggler/**/*.swift"), recursive=True)
                        + glob.glob(os.path.join(ROOT, "Sources/JugglerCore/**/*.swift"), recursive=True)):
         src = open(path, encoding="utf-8").read()
-        for m in CALL.finditer(src):
+        for m in pattern.finditer(src):
             i = m.end() - 1
             body = multi_literal(src, i) if src.startswith('"""', i) else single_literal(src, i)
             key = normalize(body)
             if CYRILLIC.search(key):
                 keys.setdefault(key, f"{os.path.relpath(path, ROOT)}:{src[:i].count(chr(10)) + 1}")
     return keys
+
+
+def code_keys():
+    return literals(CALL)
 
 
 def load_strings(path):
@@ -123,7 +132,8 @@ def main():
             print(f"{where}\t{json.dumps(key, ensure_ascii=False)}")
         return 0
     expected = set(found) | {SPEC.sub("◊", k) for k in EXTRA_KEYS}
-    problems = []
+    problems = [f"{where}: «{key}» не в loc(...) — не переключится без перезапуска"
+                for key, where in literals(LEGACY).items()]
     lprojs = sorted(glob.glob(os.path.join(ROOT, "Localization/*.lproj")))
     languages = [os.path.basename(p)[:-len(".lproj")] for p in lprojs]
     for lproj, lang in zip(lprojs, languages):

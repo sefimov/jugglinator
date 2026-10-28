@@ -64,12 +64,16 @@ public enum HotkeyAction: String, Codable, CaseIterable, Sendable {
     /// ⌃⌥§: добавить переднее окно задачей или удалить задачу, если оно уже задача (D15).
     /// Имя случая не меняется: это ключ в hotkeys.json.
     case bindCurrentChat
+    /// ⌃⌥D: отметить задачу сделанной или вернуть в работу (D24). Новый случай добавлен в конец:
+    /// старые hotkeys.json читаются, действие без записи берёт умолчание.
+    case toggleDone
 
     public var displayName: String {
         switch self {
-        case .nextTask: return String(localized: "Следующая задача")
-        case .previousTask: return String(localized: "Предыдущая задача")
+        case .nextTask: return loc("Следующая задача")
+        case .previousTask: return loc("Предыдущая задача")
         case .bindCurrentChat: return TaskToggleTexts.actionTitle
+        case .toggleDone: return DoneToggleTexts.actionTitle
         }
     }
 }

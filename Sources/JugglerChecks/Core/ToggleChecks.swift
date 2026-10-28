@@ -310,10 +310,15 @@ extension CoreChecks {
             c.expectEqual(TaskToggle.decide(document: d, lastRemoved: nil, now: t0, allowRestore: false) { front },
                           .remove(taskID: d.tasks[1].id, number: 2), "из меню: окно — задача → удалить")
 
-            c.expectEqual(MenuFooterItem.items(canRestore: false), [.currentWindow, .settings, .quit],
-                          "под списком без возврата: окно, настройки, выход")
-            c.expectEqual(MenuFooterItem.items(canRestore: true), [.currentWindow, .restoreRemoved, .settings, .quit],
-                          "под списком: окно, возврат, настройки, выход")
+            c.expectEqual(MenuFooterItem.items(canRestore: false, hasTasks: false), [.currentWindow, .settings, .quit],
+                          "под списком без возврата и без задач: окно, настройки, выход")
+            c.expectEqual(MenuFooterItem.items(canRestore: true, hasTasks: false), [.currentWindow, .restoreRemoved, .settings, .quit],
+                          "под списком без задач: окно, возврат, настройки, выход")
+            c.expectEqual(MenuFooterItem.items(canRestore: false, hasTasks: true), [.currentWindow, .clearAll, .settings, .quit],
+                          "под списком: окно, очистка, настройки, выход")
+            c.expectEqual(MenuFooterItem.items(canRestore: true, hasTasks: true),
+                          [.currentWindow, .restoreRemoved, .clearAll, .settings, .quit],
+                          "под списком: окно, возврат, очистка, настройки, выход")
             c.expectEqual(TaskToggleTexts.settingsMenuTitle, "Настройки…", "пункт «Настройки…»")
             c.expectEqual(TaskToggleTexts.quitMenuTitle, "Выйти", "«Выйти из Juggler» → «Выйти»")
         }

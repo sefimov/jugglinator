@@ -57,7 +57,7 @@ public enum TaskListPresenter {
             TaskRow(
                 id: task.id,
                 number: index + 1,
-                title: task.title.isEmpty ? String(localized: "Без названия") : task.title,
+                title: task.title.isEmpty ? loc("Без названия") : task.title,
                 note: task.note,
                 isDone: task.isDone,
                 isCurrent: task.id == document.lastActiveTaskID,
@@ -70,78 +70,64 @@ public enum TaskListPresenter {
 
     /// Справка о привязке: «Chrome: Заголовок вкладки» или «Без привязки…».
     public static func bindingHelp(_ binding: TaskBinding?) -> String {
-        guard let binding else { return String(localized: "Без привязки: откройте чат и выберите «\(TaskToggleTexts.menuAddTitle)»") }
+        guard let binding else { return loc("Без привязки: откройте чат и выберите «\(TaskToggleTexts.menuAddTitle)»") }
         let title = binding.title.trimmingCharacters(in: .whitespacesAndNewlines)
         return title.isEmpty ? binding.source.displayName : "\(binding.source.displayName): \(title)"
     }
 
-    /// Текст иконки меню-бара: номер текущей задачи или «–», если её нет.
-    public static func menuBarText(currentNumber: Int?) -> String {
-        guard let currentNumber, currentNumber > 0 else { return "–" }
-        return String(currentNumber)
-    }
-
-    /// SF Symbol с номером текущей задачи (есть для 1…50) или `nil`, тогда показывается текст.
-    public static func menuBarSymbol(currentNumber: Int?) -> String? {
-        guard let currentNumber, (1...50).contains(currentNumber) else { return nil }
-        return "\(currentNumber).square.fill"
-    }
-
-    /// Значок меню-бара, когда текущей задачи нет.
-    public static let menuBarEmptySymbol = "square.dashed"
-
-    /// Подсказка к иконке меню-бара.
-    public static func menuBarHelp(document: TasksDocument) -> String {
-        guard let task = document.lastActiveTask, let number = document.number(of: task.id) else {
-            return String(localized: "Juggler: текущей задачи нет")
-        }
-        return String(localized: "Juggler: задача \(number) — \(task.title)")
-    }
-
     /// Сводка под заголовком: «3 задачи, 1 сделана». Формы слов — из `Localizable.stringsdict`
-    /// пакета .app; без таблиц (проверки, `swift run`) — русские по `RussianPlural`.
+    /// выбранного языка; без таблиц — русские по `RussianPlural`.
     public static func summary(for document: TasksDocument) -> String {
         let total = document.tasks.count
-        guard total > 0 else { return String(localized: "Задач пока нет") }
+        guard total > 0 else { return loc("Задач пока нет") }
         let done = document.tasks.filter(\.isDone).count
         let head = LocalizedPlural.format("summary.tasks", total)
             ?? "\(total) \(RussianPlural.form(total, one: "задача", few: "задачи", many: "задач"))"
         guard done > 0 else { return head }
         let tail = LocalizedPlural.format("summary.done", done)
             ?? "\(done) \(RussianPlural.form(done, one: "сделана", few: "сделаны", many: "сделано"))"
-        return String(localized: "\(head), \(tail)")
+        return loc("\(head), \(tail)")
     }
 
     /// Вопрос перед удалением.
     public static func deleteConfirmation(title: String) -> String {
         let cleaned = TaskListOps.cleanTitle(title)
-        let shown = cleaned.isEmpty ? String(localized: "Без названия") : cleaned
-        return String(localized: "Удалить задачу «\(shown)»?")
+        let shown = cleaned.isEmpty ? loc("Без названия") : cleaned
+        return loc("Удалить задачу «\(shown)»?")
     }
+
+    /// Вопрос перед очисткой списка: «Удалить все 5 задач?» (форма слова — по `clearAll.confirm`).
+    public static func clearAllConfirmation(count: Int) -> String {
+        LocalizedPlural.format("clearAll.confirm", count) ?? {
+            switch RussianPlural.form(count, one: "one", few: "few", many: "many") {
+            case "one": return "Удалить \(count) задачу?"
+            case "few": return "Удалить все \(count) задачи?"
+            default: return "Удалить все \(count) задач?"
+            }
+        }()
+    }
+
+    /// Пояснение под вопросом об очистке.
+    public static var clearAllWarning: String { loc("Задачи, заметки и привязки будут удалены. Это нельзя отменить.") }
 
     /// Сообщение о восстановлении `tasks.json` после загрузки или `nil`, если всё в порядке.
     public static func loadNotice(_ outcome: TaskStore.LoadOutcome?) -> String? {
         switch outcome {
         case .recoveredFromBackup:
-            return String(localized: "Файл задач был повреждён или пропал. Список восстановлен из резервной копии.")
+            return loc("Файл задач был повреждён или пропал. Список восстановлен из резервной копии.")
         case .resetAfterCorruption:
-            return String(localized: "Файл задач был повреждён, резервной копии нет. Испорченный файл сохранён рядом, список начат заново.")
+            return loc("Файл задач был повреждён, резервной копии нет. Испорченный файл сохранён рядом, список начат заново.")
         case .loaded, .missing, nil:
             return nil
         }
     }
 }
 
-/// Число со словом в нужной форме по ключу из `Localizable.stringsdict` (правила множественного
-/// числа — языка таблицы) или `nil`, если таблицы с этим ключом нет.
+/// Число со словом в нужной форме по ключу из `Localizable.stringsdict` выбранного сейчас языка
+/// (правила множественного числа — языка таблицы) или `nil`, если таблицы с этим ключом нет.
 public enum LocalizedPlural {
-    public static func format(_ key: String, _ n: Int, bundle: Bundle = .main) -> String? {
-        let missing = "\u{1}"
-        let format = bundle.localizedString(forKey: key, value: missing, table: nil)
-        guard format != missing else { return nil }
-        // Правила — языка выбранной таблицы, а не региона системы (en-RU и т. п.).
-        let language = bundle.preferredLocalizations.first ?? Locale.current.identifier
-        return String(format: format, locale: Locale(identifier: language), n)
+    public static func format(_ key: String, _ n: Int, localizer: Localizer = .shared) -> String? {
+        localizer.plural(key, n)
     }
 }
 
@@ -180,9 +166,9 @@ public enum LoginItemState: String, Equatable, Sendable, CaseIterable {
         case .enabled: return nil
         case .notRegistered: return nil
         case .requiresApproval:
-            return String(localized: "Нужно разрешить запуск в «Системных настройках» → «Основные» → «Объекты входа».")
+            return loc("Нужно разрешить запуск в «Системных настройках» → «Основные» → «Объекты входа».")
         case .notFound:
-            return String(localized: "Запуск при входе доступен только для собранного приложения Juggler.app.")
+            return loc("Запуск при входе доступен только для собранного приложения Juggler.app.")
         }
     }
 

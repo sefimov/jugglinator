@@ -3,23 +3,25 @@ import JugglerCore
 import ServiceManagement
 import SwiftUI
 
-/// Окно настроек: раздел хоткеев (компонент SWITCH), запуск при входе, файл данных.
+/// Окно настроек: раздел хоткеев (компонент SWITCH), язык интерфейса, запуск при входе, файл данных.
 struct SettingsView: View {
     let environment: AppEnvironment
     @StateObject private var loginItem = LoginItemController()
 
     var body: some View {
         Form {
-            Section("Хоткеи") {
+            Section(loc("Хоткеи")) {
                 SwitchModule.hotkeySettingsView(environment: environment)
             }
 
-            Section("Разрешения") {
+            Section(loc("Разрешения")) {
                 PermissionsSection(environment: environment)
             }
 
-            Section("Запуск") {
-                Toggle("Запускать Juggler при входе в систему", isOn: Binding(
+            LanguageSection()
+
+            Section(loc("Запуск")) {
+                Toggle(loc("Запускать Juggler при входе в систему"), isOn: Binding(
                     get: { loginItem.state.isOn },
                     set: { loginItem.setEnabled($0) }))
                 if let explanation = loginItem.state.explanation {
@@ -35,21 +37,21 @@ struct SettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if loginItem.state.needsSystemSettings {
-                    Button("Открыть «Объекты входа»") {
+                    Button(loc("Открыть «Объекты входа»")) {
                         SMAppService.openSystemSettingsLoginItems()
                     }
                 }
             }
 
-            Section("Данные") {
-                LabeledContent("Файл задач") {
+            Section(loc("Данные")) {
+                LabeledContent(loc("Файл задач")) {
                     Text(environment.model.store.fileURL.path)
                         .textSelection(.enabled)
                         .lineLimit(1)
                         .truncationMode(.middle)
                         .foregroundStyle(.secondary)
                 }
-                Button("Показать в Finder") {
+                Button(loc("Показать в Finder")) {
                     revealDataFile()
                 }
             }
@@ -57,7 +59,7 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 480)
         .frame(minHeight: 380)
-        .navigationTitle("Настройки Juggler")
+        .navigationTitle(loc("Настройки Juggler"))
         .onAppear { loginItem.refresh() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             loginItem.refresh()
@@ -103,8 +105,8 @@ final class LoginItemController: ObservableObject {
             errorText = nil
         } catch {
             errorText = enabled
-                ? String(localized: "Не удалось включить запуск при входе: \(error.localizedDescription)")
-                : String(localized: "Не удалось выключить запуск при входе: \(error.localizedDescription)")
+                ? loc("Не удалось включить запуск при входе: \(error.localizedDescription)")
+                : loc("Не удалось выключить запуск при входе: \(error.localizedDescription)")
             uiLog.error("SMAppService: \(error.localizedDescription, privacy: .public)")
         }
         refresh()

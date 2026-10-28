@@ -1,4 +1,5 @@
 import Foundation
+import JugglerCore
 
 // `swift run JugglerChecks [-v] [Область…]`
 //   -v        — печатать каждую прошедшую проверку;
@@ -19,6 +20,9 @@ let suites: [CheckSuite.Type] = [
 let arguments = Array(CommandLine.arguments.dropFirst())
 let verbose = arguments.contains("-v")
 let filter = Set(arguments.filter { !$0.hasPrefix("-") }.map { $0.lowercased() })
+
+// Тексты в проверках — русские (язык ключей), независимо от языка системы и CI.
+Localizer.shared.setLanguage(Localizer.keyLanguage)
 
 let runner = CheckRunner(verbose: verbose)
 for suite in suites where filter.isEmpty || filter.contains(suite.name.lowercased()) {

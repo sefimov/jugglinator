@@ -243,41 +243,48 @@ public enum MenuFooterItem: Equatable, Sendable {
     /// «Добавить текущее окно» или «Удалить текущее окно» (подпись — `CurrentWindowMenuAction.title`).
     case currentWindow
     case restoreRemoved
+    /// «Очистить все задачи» — сначала встроенное подтверждение (D25).
+    case clearAll
     case settings
     case quit
 
-    /// Столбик под разделителем; «Вернуть удалённую задачу» — только если есть что вернуть.
-    public static func items(canRestore: Bool) -> [MenuFooterItem] {
-        (canRestore ? [.currentWindow, .restoreRemoved] : [.currentWindow]) + [.settings, .quit]
+    /// Столбик под разделителем; «Вернуть удалённую задачу» — только если есть что вернуть,
+    /// «Очистить все задачи» — только если в списке есть задачи.
+    public static func items(canRestore: Bool, hasTasks: Bool) -> [MenuFooterItem] {
+        var items: [MenuFooterItem] = [.currentWindow]
+        if canRestore { items.append(.restoreRemoved) }
+        if hasTasks { items.append(.clearAll) }
+        return items + [.settings, .quit]
     }
 }
 
 /// Тексты переключателя: карточка и меню.
 public enum TaskToggleTexts {
     /// Название действия ⌃⌥§: настройки хоткеев, README.
-    public static let actionTitle = String(localized: "Добавить или удалить текущее окно")
+    public static var actionTitle: String { loc("Добавить или удалить текущее окно") }
     /// Пункт меню: переднее окно не задача.
-    public static let menuAddTitle = String(localized: "Добавить текущее окно")
+    public static var menuAddTitle: String { loc("Добавить текущее окно") }
     /// Пункт меню: переднее окно уже задача.
-    public static let menuRemoveTitle = String(localized: "Удалить текущее окно")
-    public static let restoreMenuTitle = String(localized: "Вернуть удалённую задачу")
-    public static let settingsMenuTitle = String(localized: "Настройки…")
-    public static let quitMenuTitle = String(localized: "Выйти")
+    public static var menuRemoveTitle: String { loc("Удалить текущее окно") }
+    public static var restoreMenuTitle: String { loc("Вернуть удалённую задачу") }
+    public static var clearAllMenuTitle: String { loc("Очистить все задачи") }
+    public static var settingsMenuTitle: String { loc("Настройки…") }
+    public static var quitMenuTitle: String { loc("Выйти") }
 
     /// Карточка после удаления: «Задача 2 «Название» удалена — ⌃⌥§ в течение 5 с вернёт».
     public static func removedCard(number: Int, title: String, hotkey: Hotkey?, window: TimeInterval = TaskRemoval.undoWindow) -> String {
-        let head = String(localized: "Задача \(number) «\(TransitionCardBuilder.title(title))» удалена")
-        guard let hotkey else { return String(localized: "\(head) — вернуть: «\(restoreMenuTitle)» в меню Juggler") }
-        return String(localized: "\(head) — \(hotkey.displayString) в течение \(Int(window.rounded())) с вернёт")
+        let head = loc("Задача \(number) «\(TransitionCardBuilder.title(title))» удалена")
+        guard let hotkey else { return loc("\(head) — вернуть: «\(restoreMenuTitle)» в меню Juggler") }
+        return loc("\(head) — \(hotkey.displayString) в течение \(Int(window.rounded())) с вернёт")
     }
 
     /// Карточка после возврата: «Задача 2 «Название» возвращена».
     public static func restoredCard(number: Int, title: String) -> String {
-        String(localized: "Задача \(number) «\(TransitionCardBuilder.title(title))» возвращена")
+        loc("Задача \(number) «\(TransitionCardBuilder.title(title))» возвращена")
     }
 
     /// Подсказка к пункту «Вернуть удалённую задачу».
     public static func restoreHelp(_ removed: RemovedTask) -> String {
-        String(localized: "Вернуть «\(TransitionCardBuilder.title(removed.task.title))» на место \(removed.index + 1)")
+        loc("Вернуть «\(TransitionCardBuilder.title(removed.task.title))» на место \(removed.index + 1)")
     }
 }

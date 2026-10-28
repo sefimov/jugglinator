@@ -134,6 +134,10 @@
 "%@ — вернуть: «%@» в меню Juggler" = "%@: per ripristinare, scegli «%@» nel menu di Juggler";
 "%@ — %@ в течение %lld с вернёт" = "%1$@: %2$@ entro %3$lld s la ripristina";
 "Задача %lld «%@» возвращена" = "Attività %lld «%@» ripristinata";
+"Отметить сделанной / вернуть в работу" = "Segna come fatta / rimetti in corso";
+"Текущей задачи нет: перейдите к одной из задач" = "Nessuna attività corrente: passa a una delle tue attività";
+"Задача %lld «%@» сделана" = "Attività %lld «%@» completata";
+"Задача %lld «%@» вернулась в работу" = "Attività %lld «%@» di nuovo in corso";
 "Вернуть «%@» на место %lld" = "Ripristina «%@» alla posizione %lld";
 "Клавиша %lld" = "Tasto %lld";
 "Пробел" = "Spazio";
@@ -147,8 +151,6 @@
 "Нет привязки: откройте чат и нажмите %@" = "Nessun collegamento: apri una chat e premi %@";
 "Нет привязки: откройте чат и выберите в меню «%@»" = "Nessun collegamento: apri una chat e scegli «%@» nel menu";
 "Без привязки: откройте чат и выберите «%@»" = "Senza collegamento: apri una chat e scegli «%@»";
-"Juggler: текущей задачи нет" = "Juggler: nessuna attività corrente";
-"Juggler: задача %lld — %@" = "Juggler: attività %lld — %@";
 "Задач пока нет" = "Ancora nessuna attività";
 "Удалить задачу «%@»?" = "Eliminare l'attività «%@»?";
 "Файл задач был повреждён или пропал. Список восстановлен из резервной копии." = "Il file delle attività era danneggiato o mancante. L'elenco è stato ripristinato da un backup.";
@@ -168,3 +170,15 @@
 "Нет разрешения управлять Терминалом — открыт Терминал." = "Nessun permesso per controllare Terminale: è stato aperto Terminale.";
 "Нет разрешения управлять Терминалом — окно найдено по заголовку, вкладка не выбрана." = "Nessun permesso per controllare Terminale: finestra trovata tramite il titolo, scheda non selezionata.";
 "Терминал был закрыт — он запущен, окна задачи нет." = "Terminale era chiuso: è stato avviato, ma la finestra dell'attività non c'è più.";
+"Язык" = "Lingua";
+"Язык интерфейса" = "Lingua dell’interfaccia";
+"Как в системе" = "Come il sistema";
+"Тексты Juggler уже на новом языке. Системные надписи macOS — заголовок окна настроек, стандартные кнопки, тексты запросов разрешений — сменятся после перезапуска." = "I testi di Juggler sono già nella nuova lingua. Le scritte di sistema di macOS (il titolo della finestra delle impostazioni, i pulsanti standard, i testi delle richieste di autorizzazione) cambieranno dopo il riavvio.";
+"Перезапустить сейчас" = "Riavvia ora";
+"Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "Il riavvio funziona solo nell’app Juggler.app. Chiudi Juggler e riaprilo.";
+"Не удалось перезапустить Juggler: %@" = "Impossibile riavviare Juggler: %@";
+"Очистить все задачи" = "Elimina tutte le attività";
+"Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "Le attività, le relative note e i collegamenti verranno eliminati. L'operazione non può essere annullata.";
+"Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: l’attività %lld aspetta da più tempo — %@, %@";
+"Juggler: других задач в работе нет" = "Juggler: nessun’altra attività in corso";
+"Juggler: нет задач в работе" = "Juggler: nessuna attività in corso";

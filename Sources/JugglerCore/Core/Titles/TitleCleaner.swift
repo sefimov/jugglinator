@@ -45,7 +45,7 @@ public enum TitleCleaner {
 
     /// Название для новой задачи: очищенный заголовок, обрезанный до `maxLength`
     /// символов с «…»; пустой результат заменяется на `fallback`.
-    public static func suggestedTaskTitle(from title: String?, fallback: String = String(localized: "Новая задача"), maxLength: Int = 80) -> String {
+    public static func suggestedTaskTitle(from title: String?, fallback: String = loc("Новая задача"), maxLength: Int = 80) -> String {
         let cleaned = clean(title ?? "")
         guard !cleaned.isEmpty else { return fallback }
         guard maxLength > 1, cleaned.count > maxLength else { return cleaned }

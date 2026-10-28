@@ -28,7 +28,7 @@ struct TaskRowView: View {
                 .foregroundStyle(Color.accentColor)
                 .opacity(row.isCurrent ? 1 : 0)
                 .frame(width: 8)
-                .accessibilityLabel(row.isCurrent ? String(localized: "Текущая задача") : "")
+                .accessibilityLabel(row.isCurrent ? loc("Текущая задача") : "")
 
             Text("\(row.number)")
                 .font(.body.monospacedDigit().weight(row.isCurrent ? .bold : .regular))
@@ -58,7 +58,7 @@ struct TaskRowView: View {
 
             Spacer(minLength: 4)
 
-            Text(row.isDone ? String(localized: "сделано") : row.absenceText)
+            Text(row.isDone ? loc("сделано") : row.absenceText)
                 .font(.caption.monospacedDigit())
                 .foregroundStyle(row.isDone ? Color.secondary : row.staleness.color)
                 .lineLimit(1)
@@ -68,7 +68,7 @@ struct TaskRowView: View {
                     .foregroundStyle(row.isDone ? Color.green : Color.secondary)
             }
             .buttonStyle(.borderless)
-            .help(row.isDone ? String(localized: "Вернуть в работу") : String(localized: "Отметить «сделано»"))
+            .help(row.isDone ? loc("Вернуть в работу") : loc("Отметить «сделано»"))
 
             Menu {
                 menuItems
@@ -78,7 +78,7 @@ struct TaskRowView: View {
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
             .fixedSize()
-            .help("Действия с задачей")
+            .help(loc("Действия с задачей"))
         }
         .padding(.vertical, 2)
         .contentShape(Rectangle())
@@ -88,19 +88,19 @@ struct TaskRowView: View {
 
     @ViewBuilder
     private var menuItems: some View {
-        Button("Открыть", action: actions.open)
+        Button(loc("Открыть"), action: actions.open)
         Divider()
-        Button("Переименовать…", action: actions.rename)
-        Button(row.note.isEmpty ? String(localized: "Добавить заметку…") : String(localized: "Изменить заметку…"), action: actions.editNote)
-        Button(row.isDone ? String(localized: "Вернуть в работу") : String(localized: "Отметить «сделано»"), action: actions.toggleDone)
+        Button(loc("Переименовать…"), action: actions.rename)
+        Button(row.note.isEmpty ? loc("Добавить заметку…") : loc("Изменить заметку…"), action: actions.editNote)
+        Button(row.isDone ? loc("Вернуть в работу") : loc("Отметить «сделано»"), action: actions.toggleDone)
         Divider()
-        Button("Переместить выше", action: actions.moveUp).disabled(!actions.canMoveUp)
-        Button("Переместить ниже", action: actions.moveDown).disabled(!actions.canMoveDown)
+        Button(loc("Переместить выше"), action: actions.moveUp).disabled(!actions.canMoveUp)
+        Button(loc("Переместить ниже"), action: actions.moveDown).disabled(!actions.canMoveDown)
         if row.source != nil {
             Divider()
-            Button("Снять привязку", action: actions.unbind)
+            Button(loc("Снять привязку"), action: actions.unbind)
         }
         Divider()
-        Button("Удалить…", role: .destructive, action: actions.delete)
+        Button(loc("Удалить…"), role: .destructive, action: actions.delete)
     }
 }

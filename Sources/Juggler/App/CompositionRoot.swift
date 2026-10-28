@@ -16,6 +16,7 @@ final class AppEnvironment {
     let binder: CurrentChatBinding
     let card: TransitionCardPresenting
     let switcher: TaskSwitching
+    let doneToggler: DoneToggling
     let hotkeys: HotkeyRegistering
 
     private(set) var isStarted = false
@@ -26,6 +27,7 @@ final class AppEnvironment {
         binder: CurrentChatBinding,
         card: TransitionCardPresenting,
         switcher: TaskSwitching,
+        doneToggler: DoneToggling,
         hotkeys: HotkeyRegistering
     ) {
         self.model = model
@@ -33,6 +35,7 @@ final class AppEnvironment {
         self.binder = binder
         self.card = card
         self.switcher = switcher
+        self.doneToggler = doneToggler
         self.hotkeys = hotkeys
     }
 
@@ -45,8 +48,10 @@ final class AppEnvironment {
         let binder = BindModule.makeCurrentChatBinder(model: model, services: bind, card: card,
                                                       toggleHotkey: SwitchModule.bindHotkey)
         let switcher = SwitchModule.makeSwitcher(model: model, bind: bind, card: card)
+        let doneToggler = SwitchModule.makeDoneToggler(model: model, bind: bind, card: card)
         let hotkeys = SwitchModule.makeHotkeys()
-        return AppEnvironment(model: model, bind: bind, binder: binder, card: card, switcher: switcher, hotkeys: hotkeys)
+        return AppEnvironment(model: model, bind: bind, binder: binder, card: card, switcher: switcher,
+                              doneToggler: doneToggler, hotkeys: hotkeys)
     }
 
     /// Запуск после `applicationDidFinishLaunching`: регистрирует хоткеи.
@@ -69,6 +74,7 @@ final class AppEnvironment {
         case .nextTask: switcher.switchTask(.next)
         case .previousTask: switcher.switchTask(.previous)
         case .bindCurrentChat: binder.toggleCurrentChat()
+        case .toggleDone: doneToggler.toggleDone()
         }
     }
 }

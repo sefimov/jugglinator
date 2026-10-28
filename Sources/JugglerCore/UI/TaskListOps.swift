@@ -25,7 +25,7 @@ public enum TaskListOps {
 
     /// Название по умолчанию для новой задачи: «Задача N», где N — её будущий номер.
     public static func defaultTitle(for document: TasksDocument) -> String {
-        String(localized: "Задача \(document.tasks.count + 1)")
+        loc("Задача \(document.tasks.count + 1)")
     }
 
     // MARK: - Добавление, правка, удаление
@@ -80,6 +80,15 @@ public enum TaskListOps {
             document.lastActiveTaskID = nil
         }
         return true
+    }
+
+    /// Удаляет все задачи и снимает отметку текущей. Возвращает, сколько задач было удалено.
+    @discardableResult
+    public static func clearAll(_ document: inout TasksDocument) -> Int {
+        let count = document.tasks.count
+        document.tasks.removeAll()
+        document.lastActiveTaskID = nil
+        return count
     }
 
     /// Ставит или снимает отметку «сделано».

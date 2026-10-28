@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Сводка в меню: «3 задачи, 1 сделана» (TaskListPresenter.summary). -->
+<!-- Сводка в меню: «3 задачи, 1 сделана» (TaskListPresenter.summary); вопрос «Удалить все N задач?» (clearAll.confirm). -->
 <plist version="1.0">
 <dict>
 	<key>summary.tasks</key>
@@ -49,6 +49,30 @@
 			<string>%lld تمت</string>
 			<key>other</key>
 			<string>%lld تمت</string>
+		</dict>
+	</dict>
+	<key>clearAll.confirm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>حذف جميع المهام (%lld)؟</string>
+			<key>one</key>
+			<string>حذف المهمة الوحيدة؟</string>
+			<key>two</key>
+			<string>حذف المهمتين؟</string>
+			<key>few</key>
+			<string>حذف جميع المهام الـ%lld؟</string>
+			<key>many</key>
+			<string>حذف جميع المهام الـ%lld؟</string>
+			<key>other</key>
+			<string>حذف جميع المهام الـ%lld؟</string>
 		</dict>
 	</dict>
 </dict>

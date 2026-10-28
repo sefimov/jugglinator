@@ -46,7 +46,7 @@ public enum TransitionCardBuilder {
 
     public static func title(_ raw: String) -> String {
         let t = collapse(raw)
-        return t.isEmpty ? String(localized: "Без названия") : truncate(t, to: maxTitleLength)
+        return t.isEmpty ? loc("Без названия") : truncate(t, to: maxTitleLength)
     }
 
     /// Заметка: обрезаются пробелы по краям и пустые строки, длинная — укорачивается.
@@ -62,7 +62,7 @@ public enum TransitionCardBuilder {
         switch activation {
         case .failed(let message)?:
             let m = message.trimmingCharacters(in: .whitespacesAndNewlines)
-            return m.isEmpty ? String(localized: "Не удалось открыть привязку") : String(localized: "Не удалось открыть: \(m)")
+            return m.isEmpty ? loc("Не удалось открыть привязку") : loc("Не удалось открыть: \(m)")
         case .fallback(let message)?:
             let m = message.trimmingCharacters(in: .whitespacesAndNewlines)
             return m.isEmpty ? nil : m
@@ -74,9 +74,9 @@ public enum TransitionCardBuilder {
     /// Подсказка для задачи без привязки.
     public static func unboundHint(bindHotkey: Hotkey?) -> String {
         if let bindHotkey {
-            return String(localized: "Нет привязки: откройте чат и нажмите \(bindHotkey.displayString)")
+            return loc("Нет привязки: откройте чат и нажмите \(bindHotkey.displayString)")
         }
-        return String(localized: "Нет привязки: откройте чат и выберите в меню «\(TaskToggleTexts.menuAddTitle)»")
+        return loc("Нет привязки: откройте чат и выберите в меню «\(TaskToggleTexts.menuAddTitle)»")
     }
 
     /// Строка заголовка карточки: «2. Название».

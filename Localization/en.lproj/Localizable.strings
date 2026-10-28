@@ -134,6 +134,10 @@
 "%@ — вернуть: «%@» в меню Juggler" = "%@ — to restore: “%@” in the Juggler menu";
 "%@ — %@ в течение %lld с вернёт" = "%@ — %@ within %lld s restores it";
 "Задача %lld «%@» возвращена" = "Task %lld “%@” restored";
+"Отметить сделанной / вернуть в работу" = "Mark Done / Back to Work";
+"Текущей задачи нет: перейдите к одной из задач" = "No current task: switch to one of your tasks";
+"Задача %lld «%@» сделана" = "Task %lld “%@” done";
+"Задача %lld «%@» вернулась в работу" = "Task %lld “%@” is back in progress";
 "Вернуть «%@» на место %lld" = "Restore “%@” to position %lld";
 "Клавиша %lld" = "Key %lld";
 "Пробел" = "Space";
@@ -147,8 +151,6 @@
 "Нет привязки: откройте чат и нажмите %@" = "Not bound: open a chat and press %@";
 "Нет привязки: откройте чат и выберите в меню «%@»" = "Not bound: open a chat and choose “%@” in the menu";
 "Без привязки: откройте чат и выберите «%@»" = "Not bound: open a chat and choose “%@”";
-"Juggler: текущей задачи нет" = "Juggler: no current task";
-"Juggler: задача %lld — %@" = "Juggler: task %lld — %@";
 "Задач пока нет" = "No tasks yet";
 "Удалить задачу «%@»?" = "Delete task “%@”?";
 "Файл задач был повреждён или пропал. Список восстановлен из резервной копии." = "The tasks file was damaged or missing. The list was restored from a backup.";
@@ -168,3 +170,15 @@
 "Нет разрешения управлять Терминалом — открыт Терминал." = "No permission to control Terminal — Terminal was brought forward.";
 "Нет разрешения управлять Терминалом — окно найдено по заголовку, вкладка не выбрана." = "No permission to control Terminal — the window was found by title, the tab wasn't selected.";
 "Терминал был закрыт — он запущен, окна задачи нет." = "Terminal was closed — it has been launched, but the task's window is gone.";
+"Язык" = "Language";
+"Язык интерфейса" = "Interface language";
+"Как в системе" = "Same as system";
+"Тексты Juggler уже на новом языке. Системные надписи macOS — заголовок окна настроек, стандартные кнопки, тексты запросов разрешений — сменятся после перезапуска." = "Juggler's texts are already in the new language. macOS system labels — the Settings window title, standard buttons, permission request texts — will change after a restart.";
+"Перезапустить сейчас" = "Restart now";
+"Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "Restart only works in the Juggler.app application. Quit Juggler and open it again.";
+"Не удалось перезапустить Juggler: %@" = "Couldn’t restart Juggler: %@";
+"Очистить все задачи" = "Clear All Tasks";
+"Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "Tasks, notes and bindings will be deleted. This can't be undone.";
+"Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: task %lld has waited longest — %@, %@";
+"Juggler: других задач в работе нет" = "Juggler: no other tasks in progress";
+"Juggler: нет задач в работе" = "Juggler: no tasks in progress";
