@@ -4,7 +4,7 @@ import Foundation
 import JugglerCore
 import SwiftUI
 
-/// Раздел «Хоткеи» окна настроек (UI встраивает его через `SwitchModule.hotkeySettingsView`).
+/// The "Hotkeys" section of the settings window (UI embeds it via `SwitchModule.hotkeySettingsView`).
 struct HotkeySettingsSection: View {
     @ObservedObject var preferences: HotkeyPreferences
     @StateObject private var recorder: HotkeyRecorderSession
@@ -57,12 +57,12 @@ struct HotkeySettingsSection: View {
         let key = KeyCode.displayName(preferences.keyboard.keyAboveTab)
         return loc("""
             Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). \
-            \(key) — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена.
+            ⇥ — Tab, \(key) — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена.
             """)
     }
 }
 
-/// Поле записи одного хоткея: показывает сочетание, по нажатию ждёт новое.
+/// Recorder field for one hotkey: shows the shortcut, waits for a new one when clicked.
 struct HotkeyRecorderField: View {
     let action: HotkeyAction
     @ObservedObject var preferences: HotkeyPreferences
@@ -82,8 +82,8 @@ struct HotkeyRecorderField: View {
     }
 }
 
-/// Сеанс записи: пока идёт запись, глобальные хоткеи сняты, а нажатия
-/// перехватывает локальный монитор событий окна настроек.
+/// Recording session: while recording, global hotkeys are unregistered and key presses
+/// are intercepted by a local event monitor of the settings window.
 @MainActor
 final class HotkeyRecorderSession: ObservableObject {
     @Published private(set) var recording: HotkeyAction?
@@ -129,7 +129,7 @@ final class HotkeyRecorderSession: ObservableObject {
         message = nil
     }
 
-    /// `true` — нажатие поглощено записью.
+    /// `true` — the key press was consumed by recording.
     private func handle(keyCode: UInt16, flags: NSEvent.ModifierFlags) -> Bool {
         guard let action = recording else { return false }
         let modifiers = Self.modifiers(flags)
@@ -140,7 +140,7 @@ final class HotkeyRecorderSession: ObservableObject {
         }
         let hotkey = Hotkey(keyCode: code, modifiers: modifiers)
         if let error = preferences.assign(hotkey, to: action) {
-            // Остаёмся в режиме записи: можно сразу нажать другое сочетание.
+            // Stay in recording mode: another shortcut can be pressed right away.
             message = "\(hotkey.displayString): \(error.message)"
             return true
         }

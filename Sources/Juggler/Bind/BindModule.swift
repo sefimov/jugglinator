@@ -4,19 +4,19 @@ import Foundation
 import JugglerCore
 import os
 
-// Папка Sources/Juggler/Bind/ принадлежит задаче BIND.
-// Сигнатуры функций `BindModule` — контракт с корнем композиции (App/CompositionRoot.swift),
-// точкой входа (App/JugglerApp.swift) и самопроверкой (App/SelfTest.swift).
+// The Sources/Juggler/Bind/ folder belongs to the BIND task.
+// The `BindModule` function signatures are the contract with the composition root (App/CompositionRoot.swift),
+// the entry point (App/JugglerApp.swift) and the self-test (App/SelfTest.swift).
 //
-// Состав:
-//   AppleScriptController     — проверка Automation без запроса и выполнение AppleScript;
-//   ChromeController          — AppleScript для Chrome;
-//   TerminalController        — AppleScript для Терминала: окно, tty вкладки, переход;
-//   LiveFrontmostContextProvider — контекст переднего окна (NSWorkspace, AX, AppleScript);
-//   LiveBindingCapturer       — привязка по контексту (логика в JugglerCore/Bind);
-//   LiveBindingActivator      — открытие вкладки, чата, окна; запуск приложения;
-//   LivePermissions           — Accessibility, Automation, инструкции;
-//   LiveCurrentChatBinder     — «Сделать задачей текущий чат» и ⌃⌥§ «добавить или удалить текущее окно».
+// Contents:
+//   AppleScriptController     — Automation check without prompting and running AppleScript;
+//   ChromeController          — AppleScript for Chrome;
+//   TerminalController        — AppleScript for Terminal: window, tab tty, switching;
+//   LiveFrontmostContextProvider — frontmost window context (NSWorkspace, AX, AppleScript);
+//   LiveBindingCapturer       — binding from context (logic in JugglerCore/Bind);
+//   LiveBindingActivator      — opening a tab, chat, window; launching an app;
+//   LivePermissions           — Accessibility, Automation, instructions;
+//   LiveCurrentChatBinder     — "Make the current chat a task" and ⌃⌥⇥ "add or remove current window".
 
 @MainActor
 enum BindModule {
@@ -32,32 +32,33 @@ enum BindModule {
             permissions: permissions)
     }
 
-    /// `card` и `toggleHotkey` — для карточек ⌃⌥§ «добавить или удалить текущее окно» (удалена / возвращена).
+    /// `card` and `toggleHotkey` — for the ⌃⌥⇥ "add or remove current window" cards (removed / restored)
+    /// and for the "task added" card after binding creates a new task.
     static func makeCurrentChatBinder(model: AppModel, services: BindServices,
                                       card: TransitionCardPresenting? = nil,
                                       toggleHotkey: @escaping () -> Hotkey? = { nil }) -> CurrentChatBinding {
         guard let provider = services.contextProvider as? LiveFrontmostContextProvider,
               let permissions = services.permissions as? LivePermissions else {
-            // Подменённые сервисы (например, в самопроверке): без диалогов.
+            // Substituted services (e.g., in the self-test): no dialogs.
             return MinimalCurrentChatBinder(model: model, services: services, card: card, toggleHotkey: toggleHotkey)
         }
         return LiveCurrentChatBinder(model: model, provider: provider, capturer: services.capturer, permissions: permissions,
                                      card: card, toggleHotkey: toggleHotkey)
     }
 
-    /// `Juggler --probe-frontmost [--delay <сек>] [--app <bundle id>] [--prompt] [--window-title <заголовок>]`:
-    /// печатает JSON с контекстом, диагностикой и результатом привязки. Без `--prompt`
-    /// системных запросов не показывает (с `--prompt` — запрос управления Chrome или Терминалом, если впереди он).
-    /// Для Терминала в `context.terminalWindow` — id окна и tty вкладки. Для ChatGPT в `diagnostics.chatGPTThread` — поиск треда
-    /// по заголовку окна в `session_index.jsonl`; `--window-title` подставляет заголовок (проверка без Accessibility).
-    /// Код выхода 0, если контекст прочитан.
+    /// `Juggler --probe-frontmost [--delay <sec>] [--app <bundle id>] [--prompt] [--window-title <title>]`:
+    /// prints JSON with the context, diagnostics and binding result. Without `--prompt`
+    /// shows no system prompts (with `--prompt` — the Chrome or Terminal control prompt, if it's in front).
+    /// For Terminal, `context.terminalWindow` holds the window id and tab tty. For ChatGPT, `diagnostics.chatGPTThread` holds the thread lookup
+    /// by window title in `session_index.jsonl`; `--window-title` substitutes the title (check without Accessibility).
+    /// Exit code 0 if the context was read.
     static func probeFrontmost(arguments: [String]) -> Int32 {
         let options = ProbeOptions.parse(arguments)
         let chrome = ChromeController()
         let terminal = TerminalController()
         let provider = LiveFrontmostContextProvider(chrome: chrome, terminal: terminal)
         if options.delay > 0 {
-            // Крутим цикл событий, чтобы NSWorkspace видел смену переднего приложения.
+            // Spin the event loop so that NSWorkspace sees the frontmost app change.
             RunLoop.main.run(until: Date().addingTimeInterval(options.delay))
         }
         if options.allowPrompts, chrome.automationStatus().status == .requiresConsent {
@@ -76,7 +77,7 @@ enum BindModule {
         return context.bundleID == nil ? 1 : 0
     }
 
-    /// Без запросов разрешений и без окон: проверяется только то, что не трогает пользователя.
+    /// No permission prompts and no windows: only checks that don't disturb the user.
     static func selfTest() -> [SelfTestResult] {
         var results: [SelfTestResult] = []
         let services = makeServices()
@@ -122,13 +123,13 @@ enum BindModule {
             .map { "\($0.0) → \(NSWorkspace.shared.urlForApplication(toOpen: $0.1)?.lastPathComponent ?? "нет приложения")" }
         results.append(SelfTestResult("BIND: обработчики ссылок", passed: true, detail: handlers.joined(separator: ", ")))
 
-        // Только чтение: есть ли папка метаданных сессий Claude Code (её отсутствие — не ошибка).
+        // Read-only: whether the Claude Code session metadata folder exists (its absence is not an error).
         let sessionsRoot = ClaudeCodeSessionMetadata.defaultRoot()
         let sessionsFound = sessionsRoot.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
         results.append(SelfTestResult("BIND: метаданные сессий Claude Code", passed: true,
                                       detail: sessionsFound ? "папка найдена" : "папки нет — названия сессий возьмутся из заголовка окна"))
 
-        // Только чтение: список тредов ChatGPT (его отсутствие — не ошибка).
+        // Read-only: the ChatGPT thread list (its absence is not an error).
         let indexURL = ChatGPTSessionIndex.defaultURL()
         let indexDetail: String
         switch ChatGPTSessionIndex.read(url: indexURL) {
@@ -148,7 +149,7 @@ enum BindModule {
 
 private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
-/// Запасной сценарий для подменённых сервисов: без диалогов, только то, что можно без ссылки.
+/// Fallback flow for substituted services: no dialogs, only what's possible without a link.
 @MainActor
 private final class MinimalCurrentChatBinder: CurrentChatBinding {
     private let model: AppModel
@@ -190,7 +191,10 @@ private final class MinimalCurrentChatBinder: CurrentChatBinding {
         switch BindPlanner.plan(document: model.document, binding: binding) {
         case .alreadyBound(let id, _): model.markVisited(id)
         case .offerAttach(let id, _, _): model.update { BindPlanner.attach(binding, to: id, in: &$0, suggestedTitle: title, now: now) }
-        case .createNew: model.update { BindPlanner.createTask(in: &$0, title: title, binding: binding, now: now) }
+        case .createNew:
+            var id: UUID?
+            model.update { id = BindPlanner.createTask(in: &$0, title: title, binding: binding, now: now) }
+            if let id { TaskToggleApplier.showAdded(id, model: model, card: card) }
         }
     }
 }

@@ -45,5 +45,19 @@
 			<string>要删除全部 %lld 个任务吗？</string>
 		</dict>
 	</dict>
+	<key>clearDone.confirm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>other</key>
+			<string>要删除 %lld 个已完成的任务吗？</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

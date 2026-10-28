@@ -5,7 +5,7 @@
 <p align="center">
 For people with a million tabs and windows.<br>
 Switch between the ones you actually need — almost like ⌘Tab,<br>
-but with <b>⌃§</b> (Control + the key above Tab).
+but with <b>⌃Tab</b>.
 </p>
 
 <p align="center">
@@ -16,12 +16,12 @@ but with <b>⌃§</b> (Control + the key above Tab).
 
 | Hotkey | Action |
 |---|---|
-| ⌃§ | Next task |
-| ⌃⇧§ | Previous task |
-| ⌃⌥§ | Add or remove the current window |
-| ⌃⌥D | Mark done / back to work |
+| ⌃⇥ | Next task |
+| ⌃⇧⇥ | Previous task |
+| ⌃⌥⇥ | Add or remove the current window |
+| ⌃§ | Mark done / back to work |
 
-On an ANSI keyboard (no § key) use ⌃\` instead of ⌃§. All hotkeys can be changed in Settings → Hotkeys.
+⇥ is Tab. § is the key above Tab, left of 1; on an ANSI keyboard (no § key) the "done" hotkey is ⌃\` instead. All hotkeys can be changed in Settings → Hotkeys.
 
 ### First launch
 
@@ -47,9 +47,9 @@ open build/Juggler.app       # launch: a colored circle appears in the menu bar
 Then:
 
 1. Open a chat in Claude, a session on the Code tab in Claude, a chat in ChatGPT or Grok Bot, a tab in Chrome, a Terminal window.
-2. Press ⌃⌥§ or choose "Add Current Window" in the Juggler menu. Tasks are added only from the current window: there is no "New task" field in the menu. Pressing ⌃⌥§ again in a window that is already a task removes it, see "Add or remove the current window".
+2. Press ⌃⌥⇥ or choose "Add Current Window" in the Juggler menu. Tasks are added only from the current window: there is no "New task" field in the menu. Pressing ⌃⌥⇥ again in a window that is already a task removes it, see "Add or remove the current window".
 3. Repeat for the other tasks.
-4. Cycle forward with ⌃§, backward with ⌃⇧§.
+4. Cycle forward with ⌃⇥, backward with ⌃⇧⇥.
 
 On the first binding Juggler asks for permissions, see "Permissions". To keep permissions from resetting after every rebuild, sign the app with the "Juggler Dev" certificate, see "Signing".
 
@@ -77,7 +77,7 @@ swift run Juggler --probe-frontmost # JSON with the frontmost window context
 scripts/bundle.sh                                   # ad-hoc signing
 JUGGLER_SIGN_IDENTITY="Juggler Dev" scripts/bundle.sh  # sign with your own certificate
 scripts/bundle.sh --no-self-test                    # skip the self-test at the end
-JUGGLER_VERSION=0.2.0 scripts/bundle.sh             # custom version (default 0.1.0)
+JUGGLER_VERSION=0.3.0 scripts/bundle.sh             # custom version (default 0.2.0)
 ```
 
 What the script does:
@@ -104,7 +104,7 @@ The self-test can also be run on its own:
 build/Juggler.app/Contents/MacOS/Juggler --self-test; echo $?
 ```
 
-It initializes the store, the composition root and the UI, SWITCH and BIND modules. It checks the "hotkey → switcher → card" chain, "⌃⌥ → add or remove the current window", removing the frontmost window's task and restoring it with a second ⌃⌥§, ⌃⌥D marking the task done and back, Carbon hotkey registration, and the `Info.plist` keys of the built `.app`. It shows no windows and requests no permissions. Exit code 0 means everything passed.
+It initializes the store, the composition root and the UI, SWITCH and BIND modules. It checks the "hotkey → switcher → card" chain, "⌃⌥ → add or remove the current window", removing the frontmost window's task and restoring it with a second ⌃⌥⇥, ⌃§ marking the task done and back, Carbon hotkey registration, and the `Info.plist` keys of the built `.app`. It shows no windows and requests no permissions. Exit code 0 means everything passed.
 
 ## Running
 
@@ -120,14 +120,15 @@ It initializes the store, the composition root and the UI, SWITCH and BIND modul
 
 | Action | Default | ANSI keyboard |
 |---|---|---|
-| Next task | ⌃§ | ⌃` |
-| Previous task | ⌃⇧§ | ⌃⇧` |
-| Add or remove current window | ⌃⌥§ | ⌃⌥` |
-| Mark done / back to work | ⌃⌥D | ⌃⌥D |
+| Next task | ⌃⇥ | ⌃⇥ |
+| Previous task | ⌃⇧⇥ | ⌃⇧⇥ |
+| Add or remove current window | ⌃⌥⇥ | ⌃⌥⇥ |
+| Mark done / back to work | ⌃§ | ⌃` |
 
+- ⇥ is Tab (`kVK_Tab`), the same key on every keyboard type and layout.
 - § is the physical key above Tab, to the left of 1. In the Russian layout it types `<`. The hotkey is bound to the key itself, not the character, so it works in both RU and EN layouts.
-- D is the physical key D (`kVK_ANSI_D`), the same on every keyboard type, and it works in the Russian layout too (where it types "В"). It does not clash with the other defaults.
-- Juggler detects the keyboard type (ISO with § or ANSI with `) and picks the defaults accordingly.
+- Juggler detects the keyboard type (ISO with § or ANSI with `) and picks the "done" default accordingly.
+- The hotkeys are global: while Juggler is running, ⌃⇥ and ⌃⇧⇥ no longer switch tabs in Chrome, Safari, Terminal, iTerm2, VS Code or Xcode, and ⌃§ / ⌃` is taken from them too (in VS Code ⌃` normally toggles the terminal). Reassign any of them in Settings → "Hotkeys" if that gets in the way.
 - The switching order is fixed: 1→2→3→1. Tasks marked "done" are skipped. The current task is determined at the moment of the key press from the frontmost window or tab.
 - On each switch, a card with the number, title, note and "away N min" appears for a second or so. The card does not take focus and lets clicks through.
 - **Reassigning:** Juggler settings → "Hotkeys". Click the field, then press the desired combination; Esc cancels, "Default" restores the default.
@@ -136,15 +137,16 @@ It initializes the store, the composition root and the UI, SWITCH and BIND modul
 
 ## Add or remove the current window
 
-⌃⌥§ ("Add or Remove Current Window" in the hotkey settings) and the menu item work as a toggle. The menu item's label depends on the window that was frontmost before the menu opened: not a task — "Add Current Window", already a task — "Remove Current Window". The window is read when the menu opens, without system prompts; if it cannot be read, the item is labeled "Add Current Window".
+⌃⌥⇥ ("Add or Remove Current Window" in the hotkey settings) and the menu item work as a toggle. The menu item's label depends on the window that was frontmost before the menu opened: not a task — "Add Current Window", already a task — "Remove Current Window". The window is read when the menu opens, without system prompts; if it cannot be read, the item is labeled "Add Current Window".
 
-Below the task list, under a separator, in a column: "Add Current Window" or "Remove Current Window", "Restore Removed Task" (only when there is something to restore), "Clear All Tasks" (only when the list has tasks), "Settings…", "Quit".
+Below the task list, under a separator, in a column: "Add Current Window" or "Remove Current Window", "Restore Removed Task" (only when there is something to restore), "Delete Done Tasks" (only when the list has tasks marked done), "Clear All Tasks" (only when the list has tasks), "Settings…", "Quit".
 
-- **The frontmost window is already a task** — the task is removed from the list, and the removal is saved to `tasks.json` right away. A card appears: "Task N “…” removed — ⌃⌥§ within 5 s restores it". It stays visible for the full 5 seconds.
-- **Pressing ⌃⌥§ again within those 5 s** puts the task back in its old place — with the same number, note, "done" mark, binding and visit time. It does not matter where focus is at that moment.
-- **The "Remove Current Window" menu item** does the same as the hotkey: the same card, the same restore with a second ⌃⌥§ within 5 s. The menu item itself does not restore the task during those 5 s: that is what "Restore Removed Task" is for, and the item's label always matches what it does.
-- **After 5 s** ⌃⌥§ is an ordinary toggle again: the window that used to be a task is added again as a new task.
-- **The "Restore Removed Task" menu item** appears after a removal and restores the last removed task — whether it was removed with ⌃⌥§ or from the list. Only the last one is remembered, and only until Juggler quits.
+- **The frontmost window is already a task** — the task is removed from the list, and the removal is saved to `tasks.json` right away. A card appears: "Task N “…” removed — ⌃⌥⇥ within 5 s restores it". It stays visible for the full 5 seconds.
+- **Pressing ⌃⌥⇥ again within those 5 s** puts the task back in its old place — with the same number, note, "done" mark, binding and visit time. It does not matter where focus is at that moment.
+- **The "Remove Current Window" menu item** does the same as the hotkey: the same card, the same restore with a second ⌃⌥⇥ within 5 s. The menu item itself does not restore the task during those 5 s: that is what "Restore Removed Task" is for, and the item's label always matches what it does.
+- **After 5 s** ⌃⌥⇥ is an ordinary toggle again: the window that used to be a task is added again as a new task.
+- **The "Restore Removed Task" menu item** appears after a removal and restores the last removed task — whether it was removed with ⌃⌥⇥ or from the list. Only the last one is remembered, and only until Juggler quits.
+- **The "Delete Done Tasks" menu item** removes every task marked "done" and keeps the rest in their order. It asks inline "Delete N done tasks?" with "Cancel" and "Delete" buttons; nothing is removed until you confirm. The change is saved to `tasks.json` right away. If the current task was among the deleted ones, the current marker is cleared. Deleted done tasks cannot be brought back, but a task removed earlier is still restorable with "Restore Removed Task".
 - **The "Clear All Tasks" menu item** is for resetting at the start of the day. It asks inline "Delete all N tasks?" (the word form follows the language's plural rules) with "Cancel" and "Delete" buttons; nothing is removed until you confirm. After confirming, the list is empty, the current task is cleared and the change is saved to `tasks.json` right away. Cleared tasks cannot be brought back: "Restore Removed Task" disappears and does not restore a task removed before the clear.
 - **The frontmost window is not a task** — the existing "Make current chat a task" behavior: the window becomes a new task or is bound to the current task if it has no binding, see "Bindings".
 
@@ -161,12 +163,12 @@ If several tasks match, a match by id wins, then by URL, then by name. On a tie,
 
 ## Mark done / back to work
 
-⌃⌥D ("Mark Done / Back to Work" in the hotkey settings) toggles the "done" mark of one task. It does not switch windows.
+⌃§ ("Mark Done / Back to Work" in the hotkey settings) toggles the "done" mark of one task. It does not switch windows.
 
 - **Which task:** the task of the frontmost window if the window matches it exactly (the rules above), otherwise the current task, the one marked ▸ in the list.
 - **First press** marks the task done; a card appears: "Task N “…” done". **A second press** takes the mark off: "Task N “…” is back in progress". The change is saved to `tasks.json` right away.
 - **No tasks** — nothing changes: a short beep and a card "No tasks yet: add a task from the Juggler menu". If there are tasks but none is current and the window matches none of them, there is also a beep and a card explaining it.
-- The hotkey is reassigned like the others (Settings → "Hotkeys"). An old `hotkeys.json` without this action still loads, and ⌃⌥D stays the default; the key in the file is `toggleDone`.
+- The hotkey is reassigned like the others (Settings → "Hotkeys"). An old `hotkeys.json` without this action still loads, and ⌃§ (⌃` on ANSI) stays the default; the key in the file is `toggleDone`.
 
 ## Menu bar circle
 
@@ -188,7 +190,7 @@ The menu bar icon is a circle. Its color shows the not-done task you have been a
 
 ## Bindings
 
-"Make current chat a task" (⌃⌥§ when the frontmost window is not yet a task) looks at the frontmost window. If the Juggler menu is in front, the last active app is used.
+"Make current chat a task" (⌃⌥⇥ when the frontmost window is not yet a task) looks at the frontmost window. If the Juggler menu is in front, the last active app is used.
 
 - **Google Chrome** (`com.google.Chrome`) — the active tab: id, URL, title. On switching, Juggler looks for the tab by id, then by URL, and otherwise reopens the URL.
 - **Claude** (`com.anthropic.claudefordesktop`) — the chat by UUID. Juggler tries to read the chat URL via Accessibility. If that fails, it asks you to paste the chat URL: `https://claude.ai/chat/<uuid>`, `claude://claude.ai/chat/<uuid>` or a bare UUID. The URL is visible in the address bar if you open the chat on claude.ai in a browser. A "Share" link (`claude.ai/share/…`) will not do: it is a public copy of the conversation, not the chat itself. Juggler recognizes it and says so. The chat is opened with a `claude://claude.ai/chat/<uuid>` link.
@@ -209,10 +211,10 @@ The menu bar icon is a circle. Its color shows the not-done task you have been a
   - Without the Accessibility permission the window title cannot be read, so you get the link dialog.
   - When switching, the current ChatGPT task is still determined by the window title (the thread id is not read from the frontmost window). If the thread is renamed, the task is not recognized by its new title.
 - **Terminal** (Terminal.app, `com.apple.Terminal`) — window and tab.
-  - ⌃⌥§ and "Add Current Window" bind the frontmost Terminal window and its selected tab immediately, without a dialog. Via AppleScript Juggler reads the persistent window id (`id of window`) and the tab's tty (`tty of selected tab`, e.g. `/dev/ttys003`), and keeps the window title as a fallback.
+  - ⌃⌥⇥ and "Add Current Window" bind the frontmost Terminal window and its selected tab immediately, without a dialog. Via AppleScript Juggler reads the persistent window id (`id of window`) and the tab's tty (`tty of selected tab`, e.g. `/dev/ttys003`), and keeps the window title as a fallback.
   - The task name is the window title without the size (`214×24`), shell name (`-zsh`, `bash`…), `user@host`, tty and indicator icons: "sergejefimov — sergejefimov@MacBook-Pro-Sergej — -zsh — 214×24" → "sergejefimov". If only noise is left — "Terminal".
   - On switching, Juggler looks for the tab by tty, then the window by id, then the window by its de-noised title, selects the tab and brings the window to the front. If the tab was closed, its window is brought forward and the card says so; if the window is closed, Terminal is brought forward with the message "Terminal window closed — Terminal was brought forward." The window id and tty live until the window is closed or Terminal restarts; after a restart, only the title search remains.
-  - The current task when cycling and on ⌃⌥§ recognizes a Terminal window by tty or window id, not by title, so changing the command or window size breaks nothing.
+  - The current task when cycling and on ⌃⌥⇥ recognizes a Terminal window by tty or window id, not by title, so changing the command or window size breaks nothing.
   - Permission to control Terminal is required, see "Permissions". Without it, a Terminal window is bound as an ordinary window, by title (also compared without size and shell), and switching raises a window with that title without selecting a tab.
   - In the list such a task has a Terminal icon and the "Terminal" label. Tasks bound to Terminal as an ordinary window before this version stay as they were; to get a tab binding, remove such a task and add the window again.
 - **Grok Bot** (`com.anysphere.sand`) and any other app — a window binding: bundle id and title. On switching, the window with the same title is raised, otherwise the app is simply activated.
@@ -434,7 +436,7 @@ Each task works only in its own folders:
 | CORE, PACK | `Sources/Juggler/App/`, `scripts/` | `Sources/JugglerCore/Core/` | `Sources/JugglerChecks/{main.swift,Harness,Core}` |
 
 1. **Protocols** are declared in `Sources/Juggler/App/ExtensionPoints.swift`. All of them are `@MainActor`.
-   - BIND implements `FrontmostContextProviding`, `BindingCapturing`, `BindingActivating`, `PermissionsProviding` (together, `BindServices`) and `CurrentChatBinding`. The latter is the "Make current chat a task" scenario (`bindCurrentChat`) and the ⌃⌥§ "Add or remove current window" toggle from the menu and the hotkey (`toggleCurrentChat`).
+   - BIND implements `FrontmostContextProviding`, `BindingCapturing`, `BindingActivating`, `PermissionsProviding` (together, `BindServices`) and `CurrentChatBinding`. The latter is the "Make current chat a task" scenario (`bindCurrentChat`) and the ⌃⌥⇥ "Add or remove current window" toggle from the menu and the hotkey (`toggleCurrentChat`).
    - SWITCH implements `TaskSwitching`, `TransitionCardPresenting` and `HotkeyRegistering`.
 2. **Module factories are the contract.** The composition root `App/CompositionRoot.swift` (`AppEnvironment`) and the entry point `App/JugglerApp.swift` call only these functions:
    - `BindModule.makeServices()`;
@@ -457,8 +459,8 @@ Each task works only in its own folders:
    - The icon shows `model.currentTaskNumber`, i.e. the number of the last active task.
 4. **Hotkey and menu actions** go through `AppEnvironment.perform(_ action: HotkeyAction)`.
    - SWITCH calls the handler passed to `HotkeyRegistering.start(handler:)`.
-   - `.bindCurrentChat` is ⌃⌥§ "Add or remove current window": `binder.toggleCurrentChat()`. The case name was not changed because it is the key in `hotkeys.json`.
-   - `.toggleDone` is ⌃⌥D "Mark done / back to work": `doneToggler.toggleDone()`. The logic is `DoneToggle` and `DoneToggleTexts` in `Sources/JugglerCore/Core/Toggle/DoneToggle.swift`.
+   - `.bindCurrentChat` is ⌃⌥⇥ "Add or remove current window": `binder.toggleCurrentChat()`. The case name was not changed because it is the key in `hotkeys.json`.
+   - `.toggleDone` is ⌃§ "Mark done / back to work": `doneToggler.toggleDone()`. The logic is `DoneToggle` and `DoneToggleTexts` in `Sources/JugglerCore/Core/Toggle/DoneToggle.swift`.
    - UI calls `environment.binder.toggleCurrentWindow()` (the "Add/Remove Current Window" menu item: the undo window is ignored, restoring is a separate item) and `environment.switcher.activateTask(id:)`.
 5. **Pure logic** — list operations (UI), card texts and hotkey parsing (SWITCH), AppleScript response parsing and binding selection (BIND). It lives in `Sources/JugglerCore/<Area>/`.
    - Only Foundation may be used.

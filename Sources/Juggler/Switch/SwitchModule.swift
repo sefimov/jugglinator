@@ -4,27 +4,27 @@ import Foundation
 import JugglerCore
 import SwiftUI
 
-// Папка Sources/Juggler/Switch/ принадлежит задаче SWITCH.
-// Сигнатуры функций `SwitchModule` — контракт с корнем композиции (App/CompositionRoot.swift),
-// UI (раздел хоткеев в настройках) и самопроверкой (App/SelfTest.swift).
+// The Sources/Juggler/Switch/ folder belongs to the SWITCH task.
+// `SwitchModule` function signatures are a contract with the composition root (App/CompositionRoot.swift),
+// UI (the hotkeys section in settings) and the self-test (App/SelfTest.swift).
 //
-// Состав:
-//   CarbonHotkeyCenter   — глобальные хоткеи (Carbon), перерегистрация при смене назначений;
-//   HotkeyPreferences    — умолчания по типу клавиатуры + свои сочетания в hotkeys.json;
-//   CycleTaskSwitcher    — «следующая / предыдущая» по кругу и прямой переход к задаче;
-//   PanelCardPresenter   — карточка перехода (неактивирующая панель);
-//   HotkeySettingsSection — раздел настроек с компонентом записи хоткея.
+// Contents:
+//   CarbonHotkeyCenter   — global hotkeys (Carbon), re-registration when assignments change;
+//   HotkeyPreferences    — defaults by keyboard type + custom shortcuts in hotkeys.json;
+//   CycleTaskSwitcher    — cyclic "next / previous" and jumping straight to a task;
+//   PanelCardPresenter   — transition card (non-activating panel);
+//   HotkeySettingsSection — settings section with the hotkey recorder component.
 
 @MainActor
 enum SwitchModule {
-    /// Общие назначения хоткеев: их разделяют регистратор, переключатель и настройки.
+    /// Shared hotkey assignments: used by the registrar, the switcher and settings.
     static let preferences = HotkeyPreferences(store: HotkeyOverridesStore())
 
     static func makeCardPresenter() -> TransitionCardPresenting {
         PanelCardPresenter()
     }
 
-    /// Текущее сочетание «добавить или удалить текущее окно» (⌃⌥§ по умолчанию) для подсказок и карточек.
+    /// Current "add or remove current window" shortcut (⌃⌥⇥ by default) for hints and cards.
     static func bindHotkey() -> Hotkey? {
         preferences.assignments[.bindCurrentChat]
     }
@@ -41,13 +41,13 @@ enum SwitchModule {
         CarbonHotkeyCenter(preferences: preferences)
     }
 
-    /// Раздел хоткеев для окна настроек (UI встраивает его как есть).
+    /// Hotkeys section for the settings window (UI embeds it as is).
     static func hotkeySettingsView(environment: AppEnvironment) -> AnyView {
         let center = environment.hotkeys as? CarbonHotkeyCenter
         return AnyView(HotkeySettingsSection(preferences: center?.preferences ?? preferences, center: center))
     }
 
-    /// Самопроверка: без окон на экране и без запросов разрешений.
+    /// Self-test: no on-screen windows and no permission prompts.
     static func selfTest() -> [SelfTestResult] {
         SwitchSelfTest.run()
     }
@@ -56,7 +56,7 @@ enum SwitchModule {
 @MainActor
 private enum SwitchSelfTest {
     static func run() -> [SelfTestResult] {
-        // NSPanel и NSHostingView требуют NSApplication; запуск цикла событий не нужен.
+        // NSPanel and NSHostingView require NSApplication; running the event loop is not needed.
         _ = NSApplication.shared
         var results: [SelfTestResult] = []
         results.append(constants())
@@ -114,7 +114,7 @@ private enum SwitchSelfTest {
     }
 
     private static func hotkeys() -> [SelfTestResult] {
-        // Отдельные назначения в памяти (hotkeys.json не трогаем) и своя подпись.
+        // Separate in-memory assignments (hotkeys.json is left alone) and a dedicated signature.
         let preferences = HotkeyPreferences(store: nil)
         let center = CarbonHotkeyCenter(preferences: preferences, signature: CarbonHotkeyCenter.testSignature)
         center.start { _ in }
@@ -124,7 +124,7 @@ private enum SwitchSelfTest {
         let installedHandler = center.hasEventHandler
         let shown = HotkeyAction.allCases.compactMap { preferences.assignments[$0]?.displayString }.joined(separator: " ")
 
-        // Перерегистрация при смене назначения.
+        // Re-registration when an assignment changes.
         let custom = Hotkey(keyCode: 0x5A, modifiers: [.control, .option, .shift, .command]) // ⌃⌥⇧⌘F20
         let assignError = preferences.assign(custom, to: .bindCurrentChat)
         let reRegistered = center.registeredActions == expected && preferences.registrationErrors.isEmpty
@@ -145,7 +145,7 @@ private enum SwitchSelfTest {
         ]
     }
 
-    /// Переключатель на временном хранилище с поддельными BIND и карточкой.
+    /// Switcher on a temporary store with fake BIND and card.
     private static func switching() -> SelfTestResult {
         let dir = FileManager.default.temporaryDirectory
             .appendingPathComponent("juggler-switch-self-test-\(UUID().uuidString)", isDirectory: true)
@@ -162,16 +162,16 @@ private enum SwitchSelfTest {
         let card = RecordingCard()
         let switcher = CycleTaskSwitcher(
             model: model, bind: fake.services, card: card,
-            bindHotkey: { Hotkey(keyCode: KeyCode.isoSection, modifiers: [.control, .option]) },
+            bindHotkey: { Hotkey(keyCode: KeyCode.tab, modifiers: [.control, .option]) },
             beep: {})
         switcher.switchTask(.next)
         let first = card.shown.last
-        let ok1 = first?.number == 3 && first?.hint?.contains("⌃⌥§") == true
+        let ok1 = first?.number == 3 && first?.hint?.contains("⌃⌥⇥") == true
             && model.document.lastActiveTaskID == t3.id && model.document.task(withID: t3.id)?.lastVisitedAt != nil
             && fake.activator.activated.isEmpty
 
         fake.provider.context = FrontmostContext(bundleID: "com.unknown")
-        switcher.switchTask(.next) // текущая — последняя активная (3) → 1, «сделано» (2) пропущена
+        switcher.switchTask(.next) // current is the last active one (3) → 1, "done" (2) is skipped
         let second = card.shown.last
         let ok2 = second?.number == 1 && second?.hint == nil && fake.activator.activated == [b1]
             && model.document.lastActiveTaskID == t1.id
@@ -183,7 +183,7 @@ private enum SwitchSelfTest {
     }
 }
 
-// MARK: - Подделки для самопроверки
+// MARK: - Fakes for the self-test
 
 @MainActor
 private final class RecordingCard: TransitionCardPresenting {

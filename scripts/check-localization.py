@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""Проверка локализации: таблицы Localization/<lang>.lproj согласованы с кодом и между собой.
+"""Localization check: Localization/<lang>.lproj tables are consistent with the code and with each other.
 
-    scripts/check-localization.py          проверить; код 0 — всё в порядке
-    scripts/check-localization.py --keys   напечатать ключи, найденные в коде
+    scripts/check-localization.py          check; exit code 0 — all good
+    scripts/check-localization.py --keys   print the keys found in the code
 
-Ключ перевода — русская строка из кода: литерал с кириллицей в loc(...) (JugglerCore, Localizer.swift:
-переводит на язык, выбранный сейчас). Интерполяции \\(...) сравниваются с %@, %lld, %d без учёта
-типа: тип спецификатора (Int → %lld, Int32 → %d, остальное → %@) проверяйте сами.
+A translation key is a Russian string from the code: a Cyrillic literal in loc(...) (JugglerCore, Localizer.swift:
+translates into the currently selected language). Interpolations \\(...) are matched against %@, %lld, %d regardless
+of type: check the specifier type (Int → %lld, Int32 → %d, everything else → %@) yourself.
 
-Кириллический литерал в String(localized:) или прямо в SwiftUI (Text, Button, Toggle, Section, Picker,
-LabeledContent, TextField, Label, .help, .navigationTitle, .accessibilityLabel) — ошибка: такие строки
-берут язык запуска и не переключаются без перезапуска. Оберните литерал в loc(...).
+A Cyrillic literal in String(localized:) or directly in SwiftUI (Text, Button, Toggle, Section, Picker,
+LabeledContent, TextField, Label, .help, .navigationTitle, .accessibilityLabel) is an error: such strings
+take the launch language and don't switch without a relaunch. Wrap the literal in loc(...).
 
-Проверяется:
-- в каждой Localizable.strings ровно ключи из кода (плюс «%@, %@» из сводки);
-- в каждом переводе те же спецификаторы, что в ключе (позиционные %1$@ допустимы);
-- в Localizable.stringsdict есть summary.tasks, summary.done и clearAll.confirm, в InfoPlist.strings —
+Checked:
+- each Localizable.strings has exactly the keys from the code (plus "%@, %@" from the summary);
+- each translation has the same specifiers as its key (positional %1$@ are allowed);
+- Localizable.stringsdict has summary.tasks, summary.done, clearAll.confirm and clearDone.confirm, InfoPlist.strings has
   NSAppleEventsUsageDescription;
-- CFBundleLocalizations в scripts/Info.plist совпадает с набором .lproj.
+- CFBundleLocalizations in scripts/Info.plist matches the set of .lproj folders.
 """
 import glob
 import json
@@ -35,11 +35,11 @@ LEGACY = re.compile(
     r'\.help\(|\.navigationTitle\(|\.accessibilityLabel\()\s*"')
 SPEC = re.compile(r"%(?:\d+\$)?(?:lld|d|@)")
 EXTRA_KEYS = {"%@, %@"}
-PLURAL_KEYS = {"summary.tasks", "summary.done", "clearAll.confirm"}
+PLURAL_KEYS = {"summary.tasks", "summary.done", "clearAll.confirm", "clearDone.confirm"}
 
 
 def single_literal(src, i):
-    """Тело литерала "..." с позиции кавычки i; вложенные литералы в \\(...) пропускаются."""
+    """Body of a "..." literal starting at quote position i; nested literals inside \\(...) are skipped."""
     j, depth = i + 1, 0
     while True:
         c = src[j]
@@ -66,7 +66,7 @@ def single_literal(src, i):
 
 
 def multi_literal(src, i):
-    """Тело литерала \"\"\"...\"\"\": отступ по закрывающим кавычкам, «\\» в конце строки склеивает строки."""
+    """Body of a \"\"\"...\"\"\" literal: indentation from the closing quotes, a trailing "\\" joins lines."""
     raw = src[i + 3:src.index('"""', i + 3)]
     lines = raw.split("\n")[1:]
     indent = len(lines[-1])
@@ -78,7 +78,7 @@ def multi_literal(src, i):
 
 
 def normalize(body):
-    """\\(...) → ◊, экранирование Swift → символы."""
+    """\\(...) → ◊, Swift escapes → characters."""
     out, i = "", 0
     while i < len(body):
         if body.startswith("\\(", i):
@@ -98,7 +98,7 @@ def normalize(body):
 
 
 def literals(pattern):
-    """Литералы с кириллицей сразу после pattern: {ключ: «файл:строка»}."""
+    """Cyrillic literals right after pattern: {key: "file:line"}."""
     keys = {}
     for path in sorted(glob.glob(os.path.join(ROOT, "Sources/Juggler/**/*.swift"), recursive=True)
                        + glob.glob(os.path.join(ROOT, "Sources/JugglerCore/**/*.swift"), recursive=True)):

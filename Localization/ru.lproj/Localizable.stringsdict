@@ -63,5 +63,25 @@
 			<string>Удалить все %lld задачи?</string>
 		</dict>
 	</dict>
+	<key>clearDone.confirm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>Удалить %lld сделанную задачу?</string>
+			<key>few</key>
+			<string>Удалить %lld сделанные задачи?</string>
+			<key>many</key>
+			<string>Удалить %lld сделанных задач?</string>
+			<key>other</key>
+			<string>Удалить %lld сделанные задачи?</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

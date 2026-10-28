@@ -1,7 +1,7 @@
 import JugglerCore
 import SwiftUI
 
-/// Правка названия и заметки «зачем / дальше» прямо в панели меню-бара.
+/// Editing the title and the "why / next" note right in the menu bar panel.
 struct TaskEditorView: View {
     let number: Int
     let initialField: MenuState.EditorField
@@ -63,7 +63,7 @@ struct TaskEditorView: View {
     }
 }
 
-/// Подтверждение удаления задачи.
+/// Task deletion confirmation.
 struct DeleteConfirmationView: View {
     let title: String
     let onDelete: () -> Void
@@ -89,15 +89,15 @@ struct DeleteConfirmationView: View {
     }
 }
 
-/// Подтверждение очистки всего списка.
-struct ClearAllConfirmationView: View {
-    let count: Int
+/// Confirmation for clearing the whole list or deleting the done tasks: `question` is the prompt.
+struct ClearConfirmationView: View {
+    let question: String
     let onClear: () -> Void
     let onCancel: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(TaskListPresenter.clearAllConfirmation(count: count))
+            Text(question)
                 .font(.subheadline.weight(.semibold))
                 .fixedSize(horizontal: false, vertical: true)
             Text(TaskListPresenter.clearAllWarning)

@@ -5,7 +5,7 @@ import os
 
 private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
-/// Привязка по контексту без диалогов: вся логика — в `BindingCapture` (JugglerCore).
+/// Binding from context without dialogs: all the logic is in `BindingCapture` (JugglerCore).
 @MainActor
 final class LiveBindingCapturer: BindingCapturing {
     private let provider: LiveFrontmostContextProvider
@@ -23,11 +23,11 @@ final class LiveBindingCapturer: BindingCapturing {
     }
 }
 
-/// Итог ⌃⌥§ «добавить или удалить текущее окно» (D15): удаление и возврат с карточкой.
-/// Логика решения — `TaskToggle` (JugglerCore); здесь только применение к модели и показ карточки.
+/// Outcome of ⌃⌥⇥ "add or remove current window" (D15): removal and restore with a card.
+/// The decision logic is `TaskToggle` (JugglerCore); here we only apply it to the model and show the card.
 @MainActor
 enum TaskToggleApplier {
-    /// Применяет `.restore` и `.remove`; для `.add` возвращает контекст, с которым идти в привязку.
+    /// Applies `.restore` and `.remove`; for `.add` returns the context to proceed to binding with.
     static func apply(_ decision: ToggleDecision, model: AppModel, card: TransitionCardPresenting?, hotkey: Hotkey?) -> FrontmostContext? {
         let messages = card as? TransitionMessagePresenting
         switch decision {
@@ -36,13 +36,13 @@ enum TaskToggleApplier {
                 NSSound.beep()
                 return nil
             }
-            log.info("⌃⌥§: задача \(number) возвращена")
+            log.info("⌃⌥⇥: задача \(number) возвращена")
             messages?.showMessage(TaskToggleTexts.restoredCard(number: number, title: restored.task.title))
             return nil
 
         case .remove(let id, let number):
             guard let removed = model.removeTask(id, undoableByToggle: true) else { return nil }
-            log.info("⌃⌥§: задача \(number) удалена, переднее окно точно совпало с привязкой")
+            log.info("⌃⌥⇥: задача \(number) удалена, переднее окно точно совпало с привязкой")
             messages?.showMessage(TaskToggleTexts.removedCard(number: number, title: removed.task.title, hotkey: hotkey),
                                   duration: TaskRemoval.undoWindow)
             return nil
@@ -51,18 +51,25 @@ enum TaskToggleApplier {
             return context
         }
     }
+
+    /// Card after binding created a new task: the window is now in the list.
+    static func showAdded(_ id: UUID, model: AppModel, card: TransitionCardPresenting?) {
+        guard let number = model.document.number(of: id), let task = model.document.tasks.first(where: { $0.id == id }) else { return }
+        log.info("Окно добавлено как задача \(number)")
+        (card as? TransitionMessagePresenting)?.showMessage(TaskToggleTexts.addedCard(number: number, title: task.title))
+    }
 }
 
-/// «Сделать задачей текущий чат»; через `toggleCurrentChat` — и ⌃⌥§ «добавить или удалить текущее окно».
+/// "Make the current chat a task"; via `toggleCurrentChat` — also ⌃⌥⇥ "add or remove current window".
 ///
-/// Переключатель: в течение 5 с после удаления ⌃⌥§ возвращает задачу; если переднее окно точно
-/// совпадает с задачей (`ExactTaskMatcher`) — удаляет её с карточкой; иначе — привязка, как ниже.
+/// Toggle: within 5 s after a ⌃⌥⇥ removal it restores the task; if the frontmost window exactly
+/// matches a task (`ExactTaskMatcher`) — removes it with a card; otherwise — binding, as below.
 ///
-/// 1. Читает контекст переднего окна (если впереди Juggler — последнего активного приложения).
-/// 2. Строит привязку; для Claude без прочитанного id и для ChatGPT, чей тред не найден по названию
-///    однозначно, просит вставить ссылку (при нескольких тредах — с уже вставленной ссылкой на последний).
-/// 3. Если чат уже привязан — делает ту задачу текущей; если у текущей задачи нет привязки —
-///    предлагает привязать к ней; иначе создаёт новую задачу с очищенным заголовком.
+/// 1. Reads the frontmost window context (if Juggler is in front — that of the last active app).
+/// 2. Builds a binding; for Claude without a read id and for ChatGPT whose thread isn't found by title
+///    unambiguously, asks to paste a link (with several threads — with a link to the latest prefilled).
+/// 3. If the chat is already bound — makes that task current; if the current task has no binding —
+///    offers to bind it; otherwise creates a new task with a cleaned-up title.
 @MainActor
 final class LiveCurrentChatBinder: CurrentChatBinding {
     private let model: AppModel
@@ -102,12 +109,12 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
         start(context: context)
     }
 
-    /// Привязка по уже прочитанному контексту (диагностика — от того же чтения).
+    /// Binding from an already read context (diagnostics come from the same read).
     private func start(context: FrontmostContext) {
         let diagnostics = provider.lastDiagnostics
         log.info("Привязка: \(context.bundleID ?? "-", privacy: .public), вкладка \(context.chromeTab != nil), Claude \(diagnostics.claudeChat?.rawValue ?? "-", privacy: .public), ChatGPT \(diagnostics.chatGPTThread?.status.rawValue ?? "-", privacy: .public)")
         isRunning = true
-        // Диалоги — вне обработчика хоткея/меню.
+        // Dialogs — outside the hotkey/menu handler.
         DispatchQueue.main.async {
             MainActor.assumeIsolated {
                 self.proceed(context: context, diagnostics: diagnostics)
@@ -116,7 +123,7 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
         }
     }
 
-    // MARK: - Сценарий
+    // MARK: - Flow
 
     private var shownDialog = false
 
@@ -128,7 +135,7 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
         if kind == .chrome, context.chromeTab == nil {
             switch diagnostics.chromeAutomation {
             case .requiresConsent?:
-                // Системный запрос; после согласия привязываем вкладку Chrome заново.
+                // System prompt; after consent we bind the Chrome tab again.
                 permissions.requestChromeAutomation { [weak self] status in
                     guard let self, status == .granted else { return }
                     let retry = self.provider.context(interactive: true, bundleID: BindApps.chrome)
@@ -144,8 +151,8 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
             }
         }
         if kind == .terminal, context.terminalWindow == nil, diagnostics.terminalAutomation == .requiresConsent {
-            // Системный запрос управления Терминалом; после ответа привязываем заново:
-            // разрешили — окно и вкладку (id окна, tty), нет — как обычное окно, по заголовку.
+            // System prompt for Terminal control; after the answer we bind again:
+            // allowed — window and tab (window id, tty), denied — as a regular window, by title.
             permissions.requestTerminalAutomation { [weak self] status in
                 guard let self else { return }
                 var retry = context
@@ -154,14 +161,14 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
                     retry = self.provider.context(interactive: true, bundleID: BindApps.terminal)
                     retryDiagnostics = self.provider.lastDiagnostics
                 }
-                // Не спрашивать по кругу: итог запроса уже известен.
+                // Don't ask in a loop: the outcome of the prompt is already known.
                 if retryDiagnostics.terminalAutomation == .requiresConsent { retryDiagnostics.terminalAutomation = status }
                 self.proceed(context: retry, diagnostics: retryDiagnostics)
             }
             return
         }
-        // ChatGPT тоже: без Accessibility не прочитать заголовок окна, а по нему ищется тред.
-        // Терминал без AppleScript привязывается по заголовку окна — тоже нужен Accessibility.
+        // ChatGPT too: without Accessibility the window title can't be read, and the thread is looked up by it.
+        // Terminal without AppleScript is bound by window title — Accessibility is needed too.
         let needsTitle = kind == .claude || kind == .chatGPT || kind == .other || (kind == .terminal && context.terminalWindow == nil)
         if needsTitle, !diagnostics.accessibilityTrusted, context.bundleID != nil {
             shownDialog = true
@@ -200,21 +207,27 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
             case .alertFirstButtonReturn:
                 model.update { BindPlanner.attach(binding, to: id, in: &$0, suggestedTitle: suggestedTitle, now: now) }
             case .alertSecondButtonReturn:
-                model.update { BindPlanner.createTask(in: &$0, title: suggestedTitle, binding: binding, now: now) }
+                createTask(binding, title: suggestedTitle, now: now)
             default:
                 return
             }
 
         case .createNew:
-            model.update { BindPlanner.createTask(in: &$0, title: suggestedTitle, binding: binding, now: now) }
+            createTask(binding, title: suggestedTitle, now: now)
         }
     }
 
-    // MARK: - Запрос ссылки
+    private func createTask(_ binding: TaskBinding, title: String, now: Date) {
+        var id: UUID?
+        model.update { id = BindPlanner.createTask(in: &$0, title: title, binding: binding, now: now) }
+        if let id { TaskToggleApplier.showAdded(id, model: model, card: card) }
+    }
 
-    /// Диалог со строкой ввода. Для ChatGPT с несколькими тредами того же названия вставлена ссылка
-    /// на последний обновлённый; иначе — ссылка из буфера обмена, если она распознаётся.
-    /// «Привязать только окно» — запасной путь без id чата.
+    // MARK: - Link prompt
+
+    /// Dialog with an input field. For ChatGPT with several threads of the same title, a link to
+    /// the most recently updated one is prefilled; otherwise — the clipboard link, if it's recognized.
+    /// "Bind window only" — the fallback path without a chat id.
     private func askForLink(source: BindingSource, context: FrontmostContext, chatGPTLookup: ChatGPTThreadLookup?) -> TaskBinding? {
         shownDialog = true
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 380, height: 24))
@@ -256,7 +269,7 @@ final class LiveCurrentChatBinder: CurrentChatBinding {
         }
     }
 
-    /// После диалогов вернуть фокус приложению, чей чат привязывали.
+    /// After the dialogs, return focus to the app whose chat was being bound.
     private func returnFocus(to bundleID: String?) {
         guard let bundleID, let app = NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).first else { return }
         app.activate(options: [])

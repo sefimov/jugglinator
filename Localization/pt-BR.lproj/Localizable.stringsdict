@@ -57,5 +57,23 @@
 			<string>Excluir todas as %lld tarefas?</string>
 		</dict>
 	</dict>
+	<key>clearDone.confirm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>Excluir %lld tarefa concluída?</string>
+			<key>many</key>
+			<string>Excluir %lld de tarefas concluídas?</string>
+			<key>other</key>
+			<string>Excluir %lld tarefas concluídas?</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

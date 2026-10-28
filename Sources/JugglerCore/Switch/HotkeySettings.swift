@@ -1,30 +1,30 @@
 import Foundation
 
-/// Физический тип клавиатуры (Carbon `KBGetLayoutType`). От него зависит,
-/// какой код у клавиши над Tab.
+/// Physical keyboard type (Carbon `KBGetLayoutType`). It determines
+/// the code of the key above Tab, the default "done" key.
 public enum KeyboardKind: String, Codable, CaseIterable, Sendable {
     case ansi
     case iso
     case jis
 
-    /// Значения `KBGetLayoutType`: 'ANSI', 'ISO ', 'JIS ' (четырёхсимвольные коды).
+    /// `KBGetLayoutType` values: 'ANSI', 'ISO ', 'JIS ' (four-character codes).
     public static func fromLayoutType(_ value: UInt32) -> KeyboardKind {
         switch value {
         case 0x4953_4F20: return .iso   // 'ISO '
         case 0x4A49_5320: return .jis   // 'JIS '
-        default: return .ansi           // 'ANSI' и неизвестные
+        default: return .ansi           // 'ANSI' and unknown
         }
     }
 
-    /// Клавиша над Tab, слева от 1: на ISO — § (kVK_ISO_Section),
-    /// на ANSI — ` (kVK_ANSI_Grave). На JIS такой клавиши нет, берём ` как ближайшую.
+    /// The key above Tab, left of 1: on ISO — § (kVK_ISO_Section),
+    /// on ANSI — ` (kVK_ANSI_Grave). JIS has no such key; ` is used as the closest.
     public var keyAboveTab: UInt32 {
         self == .iso ? KeyCode.isoSection : KeyCode.ansiGrave
     }
 }
 
-/// Назначения хоткеев: какое сочетание у какого действия.
-/// Действия без сочетания не регистрируются.
+/// Hotkey assignments: which combination belongs to which action.
+/// Actions without a combination are not registered.
 public struct HotkeyAssignments: Equatable, Sendable {
     public private(set) var hotkeys: [HotkeyAction: Hotkey]
 
@@ -36,25 +36,26 @@ public struct HotkeyAssignments: Equatable, Sendable {
         hotkeys[action]
     }
 
-    /// По умолчанию (D9): ⌃ + клавиша над Tab — следующая, ⌃⇧ — предыдущая, ⌃⌥ — привязать; ⌃⌥D — «сделано» (D24, физическая клавиша D на любой клавиатуре).
+    /// Defaults: ⌃⇥ — next, ⌃⇧⇥ — previous, ⌃⌥⇥ — bind (Tab is the same key on any keyboard);
+    /// ⌃ + the key above Tab (§ on ISO, ` on ANSI) — "done".
     public static func defaults(for keyboard: KeyboardKind) -> HotkeyAssignments {
-        let key = keyboard.keyAboveTab
+        let tab = KeyCode.tab
         return HotkeyAssignments([
-            .nextTask: Hotkey(keyCode: key, modifiers: [.control]),
-            .previousTask: Hotkey(keyCode: key, modifiers: [.control, .shift]),
-            .bindCurrentChat: Hotkey(keyCode: key, modifiers: [.control, .option]),
-            .toggleDone: Hotkey(keyCode: KeyCode.ansiD, modifiers: [.control, .option]),
+            .nextTask: Hotkey(keyCode: tab, modifiers: [.control]),
+            .previousTask: Hotkey(keyCode: tab, modifiers: [.control, .shift]),
+            .bindCurrentChat: Hotkey(keyCode: tab, modifiers: [.control, .option]),
+            .toggleDone: Hotkey(keyCode: keyboard.keyAboveTab, modifiers: [.control]),
         ])
     }
 
-    /// Действие, которому уже назначено это сочетание (кроме `except`).
+    /// The action this combination is already assigned to (except `except`).
     public func action(using hotkey: Hotkey, except: HotkeyAction? = nil) -> HotkeyAction? {
         HotkeyAction.allCases.first { $0 != except && hotkeys[$0] == hotkey }
     }
 
-    /// Итоговые назначения: свои сочетания пользователя поверх умолчаний.
-    /// Умолчание, совпавшее со своим сочетанием другого действия, снимается
-    /// (действие остаётся без хоткея, пока пользователь не назначит новый).
+    /// Effective assignments: the user's own combinations on top of the defaults.
+    /// A default that matches another action's custom combination is dropped
+    /// (the action stays without a hotkey until the user assigns a new one).
     public static func resolve(overrides: HotkeyOverrides, defaults: HotkeyAssignments) -> HotkeyAssignments {
         var result: [HotkeyAction: Hotkey] = [:]
         let custom = Set(overrides.hotkeys.values)
@@ -65,7 +66,7 @@ public struct HotkeyAssignments: Equatable, Sendable {
                 result[action] = fallback
             }
         }
-        // Два своих одинаковых сочетания (например, файл правили руками): остаётся первое.
+        // Two identical custom combinations (e.g. the file was edited by hand): the first one stays.
         var seen = Set<Hotkey>()
         for action in HotkeyAction.allCases {
             guard let hotkey = result[action] else { continue }
@@ -75,9 +76,9 @@ public struct HotkeyAssignments: Equatable, Sendable {
     }
 }
 
-/// Сочетания, которые пользователь назначил сам. Действия, которых здесь нет,
-/// берут умолчание — оно вычисляется при запуске по типу клавиатуры, поэтому
-/// смена клавиатуры ISO ↔ ANSI не ломает хоткеи по умолчанию.
+/// Combinations the user assigned. Actions missing here
+/// use the default — it is computed at launch from the keyboard type, so
+/// switching between ISO ↔ ANSI keyboards does not break default hotkeys.
 public struct HotkeyOverrides: Equatable, Sendable {
     public static let currentVersion = 1
     public var hotkeys: [HotkeyAction: Hotkey]
@@ -86,8 +87,8 @@ public struct HotkeyOverrides: Equatable, Sendable {
         self.hotkeys = hotkeys
     }
 
-    /// Назначить сочетание действию с проверками. При успехе возвращает `nil`
-    /// и меняет набор; совпадение с умолчанием убирает своё значение.
+    /// Assigns a combination to an action with validation. On success returns `nil`
+    /// and updates the set; matching the default removes the custom value.
     public mutating func assign(
         _ hotkey: Hotkey, to action: HotkeyAction, defaults: HotkeyAssignments
     ) -> HotkeyValidationError? {
@@ -102,7 +103,7 @@ public struct HotkeyOverrides: Equatable, Sendable {
         return nil
     }
 
-    /// Вернуть умолчание для действия.
+    /// Restores the default for an action.
     public mutating func reset(_ action: HotkeyAction) {
         hotkeys[action] = nil
     }
@@ -111,7 +112,7 @@ public struct HotkeyOverrides: Equatable, Sendable {
 extension HotkeyOverrides: Codable {
     private enum CodingKeys: String, CodingKey { case version, hotkeys }
 
-    /// Терпимое чтение: неизвестные действия и битые записи пропускаются.
+    /// Lenient decoding: unknown actions and broken entries are skipped.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let raw = try c.decodeIfPresent([String: LossyHotkey].self, forKey: .hotkeys) ?? [:]
@@ -137,8 +138,8 @@ private struct LossyHotkey: Decodable {
     init(from decoder: Decoder) throws { value = try? Hotkey(from: decoder) }
 }
 
-/// Хранение своих сочетаний: `~/Library/Application Support/Juggler/hotkeys.json`,
-/// рядом с `tasks.json`. Нет файла или он битый — используются умолчания.
+/// Storage of custom combinations: `~/Library/Application Support/Juggler/hotkeys.json`,
+/// next to `tasks.json`. No file or a broken one — defaults are used.
 public final class HotkeyOverridesStore {
     public let fileURL: URL
     private let fileManager: FileManager
@@ -155,7 +156,7 @@ public final class HotkeyOverridesStore {
     public enum LoadOutcome: Equatable, Sendable {
         case loaded
         case missing
-        /// Файл не разобрался — взяты умолчания, файл не трогаем до следующей записи.
+        /// The file did not parse — defaults are used; the file is left alone until the next write.
         case corrupt(String)
     }
 

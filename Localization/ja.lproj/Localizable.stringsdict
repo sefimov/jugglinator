@@ -45,5 +45,19 @@
 			<string>%lld件のタスクをすべて削除しますか？</string>
 		</dict>
 	</dict>
+	<key>clearDone.confirm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>other</key>
+			<string>完了した%lld件のタスクを削除しますか？</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

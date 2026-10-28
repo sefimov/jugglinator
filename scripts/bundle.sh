@@ -7,7 +7,7 @@
 # Переменные окружения:
 #   JUGGLER_SIGN_IDENTITY  идентичность для codesign (например, "Juggler Dev");
 #                          по умолчанию подпись ad-hoc ("-").
-#   JUGGLER_VERSION        CFBundleShortVersionString, по умолчанию 0.1.0.
+#   JUGGLER_VERSION        CFBundleShortVersionString, по умолчанию 0.2.0.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -26,7 +26,7 @@ APP_NAME="Juggler"
 BUNDLE_ID="com.sefimov.juggler"
 APP="$ROOT/build/$APP_NAME.app"
 IDENTITY="${JUGGLER_SIGN_IDENTITY:--}"
-VERSION="${JUGGLER_VERSION:-0.1.0}"
+VERSION="${JUGGLER_VERSION:-0.2.0}"
 BUILD_NUMBER="$(git -C "$ROOT" rev-list --count HEAD 2>/dev/null || echo 1)"
 
 step() { printf '\n==> %s\n' "$*"; }
