@@ -1,6 +1,6 @@
 // swift-tools-version:5.10
-// Сборка только средствами Command Line Tools: без XCTest, Swift Testing,
-// #Preview, .xcassets, .storyboard/.xib и сторонних зависимостей.
+// Builds with Command Line Tools only: no XCTest, Swift Testing,
+// #Preview, .xcassets, .storyboard/.xib or third-party dependencies.
 import PackageDescription
 
 let package = Package(
@@ -12,11 +12,11 @@ let package = Package(
         .library(name: "JugglerCore", targets: ["JugglerCore"]),
     ],
     targets: [
-        // Чистая логика: только Foundation. Проверяется из JugglerChecks.
+        // Pure logic: Foundation only. Checked from JugglerChecks.
         .target(name: "JugglerCore"),
-        // Приложение в меню-баре (SwiftUI + AppKit).
+        // The menu bar app (SwiftUI + AppKit).
         .executableTarget(name: "Juggler", dependencies: ["JugglerCore"]),
-        // Исполняемые проверки: `swift run JugglerChecks`, код 0 — всё прошло.
+        // Executable checks: `swift run JugglerChecks`, exit code 0 — all passed.
         .executableTarget(name: "JugglerChecks", dependencies: ["JugglerCore"]),
     ]
 )

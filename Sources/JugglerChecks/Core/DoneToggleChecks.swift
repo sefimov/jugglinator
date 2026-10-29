@@ -26,58 +26,49 @@ extension CoreChecks {
 
     static func doneTarget(_ c: CheckRunner) {
         c.group("⌃§: выбор задачи") {
+            func plan(_ d: TasksDocument, _ ctx: FrontmostContext) -> FrontWindowPlan {
+                SwitchPlanner.frontWindow(context: ctx, document: d) { BindingCapture.capture(context: $0) }
+            }
             let d = doneDoc(active: 1)
-            c.expectEqual(DoneToggle.target(document: d, context: frontOne), d.tasks[0].id, "точное совпадение важнее текущей")
-            c.expectEqual(DoneToggle.target(document: d, context: frontNone), d.tasks[1].id, "нет совпадения — текущая (▸)")
+            c.expectEqual(plan(d, frontOne), .task(d.tasks[0].id), "точное совпадение важнее текущей")
+            // The bug: a window that is not a task toggled the last active task. Now it is added instead.
+            c.expectEqual(plan(d, frontNone), .add(.appWindow(AppWindowRef(bundleID: "com.example.zzz", windowTitle: "Чужое")), title: "Чужое"),
+                          "нет совпадения — окно добавляется, текущая (▸) не трогается")
             let noCurrent = doneDoc(active: nil)
-            c.expectEqual(DoneToggle.target(document: noCurrent, context: frontOne), noCurrent.tasks[0].id, "без текущей точное совпадение всё равно работает")
-            c.expectNil(DoneToggle.target(document: doneDoc(active: nil), context: frontNone), "ни совпадения, ни текущей — цели нет")
-            // A weak match (same app, different title) is not exact: the current task is taken.
+            c.expectEqual(plan(noCurrent, frontOne), .task(noCurrent.tasks[0].id), "без текущей точное совпадение всё равно работает")
+            c.expectEqual(plan(TasksDocument(), frontNone), .add(.appWindow(AppWindowRef(bundleID: "com.example.zzz", windowTitle: "Чужое")), title: "Чужое"),
+                          "пустой список — окно добавляется")
+            // Same app, different window: not the task, a new one.
             let sameApp = FrontmostContext(bundleID: "com.example.one", windowTitle: "Другое")
-            c.expectEqual(DoneToggle.target(document: d, context: sameApp), d.tasks[1].id, "то же приложение, другое окно — текущая")
-            // A current task that is no longer in the list is not a target.
-            let stale = TasksDocument(tasks: d.tasks, lastActiveTaskID: UUID())
-            c.expectNil(DoneToggle.target(document: stale, context: frontNone), "устаревший id текущей — цели нет")
+            c.expectEqual(plan(d, sameApp), .add(.appWindow(AppWindowRef(bundleID: "com.example.one", windowTitle: "Другое")), title: "Другое"),
+                          "то же приложение, другое окно — новая задача")
             // A done task is also a target: repeating brings it back to work.
             let allDone = doneDoc(active: 2, done: [true, true, true])
-            c.expectEqual(DoneToggle.target(document: allDone, context: frontNone), allDone.tasks[2].id, "сделанная текущая — всё равно цель")
+            c.expectEqual(plan(allDone, frontOne), .task(allDone.tasks[0].id), "сделанная задача окна — всё равно цель")
         }
     }
 
     static func doneToggling(_ c: CheckRunner) {
         c.group("⌃§: переключатель") {
             var d = doneDoc(active: 1)
-            var reads = 0
-            let ctx: () -> FrontmostContext = { reads += 1; return frontOne }
-            let first = DoneToggle.toggle(&d, context: ctx)
-            c.expectEqual(first, .changed(taskID: d.tasks[0].id, number: 1, title: "Первая", isDone: true), "первое нажатие — «сделано»")
+            let id = d.tasks[0].id
+            let first = DoneToggle.toggle(&d, id: id)
+            c.expectEqual(first, DoneToggleResult(taskID: id, number: 1, title: "Первая", isDone: true), "первое нажатие — «сделано»")
             c.expect(d.tasks[0].isDone && !d.tasks[1].isDone, "отмечена задача переднего окна")
             c.expectEqual(d.lastActiveTaskID, d.tasks[1].id, "текущая задача не меняется")
-            let second = DoneToggle.toggle(&d, context: ctx)
-            c.expectEqual(second, .changed(taskID: d.tasks[0].id, number: 1, title: "Первая", isDone: false), "повтор — снова в работе")
+            let second = DoneToggle.toggle(&d, id: id)
+            c.expectEqual(second, DoneToggleResult(taskID: id, number: 1, title: "Первая", isDone: false), "повтор — снова в работе")
             c.expect(!d.tasks[0].isDone, "отметка снята")
-            c.expect(first.didChange && second.didChange, "обе попытки меняют отметку")
 
-            d = doneDoc(active: 1)
-            let current = DoneToggle.toggle(&d) { frontNone }
-            c.expectEqual(current, .changed(taskID: d.tasks[1].id, number: 2, title: "Вторая", isDone: true), "иначе — текущая задача")
-
-            var empty = TasksDocument()
-            reads = 0
-            c.expectEqual(DoneToggle.toggle(&empty) { reads += 1; return frontOne }, .noTasks, "задач нет")
-            c.expectEqual(reads, 0, "без задач контекст не читается")
-            c.expect(empty == TasksDocument() && !DoneToggleResult.noTasks.didChange, "документ не изменился")
-
-            var nobody = doneDoc(active: nil)
-            let before = nobody
-            c.expectEqual(DoneToggle.toggle(&nobody) { frontNone }, .noCurrentTask, "задачи есть, цели нет")
-            c.expectEqual(nobody, before, "документ не изменился")
+            let before = d
+            c.expectNil(DoneToggle.toggle(&d, id: UUID()), "задачи с таким id нет")
+            c.expectEqual(d, before, "документ не изменился")
 
             // Persisted to tasks.json via the regular document write.
             let (store, dir) = Fixture.tempStore()
             defer { try? FileManager.default.removeItem(at: dir) }
             var saved = doneDoc(active: 1)
-            _ = DoneToggle.toggle(&saved) { frontOne }
+            DoneToggle.toggle(&saved, id: saved.tasks[0].id)
             try store.save(saved)
             c.expectEqual(store.load().document.tasks.map(\.isDone), [true, false, false], "«сделано» читается из tasks.json")
         }
@@ -89,9 +80,8 @@ extension CoreChecks {
             c.expectEqual(DoneToggleTexts.card(number: 3, title: "Тред", isDone: false), "Задача 3 «Тред» вернулась в работу", "карточка «в работе»")
             c.expectEqual(DoneToggleTexts.card(number: 1, title: "", isDone: true), "Задача 1 «Без названия» сделана", "пустое название")
             c.expectEqual(HotkeyAction.toggleDone.displayName, "Отметить сделанной / вернуть в работу", "подпись в настройках хоткеев")
-            c.expectEqual(DoneToggleTexts.message(for: .noTasks), "Задач пока нет: добавьте задачу в меню Juggler", "пояснение без задач")
-            c.expect(!DoneToggleTexts.message(for: .noCurrentTask).isEmpty, "пояснение без текущей задачи")
-            c.expectEqual(DoneToggleTexts.message(for: .changed(taskID: UUID(), number: 4, title: "Х", isDone: true)),
+            c.expect(!DoneToggleTexts.noCurrentTaskMessage.isEmpty, "пояснение, когда окно добавить нельзя")
+            c.expectEqual(DoneToggleTexts.message(for: DoneToggleResult(taskID: UUID(), number: 4, title: "Х", isDone: true)),
                           "Задача 4 «Х» сделана", "текст по итогу")
         }
     }

@@ -1,8 +1,8 @@
 import Foundation
 import JugglerCore
 
-// Сессии Claude Code (задача SESSION): модель, совместимость tasks.json, разбор ссылок,
-// определение текущей задачи и круг 1→2→3→1 по сессиям.
+// Claude Code sessions (task SESSION): model, tasks.json compatibility, link parsing,
+// current-task detection and the 1→2→3→1 cycle across sessions.
 
 extension CoreChecks {
     static let sessionUUID = "fae5c400-6c06-4fa7-8cb8-eecc594fc296"
@@ -39,7 +39,7 @@ extension CoreChecks {
         }
 
         c.group("совместимость tasks.json") {
-            // Файл в формате первой версии (до SESSION): все четыре прежних вида привязок.
+            // A file in the first-version format (before SESSION): all four old binding kinds.
             let legacy = """
             {"version":1,"lastActiveTaskID":"22222222-2222-2222-2222-222222222222","tasks":[
               {"id":"11111111-1111-1111-1111-111111111111","title":"Вкладка","note":"н","isDone":false,
@@ -101,7 +101,7 @@ extension CoreChecks {
             c.expectNil(parse("file:///Applications/Claude.app/Contents/Resources/index.html"), "адрес оболочки Claude — не сессия")
             c.expect(ChatLinkParser.isClaudeCodeSessionID("LOCAL_\(sessionUUID)"), "isClaudeCodeSessionID без учёта регистра")
             c.expect(!ChatLinkParser.isClaudeCodeSessionID("../\(sessionID)"), "id с путём — не id сессии")
-            // Прежнее поведение чатов не изменилось.
+            // The old chat behavior is unchanged.
             c.expectEqual(parse("claude://claude.ai/chat/\(sessionUUID)"), .claude(conversationID: sessionUUID), "чат Claude по-прежнему чат")
             c.expectEqual(parse(sessionUUID), .claude(conversationID: sessionUUID), "голый UUID по-прежнему чат")
         }
@@ -149,7 +149,7 @@ extension CoreChecks {
             c.expectEqual(resolve(ctx(ids[0]), mixed, fallback: chat.id), s1.id, "сессия не путается с чатом Claude")
             c.expectEqual(resolve(ctx(nil, chat: chatUUID), mixed, fallback: s1.id), chat.id, "чат по UUID, как раньше")
 
-            // Круг 1→2→3→1: после каждого перехода впереди открытая сессия, текущая — по её id.
+            // Cycle 1→2→3→1: after each switch the opened session is in front, current is found by its id.
             var front = ids[0]
             var visited: [UUID] = []
             var lastActive: UUID? = s1.id
@@ -163,7 +163,7 @@ extension CoreChecks {
             }
             c.expectEqual(visited, [s2.id, s3.id, s1.id], "круг 1→2→3→1 по сессиям Claude Code")
 
-            // Последняя активная устарела (пользователь сам открыл сессию 3) — круг идёт от переднего окна.
+            // The last active one is stale (the user opened session 3 themselves): the cycle starts from the front window.
             let fromFront = TaskCycler.neighbor(of: resolve(ctx(ids[2]), fallback: s1.id), in: tasks, direction: .next)
             c.expectEqual(fromFront?.id, s1.id, "следующая считается от сессии в переднем окне")
         }

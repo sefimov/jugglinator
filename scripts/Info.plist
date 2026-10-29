@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Шаблон Info.plist для build/Juggler.app. scripts/bundle.sh подставляет
-     __VERSION__ и __BUILD__ и копирует результат в Contents/Info.plist.
-     Языки — папки Localization/*.lproj (scripts/check-localization.py сверяет список);
-     для языков вне списка — английский. -->
+<!-- Info.plist template for build/Juggler.app. scripts/bundle.sh substitutes
+     __VERSION__ and __BUILD__ and copies the result to Contents/Info.plist.
+     Languages are the Localization/*.lproj folders (scripts/check-localization.py checks the list);
+     languages outside the list fall back to English. -->
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>

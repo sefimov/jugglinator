@@ -87,7 +87,8 @@ enum SelfTest {
 
         let fake = WiringFakes(context: FrontmostContext(bundleID: "com.example.one", windowTitle: "Один"))
         let switcher = SwitchModule.makeSwitcher(model: model, bind: fake.services, card: fake.card)
-        let doneToggler = SwitchModule.makeDoneToggler(model: model, bind: fake.services, card: fake.card)
+        let doneToggler = SwitchModule.makeDoneToggler(model: model, bind: fake.services, card: fake.card,
+                                                       addWithDialogs: { fake.binder.bindCurrentChat() })
         let env = AppEnvironment(model: model, bind: fake.services, binder: fake.binder,
                                  card: fake.card, switcher: switcher, doneToggler: doneToggler, hotkeys: fake.hotkeys)
         env.start()
@@ -116,6 +117,24 @@ enum SelfTest {
         let doneOff = model.document.task(withID: t1.id)?.isDone == false
             && fake.card.messages.last == DoneToggleTexts.card(number: 1, title: "Первая", isDone: false)
         let doneOK = doneOn && doneOff && fake.activator.activated.count == activations && fake.card.shown.count == shownCards
+        // ⌃§ in a window that is not a task: the window becomes task 3, the current task 1 is not marked.
+        fake.provider.context = FrontmostContext(bundleID: "com.example.new", windowTitle: "Новое")
+        fake.hotkeys.press(.toggleDone)
+        let added = model.document.tasks.count == 3 && model.document.tasks[2].title == "Новое"
+            && model.document.tasks.allSatisfy { !$0.isDone }
+            && fake.card.messages.last == TaskToggleTexts.addedCard(number: 3, title: "Новое")
+        // ⌃§ where nothing can be added (capture fails): only a sound and a card, nothing marked or added.
+        fake.provider.context = FrontmostContext(bundleID: "com.example.zzz", windowTitle: "Чужое")
+        fake.hotkeys.press(.toggleDone)
+        let untouched = model.document.tasks.count == 3 && model.document.tasks.allSatisfy { !$0.isDone }
+            && fake.card.messages.last == "самопроверка"
+        // ⌃⇥ in a window that is not a task: nothing is added, it switches to a task window.
+        fake.provider.context = FrontmostContext(bundleID: "com.example.new", windowTitle: "Ещё")
+        let shownBefore = fake.card.shown.count
+        fake.hotkeys.press(.nextTask)
+        let switchedOnly = model.document.tasks.count == 3 && fake.card.shown.count == shownBefore + 1
+            && fake.activator.activated.count == activations + 1
+        let addOK = added && untouched && switchedOnly && fake.binder.calls == 0
         env.stop()
         let stopped = !env.isStarted && fake.hotkeys.stopped
 
@@ -126,6 +145,7 @@ enum SelfTest {
                            detail: "карточки: \(fake.card.shown.map { "\($0.number)" }.joined(separator: "→"))"),
             SelfTestResult("Связка: ⌃⌥ → «добавить или удалить текущее окно»", passed: bindOK),
             SelfTestResult("Связка: ⌃§ → «сделано» и обратно, без переключения окон", passed: doneOK),
+            SelfTestResult("Связка: ⌃§ в окне не из списка добавляет его, ⌃⇥ — переключает, текущую задачу не трогают", passed: addOK),
             toggleResult(),
             clearAllResult(),
         ]

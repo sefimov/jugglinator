@@ -6,11 +6,11 @@ import os
 
 private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
-/// Разрешения Accessibility и Automation (Chrome, Терминал) и понятные пользователю запросы.
+/// Accessibility and Automation (Chrome, Terminal) permissions and user-friendly prompts.
 ///
-/// Ничего не запрашивается само по себе: только из действий пользователя
-/// (привязка, переключение на вкладку Chrome, кнопка в интерфейсе). Управление Терминалом
-/// запрашивается только при привязке окна Терминала и кнопкой в настройках — не при переключении.
+/// Nothing is requested on its own: only from user actions
+/// (binding, switching to a Chrome tab, a button in the UI). Terminal control
+/// is requested only when binding a Terminal window and via the button in settings — not when switching.
 @MainActor
 final class LivePermissions: PermissionsProviding {
     private let chrome: ChromeController
@@ -27,14 +27,14 @@ final class LivePermissions: PermissionsProviding {
 
     var isAccessibilityTrusted: Bool { AX.isTrusted }
 
-    /// Статус управления Chrome без запроса.
+    /// Chrome control status without prompting.
     var chromeAutomationStatus: AutomationStatus { chrome.automationStatus().status }
 
-    /// Статус управления Терминалом без запроса.
+    /// Terminal control status without prompting.
     var terminalAutomationStatus: AutomationStatus { terminal.automationStatus().status }
 
-    /// Объяснение и переход в настройки. Системный запрос `AXIsProcessTrustedWithOptions`
-    /// добавляет Juggler в список «Универсальный доступ».
+    /// Explanation and a jump to settings. The `AXIsProcessTrustedWithOptions` system prompt
+    /// adds Juggler to the "Accessibility" list.
     func requestAccessibility() {
         guard !AX.isTrusted else { return }
         let alert = NSAlert()
@@ -46,8 +46,8 @@ final class LivePermissions: PermissionsProviding {
         openAccessibilitySettings()
     }
 
-    /// Предложить разрешение один раз за запуск (в сценарии привязки). Возвращает `true`,
-    /// если пользователь пошёл в настройки.
+    /// Offer the permission once per launch (in the binding flow). Returns `true`
+    /// if the user went to settings.
     func offerAccessibilityOnce() -> Bool {
         guard !AX.isTrusted, !accessibilityAsked else { return false }
         accessibilityAsked = true
@@ -67,7 +67,7 @@ final class LivePermissions: PermissionsProviding {
         if let url = URL(string: BindTexts.accessibilitySettingsURL) { NSWorkspace.shared.open(url) }
     }
 
-    /// Системный запрос Automation для Chrome (в фоне). При отказе — инструкция.
+    /// System Automation prompt for Chrome (in the background). On denial — instructions.
     func requestChromeAutomation(completion: (@MainActor (AutomationStatus) -> Void)? = nil) {
         guard !chromeRequestInFlight else { return }
         chromeRequestInFlight = true
@@ -80,8 +80,8 @@ final class LivePermissions: PermissionsProviding {
         }
     }
 
-    /// Системный запрос Automation для Терминала (в фоне). Инструкцию при отказе не показывает:
-    /// без разрешения окно Терминала просто привязывается как обычное окно.
+    /// System Automation prompt for Terminal (in the background). Shows no instructions on denial:
+    /// without permission the Terminal window is simply bound as a regular window.
     func requestTerminalAutomation(completion: (@MainActor (AutomationStatus) -> Void)? = nil) {
         guard !terminalRequestInFlight else { return }
         terminalRequestInFlight = true
@@ -105,8 +105,8 @@ final class LivePermissions: PermissionsProviding {
         }
     }
 
-    /// Отказ -1743: показать инструкцию (не чаще раза за запуск, если не `force`).
-    /// Окно показывается асинхронно, чтобы не блокировать переключение.
+    /// Denial -1743: show instructions (at most once per launch, unless `force`).
+    /// The window is shown asynchronously so as not to block switching.
     func reportChromeDenied(force: Bool = false) {
         guard force || !chromeDeniedShown else { return }
         chromeDeniedShown = true
@@ -128,8 +128,8 @@ final class LivePermissions: PermissionsProviding {
     }
 }
 
-/// Модальные окна из фонового (accessory) приложения: сначала активируем Juggler,
-/// иначе окно окажется под чужими окнами.
+/// Modal windows from a background (accessory) app: activate Juggler first,
+/// otherwise the window ends up beneath other windows.
 @MainActor
 enum Dialogs {
     static func run(_ alert: NSAlert) -> NSApplication.ModalResponse {

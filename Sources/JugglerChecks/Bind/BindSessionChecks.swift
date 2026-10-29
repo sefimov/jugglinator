@@ -1,8 +1,8 @@
 import Foundation
 import JugglerCore
 
-// Сессии Claude Code (задача SESSION): чтение id из Accessibility, привязка без диалога,
-// вставленные ссылки, тексты диалога и метаданные claude-code-sessions.
+// Claude Code sessions (task SESSION): reading the id from Accessibility, binding without a dialog,
+// pasted links, dialog texts and claude-code-sessions metadata.
 
 extension BindChecks {
     static let sessionUUID = "fae5c400-6c06-4fa7-8cb8-eecc594fc296"
@@ -17,7 +17,7 @@ extension BindChecks {
 
     static func sessionExtractor(_ c: CheckRunner) {
         c.group("Сессия Claude Code из Accessibility") {
-            // Как на маке пользователя: вкладка Code, `--probe-frontmost` 28.10.2026.
+            // As on the user's Mac: the Code tab, `--probe-frontmost` 28.10.2026.
             let code = ["file:///Applications/Claude.app/Contents/Resources/app.asar/index.html",
                         "https://claude.ai/epitaxy/\(sessionID)"]
             c.expectEqual(ClaudeChatURLExtractor.sessionID(fromCandidates: code), sessionID, "id сессии из адреса веб-области")

@@ -1,8 +1,8 @@
 import Foundation
 import JugglerCore
 
-// Папка Sources/JugglerChecks/Bind/ принадлежит задаче BIND.
-// Проверки чистой логики из Sources/JugglerCore/Bind/.
+// The Sources/JugglerChecks/Bind/ folder belongs to task BIND.
+// Checks for the pure logic in Sources/JugglerCore/Bind/.
 
 enum BindChecks: CheckSuite {
     static let name = "Bind"

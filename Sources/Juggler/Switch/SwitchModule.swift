@@ -33,8 +33,11 @@ enum SwitchModule {
         CycleTaskSwitcher(model: model, bind: bind, card: card, bindHotkey: bindHotkey)
     }
 
-    static func makeDoneToggler(model: AppModel, bind: BindServices, card: TransitionCardPresenting) -> DoneToggling {
-        LiveDoneToggler(model: model, bind: bind, card: card)
+    /// `addWithDialogs` — adding a window that needs a link (BIND's "make the current chat a task").
+    static func makeDoneToggler(
+        model: AppModel, bind: BindServices, card: TransitionCardPresenting, addWithDialogs: @escaping () -> Void
+    ) -> DoneToggling {
+        LiveDoneToggler(model: model, bind: bind, card: card, addWithDialogs: addWithDialogs)
     }
 
     static func makeHotkeys() -> HotkeyRegistering {

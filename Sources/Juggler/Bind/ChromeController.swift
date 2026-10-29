@@ -2,16 +2,16 @@ import AppKit
 import Foundation
 import JugglerCore
 
-// Общая часть (проверка Automation без запроса, выполнение скриптов) — в AppleScriptController.swift.
+// The shared part (Automation check without prompting, running scripts) is in AppleScriptController.swift.
 
-/// AppleScript для Chrome.
+/// AppleScript for Chrome.
 @MainActor
 final class ChromeController: AppleScriptController {
     init(bundleID: String = BindApps.chrome) {
         super.init(bundleID: bundleID, logName: "Chrome")
     }
 
-    /// Активная вкладка, если разрешение выдано. Статус объясняет, почему вкладки нет.
+    /// The active tab, if permission is granted. The status explains why there's no tab.
     func activeTab() -> (tab: ChromeTabRef?, status: AutomationStatus, code: Int) {
         let permission = automationStatus()
         guard permission.status == .granted else { return (nil, permission.status, permission.code) }
@@ -30,7 +30,7 @@ final class ChromeController: AppleScriptController {
         run(ChromeScripts.focusTabSource(windowID: entry.windowID, tabIndex: entry.index, bundleID: bundleID))
     }
 
-    /// Проверка для самопроверки: скрипты компилируются (без отправки событий Chrome).
+    /// Check for the self-test: the scripts compile (without sending events to Chrome).
     func compileScripts() -> String? {
         compile([ChromeScripts.activeTabSource(bundleID: bundleID),
                  ChromeScripts.tabListingSource(bundleID: bundleID),

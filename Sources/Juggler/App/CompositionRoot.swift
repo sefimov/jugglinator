@@ -1,12 +1,12 @@
 import Foundation
 import JugglerCore
 
-/// Корень композиции: создаёт и связывает компоненты UI, SWITCH и BIND.
+/// Composition root: creates and wires the UI, SWITCH and BIND components.
 ///
-/// Компоненты берутся только из фабрик модулей своих папок:
+/// Components come only from the module factories in their folders:
 /// `BindModule` (Sources/Juggler/Bind/), `SwitchModule` (Sources/Juggler/Switch/),
-/// `UIModule` (Sources/Juggler/UI/). Задачи второго этапа меняют реализации внутри
-/// своих модулей и не трогают этот файл; итоговую связку проверяет PACK.
+/// `UIModule` (Sources/Juggler/UI/). Second-stage tasks change implementations inside
+/// their modules and don't touch this file; PACK verifies the final wiring.
 @MainActor
 final class AppEnvironment {
     static let shared = AppEnvironment.makeLive()
@@ -39,7 +39,7 @@ final class AppEnvironment {
         self.hotkeys = hotkeys
     }
 
-    /// Рабочая сборка. `store` можно подменить (например, для самопроверки).
+    /// Production build. `store` can be substituted (e.g., for the self-test).
     static func makeLive(store: TaskStore = TaskStore()) -> AppEnvironment {
         let model = AppModel(store: store)
         model.load()
@@ -48,13 +48,14 @@ final class AppEnvironment {
         let binder = BindModule.makeCurrentChatBinder(model: model, services: bind, card: card,
                                                       toggleHotkey: SwitchModule.bindHotkey)
         let switcher = SwitchModule.makeSwitcher(model: model, bind: bind, card: card)
-        let doneToggler = SwitchModule.makeDoneToggler(model: model, bind: bind, card: card)
+        let doneToggler = SwitchModule.makeDoneToggler(model: model, bind: bind, card: card,
+                                                       addWithDialogs: { [weak binder] in binder?.bindCurrentChat() })
         let hotkeys = SwitchModule.makeHotkeys()
         return AppEnvironment(model: model, bind: bind, binder: binder, card: card, switcher: switcher,
                               doneToggler: doneToggler, hotkeys: hotkeys)
     }
 
-    /// Запуск после `applicationDidFinishLaunching`: регистрирует хоткеи.
+    /// Start after `applicationDidFinishLaunching`: registers hotkeys.
     func start() {
         guard !isStarted else { return }
         isStarted = true
@@ -68,7 +69,7 @@ final class AppEnvironment {
         isStarted = false
     }
 
-    /// Единая точка для действий хоткеев и пунктов меню.
+    /// Single entry point for hotkey and menu item actions.
     func perform(_ action: HotkeyAction) {
         switch action {
         case .nextTask: switcher.switchTask(.next)

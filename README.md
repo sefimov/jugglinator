@@ -3,55 +3,115 @@
 <h1 align="center">Juggler</h1>
 
 <p align="center">
-For people with a million tabs and windows.<br>
-Switch between the ones you actually need — almost like ⌘Tab,<br>
-but with <b>⌃Tab</b>.
+One hotkey to cycle through your parallel AI chats on macOS:<br>
+Claude chats, Claude Code sessions, ChatGPT threads, Chrome tabs and Terminal tabs.<br>
+Like ⌘Tab, but for tasks instead of apps.
 </p>
 
 <p align="center">
   <a href="https://github.com/sefimov/juggler/releases/latest/download/Juggler.app.zip"><img src="https://img.shields.io/badge/Download_for_macOS-14%2B-black?style=for-the-badge&logo=apple" height="44" alt="Download for macOS 14+"></a>
   <br>
-  <sub>The app is not notarized yet: on first launch see <a href="#first-launch">First launch</a>.</sub>
+  <sub>Free and open source (MIT) · <a href="https://sefimov.github.io/juggler/">Website</a>. Not notarized yet: on first launch see <a href="#first-launch">First launch</a>.</sub>
 </p>
+
+---
+
+## The problem
+
+You have three Claude Code sessions working on three branches, a ChatGPT thread where you are drafting a spec, a Claude chat with a design review, a Terminal tab with the tests, and a Chrome tab with the docs. Each of them is one *task*. ⌘Tab shows you apps, not tasks. Window switchers show you windows, but two Claude Code sessions are the same window, and two ChatGPT threads look identical in a list. So you click around, lose track of which agent has been waiting for you for an hour, and forget the one that has finished.
+
+Juggler is a macOS menu bar app that keeps the list of those tasks and cycles through them with a hotkey. On each switch it opens exactly the bound thing: the chat, the session, the thread, the tab. A colored circle in the menu bar shows the task you have neglected the longest.
+
+## What it does
+
+- **One hotkey, next task.** ⌃⇥ goes to the next task, ⌃⇧⇥ to the previous one, in a fixed 1→2→3→1 order. A small card shows the task number, title and how long you were away. It does not take focus.
+- **Add the current window as a task.** ⌃⌥⇥ in any window makes it a task; the same hotkey in a window that is already a task removes it. No typing, no forms.
+- **Deep bindings, not just window titles.** Juggler reopens the exact chat or tab, even after the app was restarted:
+  - Claude desktop: the chat by its UUID (`claude://` link).
+  - Claude Code (the Code tab in Claude desktop): the session by its id, with the session title as the task name.
+  - ChatGPT desktop: the thread by its id, found through ChatGPT's local thread index.
+  - Google Chrome: the tab by id, then by URL.
+  - Terminal.app: the window and tab by tty.
+  - Any other app (Cursor, VS Code, iTerm2, Grok, Safari…): the window by title.
+- **Mark a task done** with ⌃§ (⌃` on an ANSI keyboard); done tasks are skipped in the cycle. Press again to bring it back, or clear them all with "Delete Done Tasks" in the menu.
+- **The menu bar circle** turns from green to yellow, orange and red as the longest-waiting task waits 10, 30 and 60 minutes. Hover it to see which task that is.
+- **Private by design.** No account, no network, no analytics. Juggler reads a few local files (ChatGPT's thread index, Claude Code session titles) and writes its own `tasks.json`. No third-party dependencies, about 3 MB on disk.
+- **12 languages:** Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish. Switch in Settings → Language without a restart.
+
+## Who it is for
+
+- Developers running several Claude Code, Codex or other agent sessions in parallel and switching between them while they work.
+- Anyone who keeps a handful of long-running ChatGPT or Claude conversations open as "projects" and wants to get back to the right one in one keystroke.
+- People with a million tabs and windows who want a short list of the ones that matter *today*, and a reminder of which one they have been ignoring.
+
+## Install
+
+**Download.** Get [Juggler.app.zip](https://github.com/sefimov/juggler/releases/latest/download/Juggler.app.zip) from the latest release, unzip, move `Juggler.app` to Applications. Requires macOS 14 or later. The release build is for Apple silicon; on an Intel Mac build from source.
+
+**Build from source.** Only the Command Line Tools with Swift 6.x are needed; full Xcode is not required.
+
+```sh
+git clone https://github.com/sefimov/juggler.git && cd juggler
+scripts/bundle.sh                       # build, sign and self-test build/Juggler.app
+ditto build/Juggler.app /Applications/Juggler.app
+open /Applications/Juggler.app          # a colored circle appears in the menu bar
+```
+
+### First launch
+
+1. Open `Juggler.app`. macOS says it cannot verify the developer: open System Settings → Privacy & Security and click "Open Anyway". Or run `xattr -dr com.apple.quarantine /Applications/Juggler.app` once.
+2. On the first binding Juggler asks for Accessibility and, for Chrome and Terminal, Automation permissions, see [Permissions](#permissions). It asks only when needed and works with less if you decline.
+3. Optional: turn on "Launch at login" in Settings.
+
+### Getting started
+
+1. Open a chat in Claude, a session on the Code tab in Claude, a chat in ChatGPT, a tab in Chrome, a Terminal window.
+2. Press ⌃⌥⇥ or choose "Add Current Window" in the Juggler menu. Tasks are added only from the current window: there is no "New task" field in the menu. Pressing ⌃⌥⇥ again in a window that is already a task removes it, see "Add or remove the current window".
+3. Repeat for the other tasks.
+4. Cycle forward with ⌃⇥, backward with ⌃⇧⇥.
 
 | Hotkey | Action |
 |---|---|
 | ⌃⇥ | Next task |
 | ⌃⇧⇥ | Previous task |
 | ⌃⌥⇥ | Add or remove the current window |
-| ⌃§ | Mark done / back to work |
+| ⌃§ (⌃` on ANSI keyboards) | Mark done / back to work |
 
-⇥ is Tab. § is the key above Tab, left of 1; on an ANSI keyboard (no § key) the "done" hotkey is ⌃\` instead. All hotkeys can be changed in Settings → Hotkeys.
+All hotkeys can be changed in Settings → Hotkeys. While Juggler is running, ⌃⇥ and ⌃⇧⇥ no longer switch tabs in Chrome, Safari, Terminal, VS Code or Xcode; reassign them if that gets in the way.
 
-### First launch
+## How it compares
 
-1. Unzip `Juggler.app.zip` and move `Juggler.app` to Applications.
-2. Open it. macOS says it cannot verify the developer: open System Settings → Privacy & Security and click "Open Anyway". Or run `xattr -dr com.apple.quarantine /Applications/Juggler.app` once.
-3. On the first binding Juggler asks for Accessibility and Automation permissions, see [Permissions](#permissions).
+| | What it switches | Jumps to a specific Claude Code session or ChatGPT thread | Shows what you have neglected |
+|---|---|---|---|
+| ⌘Tab, Stage Manager, Spaces | apps, windows, desktops | no | no |
+| AltTab, Contexts, rcmd, Witch | windows by title | no: two sessions are the same window | no |
+| tmux, iTerm2 profiles | terminal panes | terminal only | no |
+| Raycast / Alfred window commands | windows | no | no |
+| **Juggler** | a short list of *tasks* you chose | yes: chat, session, thread, tab, tty | yes: menu bar circle, "away N min" |
+
+Juggler is not a replacement for ⌘Tab or a window manager. It is a task list for the two to ten things you are actively juggling, with a hotkey that always lands on the right one.
+
+## FAQ
+
+**Does it work with the ChatGPT and Claude desktop apps, or only in the browser?** With the desktop apps. Claude chats and Claude Code sessions are opened by `claude://` links, ChatGPT threads by `codex://` links. A chat open in a Chrome tab is bound as a Chrome tab, which also works.
+
+**Can I bind a Cursor, VS Code, iTerm2 or Safari window?** Yes, as a window: Juggler remembers the app and the window title and raises that window. Deep bindings (tab, session, thread, tty) exist for Chrome, Claude, Claude Code, ChatGPT and Terminal.app.
+
+**Does Juggler send anything anywhere?** No. It has no network code. It reads ChatGPT's local `session_index.jsonl` and Claude Code's local session files to learn thread ids and titles, and stores its own list in `~/Library/Application Support/Juggler/tasks.json`.
+
+**Why does macOS say the developer cannot be verified?** The release is ad-hoc signed and not notarized with an Apple Developer ID yet. "Open Anyway" in System Settings or the `xattr` command above fixes it once. The source is here if you prefer to build it yourself.
+
+**Does it work with the Russian or other non-US keyboard layouts?** Yes. Hotkeys are bound to physical keys, not characters, so ⌃⇥ and ⌃§ work in any layout.
+
+**Is it on Homebrew or the Mac App Store?** No. Homebrew casks now require notarized apps, and the App Store sandbox does not allow the Accessibility and Apple Events access Juggler needs. Download the zip or build from source.
+
+**Where do I report a bug or ask for an app to be supported?** [GitHub issues](https://github.com/sefimov/juggler/issues). Say which app and what the window title looks like.
 
 ---
 
-A macOS menu bar app. It keeps a list of parallel chat tasks and cycles through them with a hotkey. On each switch it opens the bound chat in Claude, a Claude Code session, a ChatGPT thread, a Grok Bot window, a Chrome tab, or a Terminal window and tab.
+## Developer documentation
 
-- Bundle id: `com.sefimov.juggler`.
-- Requires macOS 14 or later.
-- The interface is available in 12 languages: Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish. The language follows the macOS settings and falls back to English for anything else; you can change it for Juggler alone in Settings → Language, and Juggler's texts switch right away, without a restart. See "Localization" for details.
-
-## Quick start
-
-```sh
-scripts/bundle.sh            # build, sign and self-test build/Juggler.app
-open build/Juggler.app       # launch: a colored circle appears in the menu bar
-```
-
-Then:
-
-1. Open a chat in Claude, a session on the Code tab in Claude, a chat in ChatGPT or Grok Bot, a tab in Chrome, a Terminal window.
-2. Press ⌃⌥⇥ or choose "Add Current Window" in the Juggler menu. Tasks are added only from the current window: there is no "New task" field in the menu. Pressing ⌃⌥⇥ again in a window that is already a task removes it, see "Add or remove the current window".
-3. Repeat for the other tasks.
-4. Cycle forward with ⌃⇥, backward with ⌃⇧⇥.
-
-On the first binding Juggler asks for permissions, see "Permissions". To keep permissions from resetting after every rebuild, sign the app with the "Juggler Dev" certificate, see "Signing".
+Everything below is for building, debugging and extending Juggler: [building and checks](#building-and-checks), [the .app bundle](#building-the-app), [hotkeys](#hotkeys) and [adding or removing the current window](#add-or-remove-the-current-window) in detail, [bindings](#bindings), [permissions](#permissions), [signing for development](#signing-the-juggler-dev-certificate), [`--probe-frontmost`](#debugging-bindings---probe-frontmost), [localization](#localization), [package layout](#package-layout) and [extension points](#extension-points-and-rules-for-ui-switch-bind-and-pack). Bundle id: `com.sefimov.juggler`.
 
 ## Building and checks
 
@@ -130,6 +190,7 @@ It initializes the store, the composition root and the UI, SWITCH and BIND modul
 - Juggler detects the keyboard type (ISO with § or ANSI with `) and picks the "done" default accordingly.
 - The hotkeys are global: while Juggler is running, ⌃⇥ and ⌃⇧⇥ no longer switch tabs in Chrome, Safari, Terminal, iTerm2, VS Code or Xcode, and ⌃§ / ⌃` is taken from them too (in VS Code ⌃` normally toggles the terminal). Reassign any of them in Settings → "Hotkeys" if that gets in the way.
 - The switching order is fixed: 1→2→3→1. Tasks marked "done" are skipped. The current task is determined at the moment of the key press from the frontmost window or tab.
+- **⌃⇥ in a window that is not a task** switches to a task window as usual (counting from the last active task); nothing is added. To add the window, press ⌃§ or ⌃⌥⇥.
 - On each switch, a card with the number, title, note and "away N min" appears for a second or so. The card does not take focus and lets clicks through.
 - **Reassigning:** Juggler settings → "Hotkeys". Click the field, then press the desired combination; Esc cancels, "Default" restores the default.
 - `~/Library/Application Support/Juggler/hotkeys.json` stores only reassigned combinations. Defaults are computed at launch from the keyboard type. To reset everything, quit Juggler and delete this file.
@@ -165,9 +226,9 @@ If several tasks match, a match by id wins, then by URL, then by name. On a tie,
 
 ⌃§ ("Mark Done / Back to Work" in the hotkey settings) toggles the "done" mark of one task. It does not switch windows.
 
-- **Which task:** the task of the frontmost window if the window matches it exactly (the rules above), otherwise the current task, the one marked ▸ in the list.
+- **Which task:** only the task of the frontmost window, if the window matches it exactly (the rules above). The last active task is never marked instead.
+- **The frontmost window is not a task** — it is added as a new task, nothing is marked. A window that needs a link opens the usual binding dialog. If the window cannot be added (desktop, Juggler itself, a window without a title), there is a short beep and a card explaining it.
 - **First press** marks the task done; a card appears: "Task N “…” done". **A second press** takes the mark off: "Task N “…” is back in progress". The change is saved to `tasks.json` right away.
-- **No tasks** — nothing changes: a short beep and a card "No tasks yet: add a task from the Juggler menu". If there are tasks but none is current and the window matches none of them, there is also a beep and a card explaining it.
 - The hotkey is reassigned like the others (Settings → "Hotkeys"). An old `hotkeys.json` without this action still loads, and ⌃§ (⌃` on ANSI) stays the default; the key in the file is `toggleDone`.
 
 ## Menu bar circle
@@ -182,6 +243,7 @@ The menu bar icon is a circle. Its color shows the not-done task you have been a
 | red | an hour or more |
 | grey outline | no tasks, or all of them are done |
 
+- **The number inside the circle** is the task of the frontmost window (exact match, the rules above). In a window that is not a task there is no number, and the menu marks no task with ▸ either. The window is re-read when another app becomes active and every 3 seconds (switching tabs inside an app sends no notification).
 - The thresholds are the same as the "away N min" colors in the list. A task that has never been opened counts from the moment it was created.
 - The color is recomputed right after switching, marking done, adding and removing a task, and at least once a minute (also after the Mac wakes up).
 - Hovering the icon shows which task it is and how long you have been away from it, for example "Task 3 — Report, away 12 min". The tooltip is localized. SwiftUI `.help` on a `MenuBarExtra` label does not reach the status item, so the text is also set directly on the status item button (`StatusItemTooltip`).
@@ -481,3 +543,7 @@ Each task works only in its own folders:
    - no `#Preview`, `.xcassets`, `.storyboard`/`.xib` or third-party dependencies;
    - interface strings are written in Russian via `loc("…")` (also inside SwiftUI: `Text(loc("…"))`), with translations in `Localization/*.lproj`, see "Localization";
    - logging goes through `Logger(subsystem: JugglerLog.subsystem, category: "<area>")`.
+
+## License
+
+[MIT](LICENSE).

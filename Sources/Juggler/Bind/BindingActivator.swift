@@ -5,7 +5,7 @@ import os
 
 private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
-/// Открывает привязанную вкладку, чат или окно. Незапущенное приложение запускается.
+/// Opens the bound tab, chat or window. An app that isn't running gets launched.
 @MainActor
 final class LiveBindingActivator: BindingActivating {
     private let chrome: ChromeController
@@ -23,7 +23,7 @@ final class LiveBindingActivator: BindingActivating {
         switch binding {
         case .chromeTab(let ref): result = activateChrome(ref)
         case .claudeChat(let ref): result = openAppURL(ref.appURL, name: "Claude", webFallback: ChatLinkParser.claudeWebURL(conversationID: ref.conversationID))
-        // Локальная сессия Claude Code живёт только в Claude desktop: в браузере её не открыть.
+        // A local Claude Code session lives only in Claude desktop: it can't be opened in a browser.
         case .claudeCodeSession(let ref): result = openAppURL(ref.appURL, name: "Claude", webFallback: nil)
         case .chatGPTThread(let ref): result = openAppURL(ref.appURL, name: "ChatGPT", webFallback: nil)
         case .terminalWindow(let ref): result = activateTerminal(ref)
@@ -37,7 +37,7 @@ final class LiveBindingActivator: BindingActivating {
 
     private func activateChrome(_ ref: ChromeTabRef) -> ActivationResult {
         guard chrome.runningApp != nil else {
-            // Chrome закрыт: открываем адрес — Chrome запустится сам.
+            // Chrome is closed: open the URL — Chrome will launch by itself.
             if let url = ChromeTabMatcher.reopenURL(for: ref), open(url, inAppWithBundleID: chrome.bundleID) {
                 return .fallback(BindTexts.appLaunched)
             }
@@ -53,7 +53,7 @@ final class LiveBindingActivator: BindingActivating {
             permissions.reportChromeDenied()
             return reopenChrome(ref, message: BindTexts.chromeReopenedNoAccess)
         case .requiresConsent:
-            // Спрашиваем в фоне (системный диалог), а пока открываем адрес.
+            // Ask in the background (system dialog), and meanwhile open the URL.
             permissions.requestChromeAutomation()
             return reopenChrome(ref, message: BindTexts.chromeReopenedNoAccess)
         default:
@@ -83,10 +83,10 @@ final class LiveBindingActivator: BindingActivating {
             : .failed(BindTexts.appNotInstalled("Google Chrome"))
     }
 
-    // MARK: - Терминал
+    // MARK: - Terminal
 
-    /// Вкладка по tty, затем окно по id, затем окно по заголовку без шума; иначе — просто Терминал.
-    /// Разрешение только проверяется (без запроса): переключение никогда не показывает системный диалог.
+    /// Tab by tty, then window by id, then window by title without noise; otherwise — just Terminal.
+    /// Permission is only checked (without prompting): switching never shows a system dialog.
     private func activateTerminal(_ ref: TerminalWindowRef) -> ActivationResult {
         guard let app = terminal.runningApp else {
             return launch(bundleID: terminal.bundleID, name: loc("Терминал")) ? .fallback(BindTexts.terminalLaunched)
@@ -113,7 +113,7 @@ final class LiveBindingActivator: BindingActivating {
         return .fallback(BindTexts.terminalWindowClosed)
     }
 
-    /// Без AppleScript: окно по заголовку через Accessibility (вкладку так не выбрать) и Терминал вперёд.
+    /// Without AppleScript: window by title via Accessibility (can't select the tab this way) and bring Terminal forward.
     private func activateTerminalWithoutAccess(_ ref: TerminalWindowRef, app: NSRunningApplication) -> ActivationResult {
         var raised = false
         if AX.isTrusted, !ref.title.trimmingCharacters(in: .whitespaces).isEmpty {
@@ -142,7 +142,7 @@ final class LiveBindingActivator: BindingActivating {
         return .failed(BindTexts.urlNotHandled(name))
     }
 
-    // MARK: - Окно
+    // MARK: - Window
 
     private func activateWindow(_ ref: AppWindowRef) -> ActivationResult {
         let name = ref.appName.isEmpty ? ref.bundleID : ref.appName
@@ -165,10 +165,10 @@ final class LiveBindingActivator: BindingActivating {
         return .fallback(AX.isTrusted ? BindTexts.windowNotFound : BindTexts.windowNoAccessibility)
     }
 
-    // MARK: - Общее
+    // MARK: - Common
 
-    /// Активация уже запущенного приложения. С macOS 14 `activate()` из фонового приложения
-    /// может не сработать, поэтому дополнительно просим LaunchServices (как `open -a`).
+    /// Activation of an already running app. Since macOS 14, `activate()` from a background app
+    /// may not work, so we additionally ask LaunchServices (like `open -a`).
     private func bringToFront(_ app: NSRunningApplication, bundleID: String) {
         app.unhide()
         app.activate(options: [.activateAllWindows])

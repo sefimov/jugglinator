@@ -230,6 +230,29 @@ enum SwitchChecks: CheckSuite {
             let doc2 = TasksDocument(tasks: [chrome, doneTab, claude])
             let doneCtx = FrontmostContext(bundleID: KnownBundleIDs.chrome, chromeTab: ChromeTabRef(tabID: 9, url: "https://b.example"))
             c.expectEqual(SwitchPlanner.target(direction: .next, context: doneCtx, document: doc2), claude.id, "из сделанной — к следующей несделанной")
+
+            // What the frontmost window is for ⌃§: a task, a window to add, or neither.
+            func capture(_ ctx: FrontmostContext) -> BindingCaptureResult { BindingCapture.capture(context: ctx) }
+            func plan(_ ctx: FrontmostContext) -> FrontWindowPlan { SwitchPlanner.frontWindow(context: ctx, document: doc, capture: capture) }
+            var captured = false
+            c.expectEqual(SwitchPlanner.frontWindow(context: chromeCtx, document: doc) { captured = true; return capture($0) },
+                          .task(chrome.id), "окно — задача")
+            c.expect(!captured, "для окна-задачи привязка не снимается")
+            let other = FrontmostContext(bundleID: "com.example.notes", appName: "Notes", windowTitle: "Список покупок")
+            c.expectEqual(plan(other), .add(.appWindow(AppWindowRef(bundleID: "com.example.notes", windowTitle: "Список покупок", appName: "Notes")),
+                                            title: "Список покупок"), "чужое окно → добавить, название из заголовка")
+            let newTab = FrontmostContext(bundleID: KnownBundleIDs.chrome, chromeTab: ChromeTabRef(tabID: 42, url: "https://c.example", title: "C"))
+            c.expectEqual(plan(newTab), .add(.chromeTab(ChromeTabRef(tabID: 42, url: "https://c.example", title: "C")), title: "C"),
+                          "новая вкладка → добавить")
+            c.expectEqual(plan(FrontmostContext(bundleID: "com.example.notes", appName: "Notes")), .unavailable(message: nil),
+                          "окно без заголовка → не добавляется")
+            c.expectEqual(plan(.unknown), .unavailable(message: BindTexts.noFrontmostApp), "окно не узнано → не добавляется, с пояснением")
+            c.expectEqual(plan(FrontmostContext(bundleID: KnownBundleIDs.claude, windowTitle: "Claude")), .needsLink, "Claude без id → нужна ссылка")
+            c.expectEqual(plan(FrontmostContext(bundleID: BindApps.juggler, windowTitle: "Juggler")), .unavailable(message: BindTexts.frontmostIsJuggler),
+                          "сам Juggler → не добавляется")
+            // Same tab by URL, but another tab id in the binding: still a task (`BindPlanner.sameTarget`), not a duplicate.
+            let sameURL = FrontmostContext(bundleID: KnownBundleIDs.chrome, chromeTab: ChromeTabRef(tabID: 99, url: "https://a.example/x/"))
+            c.expectEqual(plan(sameURL), .task(chrome.id), "та же вкладка по адресу → задача")
         }
     }
 

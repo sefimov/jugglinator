@@ -2,28 +2,28 @@ import AppKit
 import JugglerCore
 import SwiftUI
 
-/// Язык интерфейса: выбор, переключение текстов Juggler на ходу и перезапуск для системных надписей.
-/// Язык хранится только для Juggler.
+/// Interface language: choosing it, switching Juggler texts on the fly, and relaunching for system labels.
+/// The language is stored for Juggler only.
 ///
-/// Один экземпляр на приложение (`shared`): меню, окно настроек и иконка в меню-баре следят за
-/// `language` и перерисовываются, как только он меняется (`followsLanguage()`).
+/// One instance per app (`shared`): the menu, the settings window and the menu bar icon observe
+/// `language` and redraw as soon as it changes (`followsLanguage()`).
 @MainActor
 final class LanguageController: ObservableObject {
     static let shared = LanguageController()
 
     @Published private(set) var choice: LanguageChoice
-    /// Код языка, на котором сейчас показываются тексты Juggler.
+    /// Code of the language Juggler texts are currently shown in.
     @Published private(set) var language: String
     @Published private(set) var restartError: String?
 
-    /// Выбор, с которым приложение запущено: по нему AppKit и Info.plist выбрали язык своих надписей.
+    /// The choice the app was launched with: AppKit and Info.plist picked their labels' language from it.
     private let launchChoice: LanguageChoice
     private let settings: LanguageSettings
     private let localizer: Localizer
     private let systemLanguages: () -> [String]
 
-    /// `settings`, `localizer` и `systemLanguages` подменяются в самопроверке: настоящие настройки
-    /// и язык приложения она не трогает.
+    /// `settings`, `localizer` and `systemLanguages` are substituted in the self-test: it does not touch
+    /// the real settings or the app language.
     init(settings: LanguageSettings = .app,
          localizer: Localizer = .shared,
          systemLanguages: @escaping () -> [String] = { LanguageSettings.systemPreferredLanguages() }) {
@@ -38,13 +38,13 @@ final class LanguageController: ObservableObject {
         localizer.setLanguage(code)
     }
 
-    /// Системные надписи AppKit (заголовок окна настроек, стандартные кнопки) и Info.plist
-    /// всё ещё на языке запуска: их сменит только перезапуск.
+    /// AppKit system labels (settings window title, standard buttons) and Info.plist
+    /// are still in the launch language: only a relaunch changes them.
     var needsRestart: Bool { choice != launchChoice }
 
     var canRestart: Bool { Self.relaunch() != nil }
 
-    /// Запомнить выбор и сразу переключить тексты Juggler.
+    /// Remember the choice and switch Juggler texts immediately.
     func select(_ newChoice: LanguageChoice) {
         guard newChoice != choice else { return }
         settings.select(newChoice)
@@ -53,15 +53,15 @@ final class LanguageController: ObservableObject {
         refreshLanguage()
     }
 
-    /// Пересчитать язык (для «Как в системе» — по текущим языкам системы) и переключить тексты.
+    /// Recompute the language (for "Same as system" — from the current system languages) and switch texts.
     func refreshLanguage() {
         let code = LanguageSettings.code(for: choice, systemPreferred: systemLanguages())
         localizer.setLanguage(code)
         if code != language { language = code }
     }
 
-    /// Закрывает Juggler и сразу открывает его снова. Задачи уже записаны в tasks.json
-    /// (запись при каждом изменении), `applicationWillTerminate` останавливает хоткеи.
+    /// Quits Juggler and immediately reopens it. Tasks are already saved to tasks.json
+    /// (saved on every change), `applicationWillTerminate` stops the hotkeys.
     func restartNow() {
         guard let command = Self.relaunch() else { return }
         let process = Process()
@@ -84,8 +84,8 @@ final class LanguageController: ObservableObject {
     }
 }
 
-/// Перерисовка на новом языке: при смене языка поддерево строится заново (`id`), так что все
-/// `loc(...)` внутри снова вычисляются; локаль окружения — того же языка.
+/// Redraw in the new language: when the language changes the subtree is rebuilt (`id`), so all
+/// `loc(...)` calls inside are re-evaluated; the environment locale uses the same language.
 private struct FollowsLanguage: ViewModifier {
     @ObservedObject var controller: LanguageController
 
@@ -97,14 +97,14 @@ private struct FollowsLanguage: ViewModifier {
 }
 
 extension View {
-    /// Корень окна или меню, тексты которого должны сразу сменить язык.
+    /// Root of a window or menu whose texts must switch language immediately.
     @MainActor
     func followsLanguage() -> some View {
         modifier(FollowsLanguage(controller: .shared))
     }
 }
 
-/// Раздел настроек «Язык».
+/// The "Language" settings section.
 struct LanguageSection: View {
     @ObservedObject private var controller = LanguageController.shared
 

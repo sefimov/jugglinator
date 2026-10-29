@@ -1,23 +1,23 @@
 import Foundation
 
-// Папка Sources/JugglerCore/Bind/ принадлежит задаче BIND: чистая логика (только Foundation),
-// которую проверяет JugglerChecks (Sources/JugglerChecks/Bind/).
+// The Sources/JugglerCore/Bind/ folder belongs to the BIND task: pure logic (Foundation only)
+// checked by JugglerChecks (Sources/JugglerChecks/Bind/).
 
-/// Какие приложения BIND различает при привязке и активации.
+/// Which apps BIND distinguishes when binding and activating.
 public enum BindAppKind: String, Codable, Equatable, Sendable {
     case chrome
     case claude
     case chatGPT
-    /// Terminal.app: окно и вкладка (id окна, tty).
+    /// Terminal.app: window and tab (window id, tty).
     case terminal
-    /// Grok Bot и любое другое приложение: привязка к окну.
+    /// Grok Bot and any other app: window binding.
     case other
 }
 
-/// Bundle id приложений, проверенные на маке пользователя (Info.plist в /Applications).
+/// App bundle ids, verified on the user's Mac (Info.plist in /Applications).
 ///
-/// ChatGPT desktop сейчас поставляется как `com.openai.codex` (схема `codex`);
-/// старый `com.openai.chat` оставлен для совместимости.
+/// ChatGPT desktop currently ships as `com.openai.codex` (scheme `codex`);
+/// the old `com.openai.chat` is kept for compatibility.
 public enum BindApps {
     public static let chrome = KnownBundleIDs.chrome
     public static let claude = KnownBundleIDs.claude
@@ -37,14 +37,14 @@ public enum BindApps {
 
     public static func isChatGPT(_ bundleID: String?) -> Bool { kind(of: bundleID) == .chatGPT }
 
-    /// Сравнение bundle id без учёта регистра; пустые и `nil` не равны ничему.
+    /// Case-insensitive bundle id comparison; empty and `nil` equal nothing.
     public static func same(_ a: String?, _ b: String?) -> Bool {
         guard let a, let b, !a.isEmpty, !b.isEmpty else { return false }
         return a.caseInsensitiveCompare(b) == .orderedSame
     }
 }
 
-/// Приложение-кандидат в «переднее» (для выбора, чьё окно привязывать).
+/// A candidate "frontmost" app (for choosing whose window to bind).
 public struct AppIdentity: Codable, Equatable, Sendable {
     public var bundleID: String?
     public var name: String?
@@ -57,10 +57,10 @@ public struct AppIdentity: Codable, Equatable, Sendable {
     }
 }
 
-/// Выбор приложения, чей контекст читать.
+/// Chooses the app whose context to read.
 ///
-/// Когда «Сделать задачей текущий чат» нажимают в меню Juggler, впереди может оказаться
-/// сам Juggler. Тогда берётся последнее активное приложение, кроме Juggler.
+/// When "Make the current chat a task" is clicked in the Juggler menu, Juggler itself
+/// may be frontmost. Then the last active app other than Juggler is used.
 public enum FrontmostAppChooser {
     public static func isOwn(_ app: AppIdentity, ownBundleID: String?, ownPID: Int32) -> Bool {
         if app.pid == ownPID { return true }
@@ -68,7 +68,7 @@ public enum FrontmostAppChooser {
         return BindApps.same(app.bundleID, BindApps.juggler)
     }
 
-    /// - Returns: приложение и признак того, что взято запомненное, а не текущее переднее.
+    /// - Returns: the app and a flag saying the remembered one was used rather than the current frontmost.
     public static func choose(
         frontmost: AppIdentity?, remembered: AppIdentity?, ownBundleID: String?, ownPID: Int32
     ) -> (app: AppIdentity, usedRemembered: Bool)? {

@@ -2,8 +2,8 @@ import AppKit
 import JugglerCore
 import SwiftUI
 
-/// Раздел «Разрешения» окна настроек: состояние Accessibility, управления Chrome и Терминалом
-/// и кнопки запроса. Сам ничего не запрашивает — только по нажатию кнопки.
+/// "Permissions" section of the settings window: status of Accessibility, Chrome and Terminal control
+/// and request buttons. Requests nothing on its own — only when a button is pressed.
 struct PermissionsSection: View {
     let environment: AppEnvironment
     @StateObject private var state: PermissionsState
@@ -63,7 +63,7 @@ struct PermissionsSection: View {
     }
 }
 
-/// Состояние разрешений для раздела настроек; обновляется при возврате в приложение.
+/// Permission state for the settings section; refreshed when returning to the app.
 @MainActor
 final class PermissionsState: ObservableObject {
     @Published private(set) var accessibilityTrusted = false
@@ -87,12 +87,12 @@ final class PermissionsState: ObservableObject {
         if let observer { NotificationCenter.default.removeObserver(observer) }
     }
 
-    /// Раздел Chrome показывается только с рабочими разрешениями BIND.
+    /// The Chrome section is shown only with the live BIND permissions.
     var canManageChrome: Bool { permissions is LivePermissions }
 
     var chromeText: String { Self.text(chromeStatus, notRunning: loc("Chrome не запущен")) }
 
-    /// Строка Терминала — только с рабочими разрешениями BIND и если Терминал установлен.
+    /// Terminal row — only with the live BIND permissions and if Terminal is installed.
     var canManageTerminal: Bool {
         permissions is LivePermissions && NSWorkspace.shared.urlForApplication(withBundleIdentifier: KnownBundleIDs.terminal) != nil
     }
@@ -112,7 +112,7 @@ final class PermissionsState: ObservableObject {
 
     func refresh() {
         accessibilityTrusted = permissions.isAccessibilityTrusted
-        // Проверка без запроса (с коротким таймаутом); Chrome должен быть запущен.
+        // Check without prompting (with a short timeout); Chrome must be running.
         chromeStatus = (permissions as? LivePermissions)?.chromeAutomationStatus
         terminalStatus = (permissions as? LivePermissions)?.terminalAutomationStatus
     }
@@ -126,7 +126,7 @@ final class PermissionsState: ObservableObject {
         guard let live = permissions as? LivePermissions else { return }
         switch chromeStatus {
         case .denied?:
-            // Повторно система не спросит: только инструкция и переход в настройки.
+            // The system won't ask again: only instructions and a jump to settings.
             LivePermissions.showChromeInstructions()
         case .notRunning?:
             if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: KnownBundleIDs.chrome) {
@@ -143,7 +143,7 @@ final class PermissionsState: ObservableObject {
         guard let live = permissions as? LivePermissions else { return }
         switch terminalStatus {
         case .denied?:
-            // Повторно система не спросит: только инструкция и переход в настройки.
+            // The system won't ask again: only instructions and a jump to settings.
             LivePermissions.showTerminalInstructions()
         case .notRunning?:
             if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: KnownBundleIDs.terminal) {

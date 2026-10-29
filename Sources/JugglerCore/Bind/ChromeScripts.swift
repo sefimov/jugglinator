@@ -1,15 +1,15 @@
 import Foundation
 
-/// Тексты AppleScript для Chrome и разбор их вывода.
+/// AppleScript sources for Chrome and parsing of their output.
 ///
-/// Скрипты возвращают одну строку: поля разделены символом U+001F (unit separator),
-/// записи — U+001E (record separator). В адресах и заголовках вкладок эти символы не встречаются,
-/// поэтому разбор однозначен и проверяется без Chrome.
+/// Scripts return a single string: fields separated by U+001F (unit separator),
+/// records by U+001E (record separator). These characters never occur in tab URLs and titles,
+/// so parsing is unambiguous and can be checked without Chrome.
 public enum ChromeScripts {
     public static let fieldSeparator: Character = "\u{1F}"
     public static let recordSeparator: Character = "\u{1E}"
 
-    /// Активная вкладка переднего окна: `windowID␟tabID␟URL␟title`; пустая строка — окон нет.
+    /// Active tab of the front window: `windowID␟tabID␟URL␟title`; an empty string means no windows.
     public static func activeTabSource(bundleID: String = BindApps.chrome) -> String {
         """
         with timeout of 3 seconds
@@ -24,8 +24,8 @@ public enum ChromeScripts {
         """
     }
 
-    /// Все вкладки всех окон: записи `windowID␟index␟tabID␟URL`, разделённые U+001E.
-    /// Свойства берутся пачкой (`id of every tab`), чтобы не слать событие на каждую вкладку.
+    /// All tabs of all windows: records `windowID␟index␟tabID␟URL`, separated by U+001E.
+    /// Properties are fetched in bulk (`id of every tab`) to avoid sending an event per tab.
     public static func tabListingSource(bundleID: String = BindApps.chrome) -> String {
         """
         with timeout of 5 seconds
@@ -47,7 +47,7 @@ public enum ChromeScripts {
         """
     }
 
-    /// Сделать вкладку `tabIndex` (с 1) активной в окне `windowID` и поднять окно.
+    /// Make tab `tabIndex` (1-based) active in window `windowID` and raise the window.
     public static func focusTabSource(windowID: Int, tabIndex: Int, bundleID: String = BindApps.chrome) -> String {
         """
         with timeout of 3 seconds
@@ -64,7 +64,7 @@ public enum ChromeScripts {
         """
     }
 
-    /// Разбор вывода `activeTabSource`. `nil` — окон нет или вывод не распознан.
+    /// Parses `activeTabSource` output. `nil` — no windows or unrecognized output.
     public static func parseActiveTab(_ output: String) -> ChromeTabRef? {
         let fields = output.split(separator: fieldSeparator, maxSplits: 3, omittingEmptySubsequences: false).map(String.init)
         guard fields.count >= 3 else { return nil }
@@ -74,7 +74,7 @@ public enum ChromeScripts {
         return ChromeTabRef(tabID: parseID(fields[1]), windowID: parseID(fields[0]), url: url, title: title)
     }
 
-    /// Разбор вывода `tabListingSource`. Неполные записи пропускаются.
+    /// Parses `tabListingSource` output. Incomplete records are skipped.
     public static func parseTabListing(_ output: String) -> [ChromeTabEntry] {
         output.split(separator: recordSeparator).compactMap { record in
             let fields = record.split(separator: fieldSeparator, maxSplits: 3, omittingEmptySubsequences: false).map(String.init)
@@ -87,7 +87,7 @@ public enum ChromeScripts {
         }
     }
 
-    /// Целое из текста AppleScript: «123», «123.0» (так AppleScript иногда печатает real), с пробелами.
+    /// An integer from AppleScript text: "123", "123.0" (AppleScript sometimes prints a real like that), with whitespace.
     public static func parseID(_ text: String) -> Int? {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         if let v = Int(t) { return v }
@@ -96,10 +96,10 @@ public enum ChromeScripts {
     }
 }
 
-/// Вкладка из списка всех вкладок Chrome.
+/// A tab from the list of all Chrome tabs.
 public struct ChromeTabEntry: Equatable, Sendable {
     public var windowID: Int
-    /// Позиция вкладки в окне, с 1 (для `active tab index`).
+    /// Tab position in the window, 1-based (for `active tab index`).
     public var index: Int
     public var tabID: Int?
     public var url: String
@@ -112,7 +112,7 @@ public struct ChromeTabEntry: Equatable, Sendable {
     }
 }
 
-/// Поиск привязанной вкладки среди открытых: сначала по id, потом по адресу.
+/// Finds the bound tab among open ones: first by id, then by URL.
 public enum ChromeTabMatcher {
     public enum MatchKind: String, Equatable, Sendable {
         case byID
@@ -124,8 +124,8 @@ public enum ChromeTabMatcher {
         public var kind: MatchKind
     }
 
-    /// По адресу сравнение идёт через `URLNormalizer` (регистр хоста, `#fragment`, хвостовой `/`).
-    /// Среди нескольких вкладок с тем же адресом предпочитается окно из привязки, затем первая.
+    /// URL comparison goes through `URLNormalizer` (host case, `#fragment`, trailing `/`).
+    /// Among several tabs with the same URL, the binding's window is preferred, then the first one.
     public static func find(_ ref: ChromeTabRef, in entries: [ChromeTabEntry]) -> Match? {
         if let id = ref.tabID, let entry = entries.first(where: { $0.tabID == id }) {
             return Match(entry: entry, kind: .byID)
@@ -139,7 +139,7 @@ public enum ChromeTabMatcher {
         return same.first.map { Match(entry: $0, kind: .byURL) }
     }
 
-    /// Адрес, который можно открыть заново, если вкладки уже нет.
+    /// A URL that can be reopened if the tab is gone.
     public static func reopenURL(for ref: ChromeTabRef) -> URL? {
         let text = ref.url.trimmingCharacters(in: .whitespacesAndNewlines)
         guard let url = URL(string: text), let scheme = url.scheme?.lowercased(),

@@ -1,30 +1,30 @@
 import Foundation
 
-/// Определение текущей задачи по контексту переднего окна.
+/// Determines the current task from the frontmost window context.
 ///
-/// Каждая привязка получает оценку совпадения с контекстом; побеждает наибольшая.
-/// При равенстве выигрывает `fallbackID` (последняя активная задача), если она среди
-/// лучших, иначе — первая по порядку списка. Отметка «сделано» не мешает совпадению:
-/// пропуск сделанных — забота `TaskCycler`.
+/// Each binding gets a match score against the context; the highest wins.
+/// On a tie, `fallbackID` (the last active task) wins if it is among
+/// the best, otherwise the first in list order. The "done" mark does not prevent a match:
+/// skipping done tasks is `TaskCycler`'s job.
 public enum CurrentTaskResolver {
-    /// Сила совпадения. Значения упорядочены: точный id важнее адреса, адрес важнее заголовка.
+    /// Match strength. Values are ordered: an exact id beats a URL, a URL beats a title.
     public enum Score: Int, Comparable, Sendable {
         case none = 0
-        /// То же приложение, заголовок не совпал или неизвестен.
+        /// Same app, title did not match or is unknown.
         case sameApp = 20
-        /// То же приложение и тот же очищенный заголовок окна.
+        /// Same app and same cleaned window title.
         case sameTitle = 50
-        /// Тот же адрес вкладки (без учёта фрагмента, регистра хоста и хвостового «/»).
+        /// Same tab URL (ignoring fragment, host case and trailing "/").
         case sameURL = 80
-        /// Тот же id: вкладки Chrome, чата Claude, сессии Claude Code, треда ChatGPT или tty вкладки Терминала.
-        /// Для Терминала «то же окно» (id окна, tty не известен) — `sameURL`.
+        /// Same id: Chrome tab, Claude chat, Claude Code session, ChatGPT thread or Terminal tab tty.
+        /// For Terminal, "same window" (window id, tty unknown) is `sameURL`.
         case sameID = 100
 
         public static func < (lhs: Score, rhs: Score) -> Bool { lhs.rawValue < rhs.rawValue }
     }
 
-    /// Задача, соответствующая переднему окну; если совпадений нет — `fallbackID`
-    /// (если такая задача есть в списке), иначе `nil`.
+    /// The task matching the frontmost window; if nothing matches — `fallbackID`
+    /// (if such a task is in the list), otherwise `nil`.
     public static func resolve(context: FrontmostContext, tasks: [JugglerTask], fallbackID: UUID? = nil) -> UUID? {
         if let matched = match(context: context, tasks: tasks, fallbackID: fallbackID) {
             return matched
@@ -33,7 +33,7 @@ public enum CurrentTaskResolver {
         return fallbackID
     }
 
-    /// Только совпадение по контексту, без запасного варианта.
+    /// Context match only, without the fallback.
     public static func match(context: FrontmostContext, tasks: [JugglerTask], fallbackID: UUID? = nil) -> UUID? {
         var best = Score.none
         var candidates: [UUID] = []
@@ -64,7 +64,7 @@ public enum CurrentTaskResolver {
         case .claudeChat(let ref):
             let id = ref.conversationID.lowercased()
             if let current = context.claudeConversationID?.lowercased(), current == id { return .sameID }
-            // Тот же чат, открытый в браузере (claude.ai/chat/<uuid>).
+            // The same chat opened in the browser (claude.ai/chat/<uuid>).
             if let url = context.chromeTab?.url, case .claude(let webID)? = ChatLinkParser.parse(url), webID == id {
                 return .sameID
             }
@@ -75,7 +75,7 @@ public enum CurrentTaskResolver {
             let id = ref.sessionID.lowercased()
             if let current = context.claudeCodeSessionID?.lowercased(), current == id { return .sameID }
             guard KnownBundleIDs.same(context.bundleID, KnownBundleIDs.claude) else { return .none }
-            // Заголовок окна вкладки Code — просто «Claude», поэтому обычно это лишь «то же приложение».
+            // The Code tab window title is just "Claude", so this is usually only "same app".
             return titleScore(bound: ref.title, current: context.windowTitle)
 
         case .chatGPTThread(let ref):
@@ -95,7 +95,7 @@ public enum CurrentTaskResolver {
         case .appWindow(let ref):
             guard KnownBundleIDs.same(context.bundleID, ref.bundleID) else { return .none }
             if KnownBundleIDs.same(ref.bundleID, KnownBundleIDs.terminal) {
-                // Окно Терминала без AppleScript: заголовок без размера и оболочки.
+                // Terminal window without AppleScript: title without size and shell.
                 return TerminalTitle.same(ref.windowTitle, context.windowTitle) ? .sameTitle : .sameApp
             }
             return titleScore(bound: ref.windowTitle, current: context.windowTitle)

@@ -1,7 +1,7 @@
 import Foundation
 import JugglerCore
 
-// «Очистить все задачи» (D25): операция над документом, вопрос с правильной формой слова, тексты.
+// "Clear all tasks" (D25): document operation, the prompt with the correct word form, texts.
 
 extension UIChecks {
     static func checkClearAll(_ c: CheckRunner) {
@@ -18,7 +18,7 @@ extension UIChecks {
             c.expectEqual(MenuFooterItem.items(canRestore: false, hasTasks: !doc.tasks.isEmpty), [.currentWindow, .settings, .quit],
                           "после очистки пункта «Очистить все задачи» нет")
 
-            // Сохранение пустого списка в tasks.json.
+            // Saving an empty list to tasks.json.
             let dir = FileManager.default.temporaryDirectory.appendingPathComponent("juggler-clear-\(UUID().uuidString)")
             defer { try? FileManager.default.removeItem(at: dir) }
             let url = dir.appendingPathComponent("tasks.json")
@@ -33,7 +33,7 @@ extension UIChecks {
                 c.expect(false, "не удалось сохранить: \(error)")
             }
 
-            // Вопрос: форма слова по правилам русского (без таблицы перевода — запасной вариант).
+            // The prompt: word form by Russian rules (no translation table: the fallback).
             let q = TaskListPresenter.clearAllConfirmation
             c.expectEqual(q(1), "Удалить 1 задачу?", "1 задача")
             c.expectEqual(q(2), "Удалить все 2 задачи?", "2 задачи")

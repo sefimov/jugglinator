@@ -6,15 +6,15 @@ import os
 
 private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
-/// AppleScript для приложения (Chrome, Терминал): проверка Automation без запроса и выполнение скриптов.
+/// AppleScript for an app (Chrome, Terminal): Automation check without prompting and running scripts.
 ///
-/// Скрипт выполняется только когда разрешение уже выдано: сначала проверяем его через
-/// `AEDeterminePermissionToAutomateTarget` без запроса. Так чтение контекста по хоткею
-/// никогда не показывает системный диалог и не блокирует главный поток.
+/// A script runs only when permission is already granted: first we check it via
+/// `AEDeterminePermissionToAutomateTarget` without prompting. This way reading context on a hotkey
+/// never shows a system dialog and never blocks the main thread.
 @MainActor
 class AppleScriptController {
     let bundleID: String
-    /// Имя приложения для журнала.
+    /// App name for the log.
     let logName: String
 
     init(bundleID: String, logName: String) {
@@ -30,21 +30,21 @@ class AppleScriptController {
         NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID)
     }
 
-    /// Сколько ждать ответа TCC на проверку без запроса.
+    /// How long to wait for TCC to answer a check without prompting.
     static let checkTimeout: TimeInterval = 0.4
-    /// Разрешение уже подтверждено в этом запуске: повторно не проверяем
-    /// (отзыв всё равно проявится ошибкой -1743 при выполнении скрипта).
+    /// Permission already confirmed in this launch: we don't check again
+    /// (revocation still shows up as error -1743 when running a script).
     private var grantedConfirmed = false
-    /// Проверка, которая ещё не вернулась (висит за системным запросом).
+    /// A check that hasn't returned yet (stuck behind a system prompt).
     private var pendingCheck: PermissionCheck?
-    /// Последняя проверка не дождалась ответа TCC (висит системный запрос).
+    /// The last check didn't get a TCC answer in time (a system prompt is pending).
     private(set) var lastCheckTimedOut = false
 
-    /// Состояние разрешения Automation без запроса пользователю.
+    /// Automation permission state without prompting the user.
     ///
-    /// `AEDeterminePermissionToAutomateTarget` даже с `askUserIfNeeded = false` блокируется,
-    /// пока на экране висит системный запрос разрешения для этого же процесса. Поэтому проверка
-    /// идёт в фоне с таймаутом: не дождались — считаем, что нужен ответ пользователя.
+    /// `AEDeterminePermissionToAutomateTarget` blocks even with `askUserIfNeeded = false`
+    /// while a system permission prompt for the same process is on screen. So the check
+    /// runs in the background with a timeout: if it times out, we assume a user answer is needed.
     func automationStatus() -> (status: AutomationStatus, code: Int) {
         guard runningApp != nil else { return (.notRunning, -600) }
         lastCheckTimedOut = false
@@ -77,10 +77,10 @@ class AppleScriptController {
         return (status, code)
     }
 
-    /// Сбросить подтверждение (после ошибки -1743 при выполнении скрипта).
+    /// Reset the confirmation (after error -1743 when running a script).
     func forgetGranted() { grantedConfirmed = false }
 
-    /// Результат фоновой проверки; потокобезопасен.
+    /// Result of the background check; thread-safe.
     private final class PermissionCheck: @unchecked Sendable {
         private let lock = NSLock()
         private let done = DispatchSemaphore(value: 0)
@@ -99,8 +99,8 @@ class AppleScriptController {
         }
     }
 
-    /// Запросить разрешение (системный диалог). Вызов блокирующий, поэтому идёт в фоне;
-    /// `completion` вызывается на главном потоке.
+    /// Request permission (system dialog). The call is blocking, so it runs in the background;
+    /// `completion` is called on the main thread.
     func requestAutomation(completion: @escaping @MainActor (AutomationStatus, Int) -> Void) {
         let bundleID = self.bundleID
         DispatchQueue.global(qos: .userInitiated).async {
@@ -141,7 +141,7 @@ class AppleScriptController {
         return ScriptResult(output: result.stringValue ?? "", errorCode: 0, errorMessage: nil)
     }
 
-    /// Скрипты компилируются (без отправки событий приложению): для самопроверки.
+    /// The scripts compile (without sending events to the app): for the self-test.
     func compile(_ sources: [String]) -> String? {
         for source in sources {
             guard let script = NSAppleScript(source: source) else { return "скрипт не создан" }

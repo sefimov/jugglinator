@@ -1,11 +1,11 @@
 import Foundation
 import JugglerCore
 
-// Треды ChatGPT (задача CHATGPT): чтение ~/.codex/session_index.jsonl, поиск треда по заголовку окна,
-// привязка без диалога, ссылка в диалоге при нескольких тредах, тексты и `--probe-frontmost`.
+// ChatGPT threads (task CHATGPT): reading ~/.codex/session_index.jsonl, finding a thread by window title,
+// binding without a dialog, prefilled link in the dialog for multiple threads, texts and `--probe-frontmost`.
 
 extension BindChecks {
-    // Строки как в ~/.codex/session_index.jsonl на маке пользователя (28.10.2026).
+    // Lines as in ~/.codex/session_index.jsonl on the user's Mac (28.10.2026).
     static let clubOld = "01a17477-7849-7471-bc56-8c5460cb624b"
     static let clubNew = "01a17485-58ac-7420-97ee-3c7d03862907"
     static let realIndexLines = [
@@ -38,7 +38,7 @@ extension BindChecks {
             c.expectEqual(real.entries.first?.updatedAt, "2026-10-25T19:24:19.612216Z", "updated_at последней строки")
             c.expectEqual(real.skippedLines, 0, "битых строк нет")
 
-            // Строки не по порядку: более поздний updated_at выигрывает, даже если строка раньше.
+            // Lines out of order: the later updated_at wins even if its line comes earlier.
             let outOfOrder = ChatGPTSessionIndex.parse(Data("""
                 {"id":"a1","thread_name":"Новое","updated_at":"2026-10-26T10:00:00Z"}
                 {"id":"a1","thread_name":"Старое","updated_at":"2026-10-25T10:00:00.5Z"}
@@ -142,7 +142,7 @@ extension BindChecks {
             c.expectEqual(ChatGPTThreadMatcher.lookup(windowTitle: "спланировать компьютерный клуб (2)", index: real).uniqueMatch?.id,
                           clubNew, "запасное сравнение — без учёта регистра")
 
-            // Разложенные и составные буквы (й = и + ◌̆): Swift сравнивает строки по канонической эквивалентности.
+            // Decomposed and precomposed letters (й = и + ◌̆): Swift compares strings by canonical equivalence.
             let decomposed = "Установить CLI".decomposedStringWithCanonicalMapping
             c.expectEqual(ChatGPTThreadMatcher.lookup(windowTitle: decomposed, index: real).status, .found, "Unicode-нормализация не мешает")
 
@@ -227,7 +227,7 @@ extension BindChecks {
                           .binding(.chatGPTThread(ChatGPTThreadRef(threadID: "t-new", title: "Отчёт"))),
                           "вставленная ссылка привязывается кнопкой «Привязать»")
 
-            // Определение текущей задачи не меняется: id треда в контексте переключения нет, тред узнаётся по заголовку окна.
+            // Current-task detection is unchanged: the switch context has no thread id, the thread is recognized by window title.
             var document = TasksDocument()
             let now = Date(timeIntervalSince1970: 1_800_000_000)
             let other = JugglerTask(title: "Другое", binding: .chatGPTThread(ChatGPTThreadRef(threadID: clubOld, title: "Спланировать компьютерный клуб")))

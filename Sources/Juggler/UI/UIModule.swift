@@ -4,19 +4,19 @@ import JugglerCore
 import ServiceManagement
 import SwiftUI
 
-// Папка Sources/Juggler/UI/ принадлежит задаче UI.
-// Сигнатуры функций `UIModule` — контракт с App/JugglerApp.swift и App/SelfTest.swift.
+// The Sources/Juggler/UI/ folder belongs to the UI task.
+// `UIModule` function signatures are a contract with App/JugglerApp.swift and App/SelfTest.swift.
 
 @MainActor
 enum UIModule {
-    /// Все сцены приложения: меню-бар и окно настроек.
+    /// All app scenes: the menu bar and the settings window.
     @SceneBuilder
     static func scenes(environment: AppEnvironment) -> some Scene {
         MenuBarExtra {
             TaskListView(environment: environment, model: environment.model)
                 .followsLanguage()
         } label: {
-            MenuBarLabel(model: environment.model)
+            MenuBarLabel(model: environment.model, contextProvider: environment.bind.contextProvider)
         }
         .menuBarExtraStyle(.window)
 
@@ -26,7 +26,7 @@ enum UIModule {
         }
     }
 
-    /// Самопроверка UI для `--self-test`: без окон и запросов разрешений.
+    /// UI self-test for `--self-test`: no windows and no permission prompts.
     static func selfTest() -> [SelfTestResult] {
         UISelfTest.run()
     }

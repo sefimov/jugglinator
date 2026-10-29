@@ -1,15 +1,15 @@
 import Foundation
 
-/// Тексты AppleScript для Terminal.app и разбор их вывода.
+/// AppleScript sources for Terminal.app and parsing of their output.
 ///
-/// Как и у Chrome (`ChromeScripts`): одна строка, поля разделены U+001F, записи — U+001E.
-/// В tty и заголовках окон эти символы не встречаются.
+/// As with Chrome (`ChromeScripts`): a single string, fields separated by U+001F, records by U+001E.
+/// These characters never occur in ttys or window titles.
 public enum TerminalScripts {
     public static let fieldSeparator: Character = ChromeScripts.fieldSeparator
     public static let recordSeparator: Character = ChromeScripts.recordSeparator
 
-    /// Переднее окно и выбранная вкладка: `windowID␟tty␟title`; пустая строка — окон нет.
-    /// Окно без вкладок (служебное) даёт пустой tty.
+    /// Front window and selected tab: `windowID␟tty␟title`; an empty string means no windows.
+    /// A window without tabs (a utility one) gives an empty tty.
     public static func frontWindowSource(bundleID: String = BindApps.terminal) -> String {
         """
         with timeout of 3 seconds
@@ -27,8 +27,8 @@ public enum TerminalScripts {
         """
     }
 
-    /// Все вкладки всех окон: записи `windowID␟index␟tty␟title` (заголовок — окна), разделённые U+001E.
-    /// tty берутся пачкой (`tty of every tab`); окно, у которого что-то не читается, пропускается.
+    /// All tabs of all windows: records `windowID␟index␟tty␟title` (title is the window's), separated by U+001E.
+    /// ttys are fetched in bulk (`tty of every tab`); a window with anything unreadable is skipped.
     public static func tabListingSource(bundleID: String = BindApps.terminal) -> String {
         """
         with timeout of 5 seconds
@@ -52,7 +52,7 @@ public enum TerminalScripts {
         """
     }
 
-    /// Поднять окно `windowID` и, если задано, выбрать вкладку `tabIndex` (с 1).
+    /// Raise window `windowID` and, if given, select tab `tabIndex` (1-based).
     public static func focusSource(windowID: Int, tabIndex: Int?, bundleID: String = BindApps.terminal) -> String {
         let selectTab = tabIndex.map { "set selected tab of w to tab \($0) of w" } ?? ""
         return """
@@ -73,7 +73,7 @@ public enum TerminalScripts {
         """
     }
 
-    /// Разбор вывода `frontWindowSource`. `nil` — окон нет, вывод не распознан или нет ни id, ни tty.
+    /// Parses `frontWindowSource` output. `nil` — no windows, unrecognized output, or neither id nor tty.
     public static func parseFrontWindow(_ output: String) -> TerminalWindowRef? {
         let fields = output.split(separator: fieldSeparator, maxSplits: 2, omittingEmptySubsequences: false).map(String.init)
         guard fields.count >= 2 else { return nil }
@@ -82,7 +82,7 @@ public enum TerminalScripts {
         return ref.hasIdentity ? ref : nil
     }
 
-    /// Разбор вывода `tabListingSource`. Неполные записи пропускаются.
+    /// Parses `tabListingSource` output. Incomplete records are skipped.
     public static func parseTabListing(_ output: String) -> [TerminalTabEntry] {
         output.split(separator: recordSeparator).compactMap { record in
             let fields = record.split(separator: fieldSeparator, maxSplits: 3, omittingEmptySubsequences: false).map(String.init)
@@ -97,13 +97,13 @@ public enum TerminalScripts {
     }
 }
 
-/// Вкладка из списка всех вкладок Терминала.
+/// A tab from the list of all Terminal tabs.
 public struct TerminalTabEntry: Equatable, Sendable {
     public var windowID: Int
-    /// Позиция вкладки в окне, с 1 (для `selected tab`).
+    /// Tab position in the window, 1-based (for `selected tab`).
     public var index: Int
     public var tty: String
-    /// Заголовок окна (выбранной в нём вкладки).
+    /// Window title (of its selected tab).
     public var windowTitle: String
 
     public init(windowID: Int, index: Int, tty: String, windowTitle: String = "") {
@@ -114,20 +114,20 @@ public struct TerminalTabEntry: Equatable, Sendable {
     }
 }
 
-/// Поиск привязанной вкладки среди открытых: по tty, затем по id окна, затем по заголовку окна.
+/// Finds the bound tab among open ones: by tty, then by window id, then by window title.
 public enum TerminalTabMatcher {
     public enum MatchKind: String, Equatable, Sendable {
-        /// Та же вкладка (tty).
+        /// The same tab (tty).
         case byTTY
-        /// То же окно; вкладку не найти (её tty не известен или она закрыта) — выбранная вкладка не меняется.
+        /// The same window; the tab cannot be found (its tty is unknown or it is closed) — the selected tab is left unchanged.
         case byWindowID
-        /// Окно с тем же заголовком (без размера, оболочки и прочего шума).
+        /// A window with the same title (without size, shell and other noise).
         case byTitle
     }
 
     public struct Match: Equatable, Sendable {
         public var windowID: Int
-        /// Вкладка, которую выбрать; `nil` — не менять выбранную.
+        /// Tab to select; `nil` — leave the selection unchanged.
         public var tabIndex: Int?
         public var kind: MatchKind
 
@@ -152,20 +152,20 @@ public enum TerminalTabMatcher {
     }
 }
 
-/// Насколько окно Терминала в контексте совпадает с привязкой (общая логика для
-/// `CurrentTaskResolver` и `ExactTaskMatcher`).
+/// How well the Terminal window in the context matches the binding (shared logic for
+/// `CurrentTaskResolver` and `ExactTaskMatcher`).
 public enum TerminalWindowMatch: Int, Comparable, Sendable {
-    /// То же окно по заголовку без шума — только когда в контексте нет ни tty, ни id окна.
+    /// Same window by title without noise — only when the context has neither tty nor window id.
     case title = 1
-    /// То же окно, а tty вкладки у одной из сторон не известен.
+    /// Same window, and one side's tab tty is unknown.
     case window = 2
-    /// Та же вкладка (tty).
+    /// The same tab (tty).
     case tab = 3
 
     public static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
 
-    /// - Returns: `nil`, если впереди не Терминал или это другое окно/вкладка.
-    ///   Если обе стороны знают tty и он разный — это другая вкладка, даже в том же окне.
+    /// - Returns: `nil` if the frontmost app is not Terminal or it is a different window/tab.
+    ///   If both sides know the tty and it differs, it is a different tab, even in the same window.
     public static func evaluate(_ ref: TerminalWindowRef, context: FrontmostContext) -> TerminalWindowMatch? {
         guard KnownBundleIDs.same(context.bundleID, KnownBundleIDs.terminal) else { return nil }
         if let current = context.terminalWindow, current.hasIdentity {
@@ -175,11 +175,11 @@ public enum TerminalWindowMatch: Int, Comparable, Sendable {
             if let a = ref.windowID, let b = current.windowID, a == b { return .window }
             return nil
         }
-        // Нет доступа к AppleScript: остаётся заголовок окна (Accessibility) без размера и оболочки.
+        // No AppleScript access: only the window title (Accessibility) without size and shell is left.
         return TerminalTitle.same(ref.title, context.windowTitle) ? .title : nil
     }
 
-    /// Привязка к окну Терминала из контекста переднего окна, если tty или id окна прочитаны.
+    /// Binding to a Terminal window from the frontmost window context, if the tty or window id was read.
     public static func ref(from context: FrontmostContext) -> TerminalWindowRef? {
         guard KnownBundleIDs.same(context.bundleID, KnownBundleIDs.terminal),
               var ref = context.terminalWindow, ref.hasIdentity else { return nil }

@@ -76,7 +76,8 @@ struct TaskListView: View {
 
     @ViewBuilder
     private func taskList(now: Date) -> some View {
-        let rows = TaskListPresenter.rows(for: model.document, now: now)
+        let current = TaskListPresenter.currentTaskID(context: state.windowContext, document: model.document)
+        let rows = TaskListPresenter.rows(for: model.document, now: now, currentTaskID: current)
         if rows.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
                 Text(loc("Задач пока нет."))
@@ -135,22 +136,6 @@ struct TaskListView: View {
                 },
                 onCancel: { state.cancel() })
             .id(editing.taskID)
-        } else if state.pendingClearAll, !model.document.tasks.isEmpty {
-            ClearConfirmationView(
-                question: TaskListPresenter.clearAllConfirmation(count: model.document.tasks.count),
-                onClear: {
-                    model.clearAllTasks()
-                    state.cancel()
-                },
-                onCancel: { state.cancel() })
-        } else if state.pendingClearDone, doneCount > 0 {
-            ClearConfirmationView(
-                question: TaskListPresenter.clearDoneConfirmation(count: doneCount),
-                onClear: {
-                    model.clearDoneTasks()
-                    state.cancel()
-                },
-                onCancel: { state.cancel() })
         } else if let id = state.pendingDeleteID, let task = model.document.task(withID: id) {
             DeleteConfirmationView(
                 title: task.title,
@@ -195,9 +180,20 @@ struct TaskListView: View {
             footerButton(TaskToggleTexts.clearDoneMenuTitle, systemImage: "checkmark.circle.badge.xmark") {
                 state.askClearDone()
             }
+            // The confirmation opens right under the item that was clicked.
+            if state.pendingClearDone, doneCount > 0 {
+                inlineConfirmation(
+                    question: TaskListPresenter.clearDoneConfirmation(count: doneCount),
+                    onClear: { model.clearDoneTasks() })
+            }
         case .clearAll:
             footerButton(TaskToggleTexts.clearAllMenuTitle, systemImage: "trash") {
                 state.askClearAll()
+            }
+            if state.pendingClearAll, !model.document.tasks.isEmpty {
+                inlineConfirmation(
+                    question: TaskListPresenter.clearAllConfirmation(count: model.document.tasks.count),
+                    onClear: { model.clearAllTasks() })
             }
         case .settings:
             footerButton(TaskToggleTexts.settingsMenuTitle, systemImage: "gearshape") {
@@ -215,6 +211,19 @@ struct TaskListView: View {
             }
             .keyboardShortcut("q", modifiers: .command)
         }
+    }
+
+    /// "Delete done" / "Clear all" confirmation shown directly under its menu item, indented to the item's text.
+    private func inlineConfirmation(question: String, onClear: @escaping () -> Void) -> some View {
+        ClearConfirmationView(
+            question: question,
+            onClear: {
+                onClear()
+                state.cancel()
+            },
+            onCancel: { state.cancel() })
+        .padding(.leading, 28)
+        .padding(.vertical, 4)
     }
 
     private func footerButton(_ title: String, systemImage: String, action: @escaping () -> Void) -> some View {

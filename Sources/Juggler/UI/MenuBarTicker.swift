@@ -1,8 +1,8 @@
 import AppKit
 import Foundation
 
-/// Раз в минуту (и после пробуждения Мака) просит иконку меню-бара пересчитать цвет:
-/// время идёт, даже когда документ не меняется.
+/// Once a minute (and after the Mac wakes) asks the menu bar icon to recompute its color:
+/// time passes even when the document does not change.
 @MainActor
 final class MenuBarTicker: ObservableObject {
     @Published private(set) var tick = 0

@@ -1,22 +1,22 @@
 import Foundation
 
-/// Хранилище `tasks.json`.
+/// Storage for `tasks.json`.
 ///
-/// - Запись атомарная: данные пишутся во временный файл и подменяют основной
-///   (`Data.write(options: .atomic)`), так что при сбое остаётся старая или новая версия целиком.
-/// - Перед каждой записью предыдущая исправная версия копируется в `tasks.backup.json`.
-/// - Битый файл при загрузке переименовывается в `tasks.corrupt-<время>.json`
-///   (данные не теряются), затем делается попытка восстановиться из резервной копии;
-///   если и она негодна, начинаем с пустого списка.
+/// - Writes are atomic: data is written to a temporary file that replaces the main one
+///   (`Data.write(options: .atomic)`), so after a failure either the old or the new version remains intact.
+/// - Before each write, the previous valid version is copied to `tasks.backup.json`.
+/// - A broken file is renamed to `tasks.corrupt-<time>.json` on load
+///   (no data is lost), then recovery from the backup is attempted;
+///   if that is invalid too, we start with an empty list.
 public final class TaskStore {
     public enum LoadOutcome: Equatable, Sendable {
-        /// Основной файл прочитан.
+        /// The main file was read.
         case loaded
-        /// Файла ещё нет (первый запуск): пустой список.
+        /// No file yet (first launch): empty list.
         case missing
-        /// Основной файл был битым или пропал; данные взяты из резервной копии.
+        /// The main file was broken or missing; data was taken from the backup.
         case recoveredFromBackup(quarantinedURL: URL?)
-        /// Основной файл битый, резервной копии нет или она тоже битая: пустой список.
+        /// The main file is broken, and there is no backup or it is broken too: empty list.
         case resetAfterCorruption(quarantinedURL: URL?)
 
         public var isRecovery: Bool {
@@ -51,14 +51,14 @@ public final class TaskStore {
 
     public var directoryURL: URL { fileURL.deletingLastPathComponent() }
 
-    /// `tasks.backup.json` рядом с основным файлом.
+    /// `tasks.backup.json` next to the main file.
     public var backupURL: URL {
         directoryURL.appendingPathComponent(baseName + ".backup.json")
     }
 
     private var baseName: String { fileURL.deletingPathExtension().lastPathComponent }
 
-    // MARK: - Загрузка
+    // MARK: - Loading
 
     public func load() -> LoadResult {
         guard fileManager.fileExists(atPath: fileURL.path) else {
@@ -77,21 +77,21 @@ public final class TaskStore {
         return LoadResult(document: TasksDocument(), outcome: .resetAfterCorruption(quarantinedURL: quarantined))
     }
 
-    // MARK: - Запись
+    // MARK: - Saving
 
     public func save(_ document: TasksDocument) throws {
         try fileManager.createDirectory(at: directoryURL, withIntermediateDirectories: true)
         var document = document
         document.normalize()
         let data = try TaskStore.encode(document)
-        // Резервная копия — только из исправного файла, чтобы не затереть её мусором.
+        // Back up only from a valid file, so the backup is never overwritten with garbage.
         if let current = try? Data(contentsOf: fileURL), (try? TaskStore.decode(current)) != nil, current != data {
             try? current.write(to: backupURL, options: .atomic)
         }
         try data.write(to: fileURL, options: .atomic)
     }
 
-    // MARK: - Кодирование
+    // MARK: - Coding
 
     public static func encode(_ document: TasksDocument) throws -> Data {
         let encoder = JSONEncoder()
@@ -119,14 +119,14 @@ public final class TaskStore {
         return try decoder.decode(TasksDocument.self, from: data)
     }
 
-    // MARK: - Внутреннее
+    // MARK: - Internals
 
     private func readDocument(at url: URL) -> TasksDocument? {
         guard let data = try? Data(contentsOf: url), !data.isEmpty else { return nil }
         return try? TaskStore.decode(data)
     }
 
-    /// Переименовывает битый основной файл, чтобы его можно было разобрать вручную.
+    /// Renames the broken main file so it can be inspected manually.
     private func quarantineMainFile() -> URL? {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -148,7 +148,7 @@ public final class TaskStore {
     }
 }
 
-/// ISO 8601 с миллисекундами при записи; при чтении принимаются оба варианта.
+/// ISO 8601 with milliseconds when writing; both variants are accepted when reading.
 enum ISO8601 {
     static func string(from date: Date) -> String {
         let f = ISO8601DateFormatter()

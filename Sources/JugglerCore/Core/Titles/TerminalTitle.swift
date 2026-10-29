@@ -1,48 +1,48 @@
 import Foundation
 
-/// Заголовки окон Terminal.app.
+/// Terminal.app window titles.
 ///
-/// Терминал собирает заголовок из частей через « — »: папка, свой заголовок программы
-/// (например, «✳ Задача» от Claude Code), активный процесс, пользователь@хост, tty, размер:
+/// Terminal builds the title from parts joined by " — ": folder, the program's own title
+/// (e.g. "✳ Task" from Claude Code), active process, user@host, tty, size:
 /// «sergejefimov — sergejefimov@MacBook-Pro-Sergej — -zsh — 214×24».
-/// Размер и процесс меняются на ходу, поэтому для названия задачи и для сравнения
-/// убирается шум: размер, имя оболочки, пользователь@хост, tty и значки-индикаторы в начале частей.
+/// Size and process change on the fly, so for the task name and for comparison
+/// noise is removed: size, shell name, user@host, tty and indicator glyphs at the start of parts.
 public enum TerminalTitle {
-    /// Разделитель частей заголовка в Терминале.
+    /// Separator between title parts in Terminal.
     public static let separator = " — "
 
-    /// Оболочки, имя которых — шум (с «-» у login shell, с путём, с ключами: «-zsh», «/bin/bash --login»).
+    /// Shells whose name is noise (with "-" for a login shell, with a path, with flags: "-zsh", "/bin/bash --login").
     public static let shells: Set<String> = [
         "zsh", "bash", "sh", "fish", "tcsh", "csh", "ksh", "dash", "nu", "pwsh", "xonsh", "elvish", "login",
     ]
 
-    /// Значимые части заголовка по порядку.
+    /// Meaningful title parts in order.
     public static func components(_ title: String) -> [String] {
         title.components(separatedBy: separator)
             .map(stripIndicators)
             .filter { !$0.isEmpty && !isNoise($0) }
     }
 
-    /// Заголовок без шума: значимые части через « — »; пусто, если значимых частей нет.
+    /// Title without noise: meaningful parts joined by " — "; empty if there are none.
     public static func clean(_ title: String) -> String {
         components(title).joined(separator: separator)
     }
 
-    /// Название новой задачи из заголовка окна Терминала; без значимых частей — `fallback`.
+    /// New task name from a Terminal window title; without meaningful parts — `fallback`.
     public static func taskTitle(from title: String?, fallback: String = defaultTaskTitle) -> String {
         TitleCleaner.suggestedTaskTitle(from: clean(title ?? ""), fallback: fallback)
     }
 
     public static var defaultTaskTitle: String { loc("Терминал") }
 
-    /// Тот же заголовок без учёта шума (размера, оболочки…) и регистра. Пустые не совпадают ни с чем.
-    /// Это запасное сравнение: когда ни tty, ни id окна не известны.
+    /// Same title ignoring noise (size, shell…) and case. Empty titles match nothing.
+    /// This is a fallback comparison: when neither the tty nor the window id is known.
     public static func same(_ a: String, _ b: String?) -> Bool {
         let x = clean(a), y = clean(b ?? "")
         return !x.isEmpty && x.caseInsensitiveCompare(y) == .orderedSame
     }
 
-    // MARK: - Шум
+    // MARK: - Noise
 
     static func isNoise(_ part: String) -> Bool {
         isDimensions(part) || isShell(part) || isUserAtHost(part) || isTTY(part)
@@ -65,7 +65,7 @@ public enum TerminalTitle {
         return shells.contains(name.lowercased())
     }
 
-    /// «user@host» одним словом.
+    /// "user@host" as a single word.
     static func isUserAtHost(_ part: String) -> Bool {
         guard !part.contains(" ") else { return false }
         let pieces = part.split(separator: "@", omittingEmptySubsequences: false)
@@ -82,7 +82,7 @@ public enum TerminalTitle {
         return !rest.isEmpty && rest.allSatisfy(\.isASCIIDigit)
     }
 
-    /// Значки в начале части: «✳ », «⠂ » (индикатор работы Claude Code), «● ».
+    /// Glyphs at the start of a part: "✳ ", "⠂ " (Claude Code activity indicator), "● ".
     static func stripIndicators(_ part: String) -> String {
         var text = Substring(part.trimmingCharacters(in: .whitespacesAndNewlines))
         while let first = text.first, first.isWhitespace || isIndicator(first) {
@@ -93,7 +93,7 @@ public enum TerminalTitle {
 
     private static func isIndicator(_ c: Character) -> Bool {
         guard let scalar = c.unicodeScalars.first else { return false }
-        if (0x2800...0x28FF).contains(scalar.value) { return true }   // шрифт Брайля: спиннеры
+        if (0x2800...0x28FF).contains(scalar.value) { return true }   // Braille patterns: spinners
         switch scalar.properties.generalCategory {
         case .otherSymbol, .mathSymbol: return !c.isASCII
         default: return false

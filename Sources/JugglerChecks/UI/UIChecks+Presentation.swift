@@ -15,10 +15,18 @@ extension UIChecks {
             doc.tasks[3].title = ""
             doc.lastActiveTaskID = ids[2]
 
-            let rows = TaskListPresenter.rows(for: doc, now: now)
+            let rows = TaskListPresenter.rows(for: doc, now: now, currentTaskID: ids[2])
             c.expectEqual(rows.map(\.number), [1, 2, 3, 4], "номера по порядку с 1")
             c.expectEqual(rows.map(\.id), ids, "id строк совпадают с задачами")
             c.expectEqual(rows.map(\.isCurrent), [false, false, true, false], "отметка только у текущей")
+            c.expect(TaskListPresenter.rows(for: doc, now: now, currentTaskID: nil).allSatisfy { !$0.isCurrent },
+                     "переднее окно не задача → ни одна не отмечена, хотя последняя активная есть")
+            c.expectEqual(TaskListPresenter.currentTaskID(
+                context: FrontmostContext(bundleID: KnownBundleIDs.chrome, chromeTab: ChromeTabRef(tabID: 7, url: "https://example.com")),
+                document: doc), ids[2], "текущая в меню — задача переднего окна")
+            c.expectNil(TaskListPresenter.currentTaskID(context: FrontmostContext(bundleID: "com.example.zzz", windowTitle: "Чужое"), document: doc),
+                        "чужое окно → текущей нет")
+            c.expectNil(TaskListPresenter.currentTaskID(context: nil, document: doc), "окно ещё не прочитано → текущей нет")
             c.expectEqual(rows.map(\.staleness), [.fresh, .aging, .forgotten, .never], "уровни старения")
             c.expectEqual(rows[0].absenceText, "не был 5 мин", "текст «не был N мин»")
             c.expectEqual(rows[3].absenceText, "ещё не был", "без захода")
@@ -29,10 +37,10 @@ extension UIChecks {
             c.expectEqual(rows[2].bindingHelp, "Chrome: Пример", "справка о привязке")
             c.expect(rows[0].bindingHelp.hasPrefix("Без привязки"), "справка без привязки")
             c.expectEqual(rows[3].title, "Без названия", "пустое название показывается как «Без названия»")
-            c.expect(TaskListPresenter.rows(for: TasksDocument(), now: now).isEmpty, "пустой документ → нет строк")
-            let custom = TaskListPresenter.rows(for: doc, now: now, thresholds: StalenessThresholds(agingMinutes: 1, staleMinutes: 2, forgottenMinutes: 200))
+            c.expect(TaskListPresenter.rows(for: TasksDocument(), now: now, currentTaskID: nil).isEmpty, "пустой документ → нет строк")
+            let custom = TaskListPresenter.rows(for: doc, now: now, currentTaskID: nil, thresholds: StalenessThresholds(agingMinutes: 1, staleMinutes: 2, forgottenMinutes: 200))
             c.expectEqual(custom[2].staleness, .stale, "пороги старения передаются")
-            let heights = (1...30).map { n in TaskListPresenter.listHeight(rows: Array(TaskListPresenter.rows(for: doc, now: now).prefix(0)) + Array(repeating: rows[0], count: n)) }
+            let heights = (1...30).map { n in TaskListPresenter.listHeight(rows: Array(TaskListPresenter.rows(for: doc, now: now, currentTaskID: nil).prefix(0)) + Array(repeating: rows[0], count: n)) }
             c.expectEqual(TaskListPresenter.listHeight(rows: []), TaskListPresenter.listPadding, "высота пустого списка — только запас")
             c.expectEqual(heights[0], TaskListPresenter.listPadding + TaskListPresenter.rowHeight, "одна строка без заметки")
             c.expect(heights[1] > heights[0], "высота растёт с числом строк")

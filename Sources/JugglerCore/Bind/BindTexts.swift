@@ -1,6 +1,6 @@
 import Foundation
 
-/// Тексты BIND для пользователя: русский текст — ключ перевода в `Localizable.strings`.
+/// User-facing BIND texts: the Russian text is the translation key in `Localizable.strings`.
 public enum BindTexts {
     public static let accessibilitySettingsURL = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
     public static let automationSettingsURL = "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation"
@@ -8,10 +8,10 @@ public enum BindTexts {
     public static var noFrontmostApp: String { loc("Не удалось определить переднее окно. Переключитесь на окно чата и повторите.") }
     public static var frontmostIsJuggler: String { loc("Впереди окно Juggler. Переключитесь на окно чата и повторите.") }
     public static var emptyLink: String { loc("Вставьте ссылку на чат.") }
-    /// Название новой задачи-сессии, если у сессии нет названия, а заголовок окна — просто «Claude».
+    /// Title of a new session task when the session has no title and the window title is just "Claude".
     public static var defaultSessionTaskTitle: String { loc("Сессия Claude Code") }
 
-    /// Пояснение к вставленной ссылке «Поделиться» (`claude.ai/share/…`): что не так и что подойдёт.
+    /// Explanation for a pasted "Share" link (`claude.ai/share/…`): what is wrong and what will work.
     public static var shareLinkNotSupported: String { loc("""
         Это ссылка «Поделиться» (claude.ai/share/…). Она ведёт на публичную копию беседы, а не на сам чат, \
         поэтому открыть по ней чат в Claude нельзя. Нужен адрес самого чата: https://claude.ai/chat/<id> — \
@@ -40,7 +40,7 @@ public enum BindTexts {
         }
     }
 
-    // MARK: Запрос ссылки
+    // MARK: Link request
 
     public static func manualLinkTitle(_ source: BindingSource) -> String {
         switch source {
@@ -68,7 +68,7 @@ public enum BindTexts {
         }
     }
 
-    /// Почему тред ChatGPT не привязался сам и что делать: по итогу поиска в `session_index.jsonl`.
+    /// Why a ChatGPT thread was not bound automatically and what to do, based on the `session_index.jsonl` lookup.
     public static func chatGPTLinkMessage(lookup: ChatGPTThreadLookup?, accessibilityTrusted: Bool) -> String {
         let howTo = loc("Скопируйте ссылку на тред (codex://threads/<id>) и вставьте её сюда.")
         let title = lookup?.windowTitle ?? ""
@@ -105,7 +105,7 @@ public enum BindTexts {
     public static var bindWindowOnlyButton: String { loc("Привязать только окно") }
     public static var cancelButton: String { loc("Отмена") }
 
-    // MARK: Сценарий привязки
+    // MARK: Binding flow
 
     public static func offerAttachTitle(number: Int, taskTitle: String) -> String {
         loc("Привязать этот чат к задаче \(number) «\(taskTitle)»?")
@@ -124,7 +124,7 @@ public enum BindTexts {
 
     public static var bindFailedTitle: String { loc("Не удалось привязать чат") }
 
-    // MARK: Разрешения
+    // MARK: Permissions
 
     public static var accessibilityTitle: String { loc("Нужно разрешение «Универсальный доступ»") }
     public static var accessibilityMessage: String { loc("""
@@ -166,7 +166,7 @@ public enum BindTexts {
            и нажмите «Разрешить…» в настройках Juggler (раздел «Разрешения») — macOS спросит разрешение.
         """) }
 
-    // MARK: Итоги активации
+    // MARK: Activation outcomes
 
     public static var terminalTabClosed: String { loc("Вкладка Терминала закрыта — открыто её окно.") }
     public static var terminalFoundByTitle: String { loc("Окно Терминала найдено по заголовку.") }

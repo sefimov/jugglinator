@@ -1,17 +1,17 @@
 import Foundation
 
-/// Очистка заголовков окон и вкладок для названия задачи и сравнения.
+/// Cleans window and tab titles for task names and comparison.
 ///
-/// Убирает:
-/// - хвосты вида « - Claude», « — ChatGPT», « | Grok» (разделители `-`, `–`, `—`, `|`, `·`
-///   с пробелами по обе стороны), в том числе несколько подряд: «Чат - Claude - Google Chrome»;
-/// - хвост профиля Chrome: «Заголовок - Google Chrome - Сергей»;
-/// - счётчик непрочитанного в начале: «(3) Заголовок»;
-/// - лишние пробелы и переводы строк.
+/// Removes:
+/// - suffixes like " - Claude", " — ChatGPT", " | Grok" (separators `-`, `–`, `—`, `|`, `·`
+///   with spaces on both sides), including several in a row: "Chat - Claude - Google Chrome";
+/// - the Chrome profile suffix: "Title - Google Chrome - Sergey";
+/// - an unread counter at the start: "(3) Title";
+/// - extra whitespace and newlines.
 ///
-/// Если от заголовка осталось только имя приложения («Claude»), результат пустой.
+/// If only the app name is left of the title ("Claude"), the result is empty.
 public enum TitleCleaner {
-    /// Имена приложений и сайтов, которые срезаются с конца заголовка.
+    /// App and site names that are stripped from the end of a title.
     public static let knownSuffixes: [String] = [
         "Google Chrome", "Chrome", "Chromium",
         "Claude", "Claude.ai",
@@ -43,8 +43,8 @@ public enum TitleCleaner {
         return text
     }
 
-    /// Название для новой задачи: очищенный заголовок, обрезанный до `maxLength`
-    /// символов с «…»; пустой результат заменяется на `fallback`.
+    /// Title for a new task: the cleaned title truncated to `maxLength`
+    /// characters with "…"; an empty result is replaced with `fallback`.
     public static func suggestedTaskTitle(from title: String?, fallback: String = loc("Новая задача"), maxLength: Int = 80) -> String {
         let cleaned = clean(title ?? "")
         guard !cleaned.isEmpty else { return fallback }
@@ -53,13 +53,13 @@ public enum TitleCleaner {
         return cut + "…"
     }
 
-    // MARK: - Внутреннее
+    // MARK: - Internals
 
     private static func collapseWhitespace(_ text: String) -> String {
         text.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).joined(separator: " ")
     }
 
-    /// «(3) Заголовок», «(12+) Заголовок».
+    /// "(3) Title", "(12+) Title".
     private static func stripUnreadCounter(_ text: String) -> String {
         guard text.hasPrefix("("), let close = text.firstIndex(of: ")") else { return text }
         let inner = text[text.index(after: text.startIndex)..<close]
@@ -69,7 +69,7 @@ public enum TitleCleaner {
         return rest.isEmpty ? text : rest
     }
 
-    /// «Заголовок - Google Chrome - Профиль» → «Заголовок».
+    /// "Title - Google Chrome - Profile" → "Title".
     private static func stripChromeProfileTail(_ text: String) -> String {
         for marker in [" - Google Chrome - ", " – Google Chrome – ", " — Google Chrome — "] {
             if let range = text.range(of: marker, options: [.backwards, .caseInsensitive]) {
@@ -80,8 +80,8 @@ public enum TitleCleaner {
         return text
     }
 
-    /// Срезает « <разделитель> <name>» с конца; `nil`, если хвоста нет
-    /// или после среза ничего не осталось.
+    /// Strips " <separator> <name>" from the end; `nil` if there is no such suffix
+    /// or nothing is left after stripping.
     private static func stripSuffix(_ name: String, from text: String) -> String? {
         guard text.count > name.count + 2,
               text.lowercased().hasSuffix(name.lowercased()) else { return nil }

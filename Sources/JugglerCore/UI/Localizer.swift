@@ -1,22 +1,22 @@
 import Foundation
 
-/// Перевод строки интерфейса на язык, выбранный сейчас (а не на язык запуска, как `String(localized:)`).
+/// Translates a UI string into the currently selected language (not the launch language, as `String(localized:)` does).
 ///
-///     loc("Выйти")                          // «Quit», если выбран английский
+///     loc("Выйти")                          // "Quit" if English is selected
 ///     loc("Задача \(number) «\(title)» сделана")
 ///
-/// Ключ — русская строка, как в `Localization/<язык>.lproj/Localizable.strings`. Интерполяции дают
-/// в ключе спецификаторы так же, как `String(localized:)`: `Int` → `%lld`, `Int32` → `%d`, остальное → `%@`.
-/// Ключи ищет `scripts/check-localization.py`, поэтому аргумент — всегда литерал.
+/// The key is the Russian string, as in `Localization/<lang>.lproj/Localizable.strings`. Interpolations put
+/// specifiers into the key just like `String(localized:)`: `Int` → `%lld`, `Int32` → `%d`, everything else → `%@`.
+/// Keys are collected by `scripts/check-localization.py`, so the argument is always a literal.
 public func loc(_ text: LocalizedText) -> String {
     Localizer.shared.string(text)
 }
 
-/// Литерал для `loc(_:)`: ключ перевода и значения интерполяций.
+/// Literal for `loc(_:)`: the translation key and interpolation values.
 public struct LocalizedText: ExpressibleByStringInterpolation {
-    /// Ключ таблицы перевода: литерал, интерполяции заменены спецификаторами.
+    /// Translation table key: the literal with interpolations replaced by specifiers.
     public let key: String
-    /// Значения интерполяций по порядку.
+    /// Interpolation values in order.
     public let arguments: [CVarArg]
 
     public init(key: String, arguments: [CVarArg] = []) {
@@ -41,7 +41,7 @@ public struct LocalizedText: ExpressibleByStringInterpolation {
         }
 
         public mutating func appendLiteral(_ literal: String) {
-            // Как в String.LocalizationValue: «%» в тексте ключа — «%%» в формате.
+            // As in String.LocalizationValue: "%" in the key text becomes "%%" in the format.
             key += literal.replacingOccurrences(of: "%", with: "%%")
         }
 
@@ -66,25 +66,25 @@ public struct LocalizedText: ExpressibleByStringInterpolation {
     }
 }
 
-/// Таблицы перевода `<язык>.lproj` и выбранный язык. Язык меняется на ходу (`setLanguage`):
-/// следующий `loc(_:)` уже переводит на новый язык, перезапуск не нужен.
+/// `<lang>.lproj` translation tables and the selected language. The language changes on the fly (`setLanguage`):
+/// the next `loc(_:)` already translates into the new language, no restart needed.
 ///
-/// Перевод ищется в таблице выбранного языка, затем в английской (язык разработки, `CFBundleDevelopmentRegion`),
-/// затем возвращается сам ключ — русская строка. Для русского английский пропускается: ключ и есть русский текст.
-/// Без таблиц (нет папок `.lproj`) — всегда ключ.
+/// A translation is looked up in the selected language's table, then in English (development language, `CFBundleDevelopmentRegion`),
+/// then the key itself — the Russian string — is returned. For Russian, English is skipped: the key is the Russian text.
+/// Without tables (no `.lproj` folders) — always the key.
 public final class Localizer: @unchecked Sendable {
-    /// Язык разработки: запасной перевод для отсутствующих ключей.
+    /// Development language: fallback translation for missing keys.
     public static let developmentLanguage = "en"
-    /// Язык ключей: русские строки в коде.
+    /// Key language: Russian strings in code.
     public static let keyLanguage = "ru"
 
-    /// Переводчик приложения: таблицы из пакета `.app` (или из `Localization/` репозитория под `swift run`),
-    /// язык — выбранный в настройках Juggler или язык системы.
+    /// The app's translator: tables from the `.app` bundle (or from the repo's `Localization/` under `swift run`),
+    /// language — the one selected in Juggler settings or the system language.
     public static let shared = Localizer(
         resourcesURL: defaultResourcesURL(),
         language: LanguageSettings.app.effectiveLanguage(systemPreferred: LanguageSettings.systemPreferredLanguages()))
 
-    /// Папка с `<язык>.lproj` или `nil`, если переводов нет.
+    /// Folder with `<lang>.lproj`, or `nil` if there are no translations.
     public let resourcesURL: URL?
 
     private let lock = NSLock()
@@ -96,17 +96,17 @@ public final class Localizer: @unchecked Sendable {
         self.current = language
     }
 
-    /// Код выбранного языка («ru», «pt-BR»…).
+    /// Code of the selected language ("ru", "pt-BR"…).
     public var language: String {
         lock.lock()
         defer { lock.unlock() }
         return current
     }
 
-    /// Локаль выбранного языка: правила склонений и формат чисел в переведённых строках.
+    /// Locale of the selected language: plural rules and number format in translated strings.
     public var locale: Locale { Locale(identifier: language) }
 
-    /// Сменить язык. Возвращает `true`, если язык действительно изменился.
+    /// Changes the language. Returns `true` if the language actually changed.
     @discardableResult
     public func setLanguage(_ code: String) -> Bool {
         lock.lock()
@@ -116,22 +116,22 @@ public final class Localizer: @unchecked Sendable {
         return true
     }
 
-    /// Языки, в которых ищется перевод, по порядку.
+    /// Languages to look up translations in, in order.
     public func lookupOrder(for code: String) -> [String] {
         code == Self.keyLanguage || code == Self.developmentLanguage ? [code] : [code, Self.developmentLanguage]
     }
 
-    /// Есть ли таблица перевода для языка.
+    /// Whether there is a translation table for the language.
     public func hasTable(for code: String) -> Bool {
         bundle(for: code) != nil
     }
 
-    /// Перевод ключа без подстановки значений; `nil`, если ключа нет ни в одной таблице.
+    /// Translation of a key without substituting values; `nil` if the key is in no table.
     public func translation(forKey key: String) -> String? {
         lookup(key)?.format
     }
 
-    /// Перевод с подстановкой значений; при отсутствии перевода — ключ (русский текст).
+    /// Translation with values substituted; without a translation — the key (Russian text).
     public func string(_ text: LocalizedText) -> String {
         guard let (format, code) = lookup(text.key) else {
             return text.arguments.isEmpty ? text.key : String(format: text.key, locale: Locale(identifier: Self.keyLanguage), arguments: text.arguments)
@@ -139,8 +139,8 @@ public final class Localizer: @unchecked Sendable {
         return text.arguments.isEmpty ? format : String(format: format, locale: Locale(identifier: code), arguments: text.arguments)
     }
 
-    /// Строка со склонением из `Localizable.stringsdict` («3 задачи»); `nil`, если ключа нет.
-    /// Форма слова выбирается по правилам языка таблицы, а не региона системы.
+    /// Pluralized string from `Localizable.stringsdict` ("3 tasks"); `nil` if there is no key.
+    /// The word form follows the table language's rules, not the system region.
     public func plural(_ key: String, _ n: Int) -> String? {
         guard let (format, code) = lookup(key) else { return nil }
         return String(format: format, locale: Locale(identifier: code), n)
@@ -156,7 +156,7 @@ public final class Localizer: @unchecked Sendable {
         return nil
     }
 
-    /// Пакет на папку `<язык>.lproj`: её Localizable.strings и .stringsdict лежат в корне пакета.
+    /// A bundle for a `<lang>.lproj` folder: its Localizable.strings and .stringsdict are at the bundle root.
     private func bundle(for code: String) -> Bundle? {
         lock.lock()
         defer { lock.unlock() }
@@ -168,8 +168,8 @@ public final class Localizer: @unchecked Sendable {
         return bundle
     }
 
-    /// Где лежат переводы: ресурсы `.app`; под `swift run` (пакета нет) — папка `Localization/` репозитория
-    /// рядом со сборкой (`.build/<платформа>/debug/Juggler` → четыре уровня вверх). `nil`, если не найдено.
+    /// Where translations live: `.app` resources; under `swift run` (no bundle) — the repo's `Localization/` folder
+    /// next to the build (`.build/<platform>/debug/Juggler` → four levels up). `nil` if not found.
     public static func defaultResourcesURL(bundle: Bundle = .main) -> URL? {
         func hasTables(_ url: URL) -> Bool {
             FileManager.default.fileExists(

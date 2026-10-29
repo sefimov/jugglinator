@@ -1,10 +1,10 @@
 import AppKit
 
-/// Подсказка у иконки в меню-баре.
+/// Tooltip for the menu bar icon.
 ///
-/// SwiftUI `.help` на метке `MenuBarExtra` не доходит до кнопки статус-элемента, поэтому подсказку
-/// выставляем сами: находим кнопку статус-элемента (`NSStatusBarButton`) в окнах приложения и
-/// задаём ей `toolTip`. Вызов идемпотентный; если кнопки ещё нет, повторяем через короткие паузы.
+/// SwiftUI `.help` on the `MenuBarExtra` label does not reach the status item button, so we set the
+/// tooltip ourselves: find the status item button (`NSStatusBarButton`) in the app's windows and
+/// set its `toolTip`. The call is idempotent; if the button isn't there yet, retry after short pauses.
 @MainActor
 enum StatusItemTooltip {
     static func apply(_ text: String, retries: [TimeInterval] = [0.3, 1.5, 5]) {
@@ -15,7 +15,7 @@ enum StatusItemTooltip {
         }
     }
 
-    /// `true`, если хотя бы одной кнопке статус-элемента подсказка выставлена.
+    /// `true` if the tooltip was set on at least one status item button.
     @discardableResult
     static func set(_ text: String) -> Bool {
         var found = false
@@ -37,7 +37,7 @@ enum StatusItemTooltip {
         return result
     }
 
-    /// Текущая подсказка кнопки (для проверки).
+    /// The button's current tooltip (for checks).
     static var currentToolTip: String? {
         for window in NSApp.windows where String(describing: type(of: window)).contains("StatusBar") {
             if let content = window.contentView, let button = statusButtons(in: content).first { return button.toolTip }

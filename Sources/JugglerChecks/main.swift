@@ -1,14 +1,14 @@
 import Foundation
 import JugglerCore
 
-// `swift run JugglerChecks [-v] [Область…]`
-//   -v        — печатать каждую прошедшую проверку;
-//   Область   — запустить только наборы с этими именами (Core, UI, Switch, Bind);
-//   --self-fail — добавить заведомо проваленную проверку (убедиться, что код выхода ненулевой).
-// Код выхода 0 — всё прошло, 1 — есть провалы.
+// `swift run JugglerChecks [-v] [Area…]`
+//   -v        — print every passing check;
+//   Area      — run only the suites with these names (Core, UI, Switch, Bind);
+//   --self-fail — add a deliberately failing check (to verify the exit code is non-zero).
+// Exit code 0 — everything passed, 1 — there are failures.
 //
-// Наборы областей уже перечислены ниже; каждая задача наполняет свой файл
-// Sources/JugglerChecks/<Область>/<Область>Checks.swift и этот файл не трогает.
+// The area suites are already listed below; each task fills its own file
+// Sources/JugglerChecks/<Area>/<Area>Checks.swift and does not touch this file.
 
 let suites: [CheckSuite.Type] = [
     CoreChecks.self,
@@ -21,7 +21,7 @@ let arguments = Array(CommandLine.arguments.dropFirst())
 let verbose = arguments.contains("-v")
 let filter = Set(arguments.filter { !$0.hasPrefix("-") }.map { $0.lowercased() })
 
-// Тексты в проверках — русские (язык ключей), независимо от языка системы и CI.
+// Texts in the checks are Russian (the key language), regardless of the system and CI language.
 Localizer.shared.setLanguage(Localizer.keyLanguage)
 
 let runner = CheckRunner(verbose: verbose)
