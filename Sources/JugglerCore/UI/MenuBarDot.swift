@@ -1,11 +1,11 @@
 import Foundation
 
-/// Цвет кружка в меню-баре. Совпадает с цветами «не был N мин» в списке задач.
+/// Color of the menu bar dot. Matches the "away N min" colors in the task list.
 public enum MenuBarDotColor: String, CaseIterable, Sendable {
     case green, yellow, orange, red
 
-    /// Цвет по уровню старения: <10 мин зелёный, <30 жёлтый, <60 оранжевый, дольше красный.
-    /// «Ни разу не был» сюда не попадает: такая задача считается от времени создания.
+    /// Color by staleness level: <10 min green, <30 yellow, <60 orange, longer red.
+    /// "Never visited" does not get here: such a task counts from its creation time.
     public static func color(for level: StalenessLevel) -> MenuBarDotColor {
         switch level {
         case .never, .fresh: return .green
@@ -16,17 +16,17 @@ public enum MenuBarDotColor: String, CaseIterable, Sendable {
     }
 }
 
-/// Что рисовать в меню-баре и что показывать в подсказке.
+/// What to draw in the menu bar and what to show in the tooltip.
 public struct MenuBarDot: Equatable, Sendable {
     public enum Appearance: Equatable, Sendable {
-        /// Серый контур: задач нет или все сделаны.
+        /// Gray outline: no tasks or all are done.
         case outline
-        /// Закрашенный кружок цвета самой заброшенной задачи.
+        /// A filled dot in the color of the most neglected task.
         case filled(MenuBarDotColor)
     }
 
     public let appearance: Appearance
-    /// Задача, по которой выбран цвет (нет, если кружок серый или остальных задач нет).
+    /// The task the color was picked by (none if the dot is gray or there are no other tasks).
     public let taskID: UUID?
     public let tooltip: String
 
@@ -38,8 +38,15 @@ public struct MenuBarDot: Equatable, Sendable {
 }
 
 public enum MenuBarDotPresenter {
-    /// Задача, к которой не возвращались дольше всего: среди несделанных, кроме текущей (▸).
-    /// Время отсчёта — последний заход, а для ни разу не открытой — создание. При равенстве — первая в списке.
+    /// Number drawn inside the dot: the task the frontmost window exactly matches (`ExactTaskMatcher`),
+    /// `nil` if the window is not in the list or the context is unknown.
+    public static func frontWindowNumber(context: FrontmostContext?, document: TasksDocument) -> Int? {
+        guard let id = TaskListPresenter.currentTaskID(context: context, document: document) else { return nil }
+        return document.number(of: id)
+    }
+
+    /// The task not returned to for the longest time: among unfinished ones, except the current one (▸).
+    /// The reference time is the last visit, or creation for a never-opened one. On a tie — the first in the list.
     public static func mostNeglected(in document: TasksDocument) -> JugglerTask? {
         var best: JugglerTask?
         var bestDate = Date.distantFuture
@@ -67,7 +74,7 @@ public enum MenuBarDotPresenter {
                 taskID: task.id,
                 tooltip: loc("Juggler: дольше всех ждёт задача \(number) — \(title), \(absence)"))
         }
-        // Других несделанных задач нет. Если текущая ещё в работе — всё спокойно.
+        // No other unfinished tasks. If the current one is still in progress, all is calm.
         if let current = document.lastActiveTask, !current.isDone {
             return MenuBarDot(
                 appearance: .filled(.green), taskID: nil,

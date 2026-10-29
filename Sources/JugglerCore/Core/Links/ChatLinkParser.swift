@@ -1,15 +1,15 @@
 import Foundation
 
-/// Ссылка на конкретный чат, вставленная пользователем или прочитанная из окна.
+/// A link to a specific chat, pasted by the user or read from a window.
 public enum ChatLink: Equatable, Hashable, Sendable {
-    /// Чат Claude: UUID в нижнем регистре.
+    /// Claude chat: lowercase UUID.
     case claude(conversationID: String)
-    /// Сессия Claude Code: `local_<uuid>` в нижнем регистре.
+    /// Claude Code session: lowercase `local_<uuid>`.
     case claudeCodeSession(sessionID: String)
-    /// Тред ChatGPT desktop: id как есть (регистр сохраняется).
+    /// ChatGPT desktop thread: id as is (case preserved).
     case chatGPT(threadID: String)
 
-    /// Ссылка для открытия в desktop-приложении.
+    /// Link for opening in the desktop app.
     public var appURL: URL {
         switch self {
         case .claude(let id): return ChatLinkParser.claudeAppURL(conversationID: id)
@@ -27,20 +27,20 @@ public enum ChatLink: Equatable, Hashable, Sendable {
     }
 }
 
-/// Разбор ссылок на чаты.
+/// Chat link parsing.
 ///
-/// Принимается:
-/// - `https://claude.ai/chat/<uuid>` (также `http`, `www.`, без схемы, с `?query`/`#fragment`, с хвостовым `/`);
-/// - `claude://claude.ai/chat/<uuid>` и `claude://chat/<uuid>`;
-/// - голый UUID (считается чатом Claude);
-/// - сессия Claude Code: `https://claude.ai/epitaxy/local_<uuid>`, `claude://claude.ai/epitaxy/local_<uuid>`,
-///   `claude://epitaxy/local_<uuid>` и голый `local_<uuid>`;
+/// Accepted:
+/// - `https://claude.ai/chat/<uuid>` (also `http`, `www.`, without a scheme, with `?query`/`#fragment`, with a trailing `/`);
+/// - `claude://claude.ai/chat/<uuid>` and `claude://chat/<uuid>`;
+/// - a bare UUID (treated as a Claude chat);
+/// - Claude Code session: `https://claude.ai/epitaxy/local_<uuid>`, `claude://claude.ai/epitaxy/local_<uuid>`,
+///   `claude://epitaxy/local_<uuid>` and a bare `local_<uuid>`;
 /// - `codex://threads/<id>`.
 ///
-/// Ссылки «Поделиться» (`claude.ai/share/<id>`) — это публичные копии, а не id чата: `parse` их
-/// не принимает, а `isClaudeShareLink` позволяет объяснить пользователю, почему.
+/// "Share" links (`claude.ai/share/<id>`) are public copies, not a chat id: `parse` does not
+/// accept them, and `isClaudeShareLink` lets us explain to the user why.
 ///
-/// Пробелы, переводы строк, кавычки и угловые скобки по краям отбрасываются.
+/// Whitespace, newlines, quotes and angle brackets at the edges are dropped.
 public enum ChatLinkParser {
     public static func parse(_ raw: String) -> ChatLink? {
         let text = trimmed(raw)
@@ -64,8 +64,8 @@ public enum ChatLinkParser {
         return claudeChat(in: segments)
     }
 
-    /// Ссылка «Поделиться» Claude (`https://claude.ai/share/<id>`): ведёт на публичную копию
-    /// беседы, а не на сам чат, поэтому для привязки не подходит.
+    /// A Claude "Share" link (`https://claude.ai/share/<id>`): leads to a public copy
+    /// of the conversation, not the chat itself, so it is not suitable for binding.
     public static func isClaudeShareLink(_ raw: String) -> Bool {
         let text = trimmed(raw)
         guard !text.isEmpty, !text.contains(where: { $0.isWhitespace }) else { return false }
@@ -73,43 +73,43 @@ public enum ChatLinkParser {
         return segments[1].lowercased() == "share"
     }
 
-    /// `local_<uuid>` (любой регистр) — id сессии Claude Code.
+    /// `local_<uuid>` (any case) — a Claude Code session id.
     public static func isClaudeCodeSessionID(_ text: String) -> Bool {
         let prefix = "local_"
         guard text.count == prefix.count + 36, text.lowercased().hasPrefix(prefix) else { return false }
         return isUUID(String(text.dropFirst(prefix.count)))
     }
 
-    /// UUID вида 8-4-4-4-12 шестнадцатеричных цифр (любой регистр).
+    /// A UUID of the form 8-4-4-4-12 hex digits (any case).
     public static func isUUID(_ text: String) -> Bool {
         let groups = text.split(separator: "-", omittingEmptySubsequences: false)
         guard groups.map(\.count) == [8, 4, 4, 4, 12] else { return false }
         return groups.allSatisfy { $0.allSatisfy(\.isHexDigit) }
     }
 
-    /// `claude://claude.ai/chat/<id>` — официальная ссылка Claude desktop.
+    /// `claude://claude.ai/chat/<id>` — the official Claude desktop link.
     public static func claudeAppURL(conversationID: String) -> URL {
         URL(string: "claude://claude.ai/chat/\(conversationID.lowercased())")!
     }
 
-    /// `https://claude.ai/chat/<id>` — та же беседа в браузере.
+    /// `https://claude.ai/chat/<id>` — the same conversation in the browser.
     public static func claudeWebURL(conversationID: String) -> URL {
         URL(string: "https://claude.ai/chat/\(conversationID.lowercased())")!
     }
 
-    /// `claude://claude.ai/epitaxy/<local_uuid>` — сессия Claude Code в Claude desktop.
+    /// `claude://claude.ai/epitaxy/<local_uuid>` — a Claude Code session in Claude desktop.
     public static func claudeCodeSessionAppURL(sessionID: String) -> URL {
         URL(string: "claude://claude.ai/epitaxy/\(sessionID.lowercased())")
             ?? URL(string: "claude://claude.ai/epitaxy/\(sessionID.lowercased().addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? "")")!
     }
 
-    /// `codex://threads/<id>` — тред ChatGPT desktop.
+    /// `codex://threads/<id>` — a ChatGPT desktop thread.
     public static func chatGPTAppURL(threadID: String) -> URL {
         URL(string: "codex://threads/\(threadID)")
             ?? URL(string: "codex://threads/\(threadID.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? "")")!
     }
 
-    // MARK: - Внутреннее
+    // MARK: - Internals
 
     private static let wrappers: Set<Character> = ["\"", "'", "<", ">", "`", "«", "»", "(", ")", "[", "]"]
 
@@ -120,7 +120,7 @@ public enum ChatLinkParser {
         return text.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Сегменты `https://`, `http://` или ссылки без схемы (первый — хост); `nil` для другой схемы.
+    /// Segments of `https://`, `http://` or a scheme-less link (the first is the host); `nil` for another scheme.
     private static func webSegments(_ text: String) -> [String]? {
         let lower = text.lowercased()
         var rest = text
@@ -132,7 +132,7 @@ public enum ChatLinkParser {
         return pathSegments(rest)
     }
 
-    /// Сегменты пути без query и fragment; пустые сегменты (`//`, хвостовой `/`) отбрасываются.
+    /// Path segments without query and fragment; empty segments (`//`, trailing `/`) are dropped.
     private static func pathSegments(_ text: String) -> [String] {
         let withoutFragment = text.split(separator: "#", maxSplits: 1, omittingEmptySubsequences: false).first ?? ""
         let withoutQuery = withoutFragment.split(separator: "?", maxSplits: 1, omittingEmptySubsequences: false).first ?? ""
@@ -144,7 +144,7 @@ public enum ChatLinkParser {
         return h == "claude.ai" || h == "www.claude.ai"
     }
 
-    /// Ровно `chat/<uuid>` или `epitaxy/local_<uuid>`: другие разделы (project, settings, share) не считаются чатом.
+    /// Exactly `chat/<uuid>` or `epitaxy/local_<uuid>`: other sections (project, settings, share) do not count as a chat.
     private static func claudeChat(in segments: [String]) -> ChatLink? {
         guard segments.count == 2 else { return nil }
         switch segments[0].lowercased() {
@@ -171,8 +171,8 @@ public enum ChatLinkParser {
     }
 }
 
-/// Нормализация адреса вкладки для сравнения: регистр схемы и хоста,
-/// без `#fragment` и без хвостового `/`. Query сохраняется — он часто значим.
+/// Normalizes a tab URL for comparison: scheme and host case,
+/// no `#fragment` and no trailing `/`. The query is kept — it often matters.
 public enum URLNormalizer {
     public static func normalize(_ raw: String) -> String {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)

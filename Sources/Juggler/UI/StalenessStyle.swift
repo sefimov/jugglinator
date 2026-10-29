@@ -2,7 +2,7 @@ import JugglerCore
 import SwiftUI
 
 extension StalenessLevel {
-    /// Цвет «не был N мин» по уровню старения.
+    /// Color of "away N min" by staleness level.
     var color: Color {
         switch self {
         case .never: return .secondary

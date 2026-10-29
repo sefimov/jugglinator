@@ -1,19 +1,19 @@
 import Foundation
 
-/// Задача — строка списка. Номер задачи не хранится: это позиция в списке (с 1).
+/// A task is a row of the list. The task number is not stored: it is the position in the list (1-based).
 ///
-/// Имя `JugglerTask`, а не `Task`, чтобы не путать со `Swift.Task`.
+/// Named `JugglerTask`, not `Task`, to avoid confusion with `Swift.Task`.
 public struct JugglerTask: Identifiable, Equatable, Hashable, Sendable {
     public var id: UUID
     public var title: String
-    /// Заметка «зачем / дальше».
+    /// The "why / next" note.
     public var note: String
-    /// Отметка «сделано»: такие задачи пропускаются при переключении.
+    /// The "done" mark: such tasks are skipped when switching.
     public var isDone: Bool
-    /// Время последнего захода (активации задачи).
+    /// Time of the last visit (task activation).
     public var lastVisitedAt: Date?
     public var createdAt: Date
-    /// Необязательная привязка к чату, вкладке или окну.
+    /// Optional binding to a chat, tab or window.
     public var binding: TaskBinding?
 
     public init(
@@ -40,8 +40,8 @@ extension JugglerTask: Codable {
         case id, title, note, isDone, lastVisitedAt, createdAt, binding
     }
 
-    /// Терпимое чтение: отсутствующие поля получают значения по умолчанию,
-    /// а нераспознанная привязка превращается в «без привязки», а не роняет весь файл.
+    /// Lenient decoding: missing fields get default values,
+    /// and an unrecognized binding becomes "no binding" instead of failing the whole file.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = (try? c.decodeIfPresent(UUID.self, forKey: .id)) ?? UUID()

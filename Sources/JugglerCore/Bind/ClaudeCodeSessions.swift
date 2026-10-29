@@ -1,12 +1,12 @@
 import Foundation
 
-/// Сведения о сессии Claude Code из метаданных Claude desktop.
+/// Claude Code session info from Claude desktop metadata.
 public struct ClaudeCodeSessionInfo: Equatable, Sendable {
-    /// `local_<uuid>` в нижнем регистре.
+    /// Lowercase `local_<uuid>`.
     public var sessionID: String
-    /// Название сессии; пустое, если его нет.
+    /// Session title; empty if there is none.
     public var title: String
-    /// Рабочая папка сессии, если указана.
+    /// Session working directory, if specified.
     public var cwd: String?
     public var isArchived: Bool
 
@@ -18,37 +18,37 @@ public struct ClaudeCodeSessionInfo: Equatable, Sendable {
     }
 }
 
-/// Чтение метаданных сессий Claude Code, которые хранит Claude desktop:
+/// Reads Claude Code session metadata stored by Claude desktop:
 /// `~/Library/Application Support/Claude/claude-code-sessions/<uuid>/<uuid>/local_<uuid>.json`
-/// (поля `sessionId`, `title`, `cwd`, `isArchived` и другие).
+/// (fields `sessionId`, `title`, `cwd`, `isArchived` and others).
 ///
-/// Только чтение: Juggler туда ничего не пишет. Нет папки, файла или поля — `nil`/пустое значение,
-/// без ошибок. Формат чужой и может меняться, поэтому разбор терпимый.
+/// Read-only: Juggler never writes there. Missing folder, file or field — `nil`/empty value,
+/// no errors. The format is someone else's and may change, so parsing is lenient.
 public enum ClaudeCodeSessionMetadata {
-    /// Файлы больше этого размера не читаются: настоящие метаданные — десятки килобайт.
+    /// Files larger than this are not read: real metadata is tens of kilobytes.
     public static let maxFileSize = 4 * 1024 * 1024
 
-    /// Папка `claude-code-sessions` текущего пользователя.
+    /// The current user's `claude-code-sessions` folder.
     public static func defaultRoot(fileManager: FileManager = .default) -> URL? {
         fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appendingPathComponent("Claude", isDirectory: true)
             .appendingPathComponent("claude-code-sessions", isDirectory: true)
     }
 
-    /// Сведения о сессии или `nil`, если id неверный, файла нет или он не читается.
+    /// Session info, or `nil` if the id is invalid, the file is missing or unreadable.
     public static func info(sessionID: String, root: URL?, fileManager: FileManager = .default) -> ClaudeCodeSessionInfo? {
         guard let root, let url = fileURL(sessionID: sessionID, root: root, fileManager: fileManager) else { return nil }
         guard let size = (try? fileManager.attributesOfItem(atPath: url.path))?[.size] as? NSNumber,
               size.intValue <= maxFileSize,
               let data = try? Data(contentsOf: url),
               let info = parse(data) else { return nil }
-        // Файл с чужим id внутри не считаем метаданными этой сессии.
+        // A file with a different id inside is not treated as this session's metadata.
         guard info.sessionID.isEmpty || info.sessionID == sessionID.lowercased() else { return nil }
         return ClaudeCodeSessionInfo(sessionID: sessionID, title: info.title, cwd: info.cwd, isArchived: info.isArchived)
     }
 
-    /// Путь к файлу `<id>.json`: сначала по известной раскладке `root/*/*/`, затем поиском
-    /// не глубже `maxDepth` уровней. Id проверяется (`local_<uuid>`), поэтому выйти за `root` нельзя.
+    /// Path to the `<id>.json` file: first by the known `root/*/*/` layout, then by searching
+    /// no deeper than `maxDepth` levels. The id is validated (`local_<uuid>`), so escaping `root` is impossible.
     public static func fileURL(sessionID: String, root: URL, fileManager: FileManager = .default, maxDepth: Int = 4) -> URL? {
         guard ChatLinkParser.isClaudeCodeSessionID(sessionID) else { return nil }
         let name = sessionID.lowercased() + ".json"
@@ -58,7 +58,7 @@ public enum ClaudeCodeSessionMetadata {
                 if isRegularFile(candidate, fileManager: fileManager) { return candidate }
             }
         }
-        // Запасной путь, если Claude поменяет вложенность.
+        // Fallback in case Claude changes the nesting.
         guard let enumerator = fileManager.enumerator(
             at: root, includingPropertiesForKeys: [.isRegularFileKey],
             options: [.skipsHiddenFiles, .skipsPackageDescendants]) else { return nil }
@@ -69,7 +69,7 @@ public enum ClaudeCodeSessionMetadata {
         return nil
     }
 
-    /// Разбор JSON метаданных. Нужен объект; все поля необязательны.
+    /// Parses metadata JSON. Requires an object; all fields are optional.
     public static func parse(_ data: Data) -> ClaudeCodeSessionInfo? {
         guard let object = try? JSONSerialization.jsonObject(with: data),
               let dict = object as? [String: Any] else { return nil }
@@ -82,7 +82,7 @@ public enum ClaudeCodeSessionMetadata {
             title: title, cwd: cwd, isArchived: archived)
     }
 
-    // MARK: - Внутреннее
+    // MARK: - Internals
 
     private static func subdirectories(of url: URL, fileManager: FileManager) -> [URL] {
         let items = (try? fileManager.contentsOfDirectory(

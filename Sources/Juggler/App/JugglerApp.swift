@@ -1,9 +1,9 @@
 import AppKit
 import SwiftUI
 
-/// Точка входа. Ключи командной строки обрабатываются до запуска SwiftUI:
-/// - `--self-test` — самопроверка всех компонентов без окон и запросов разрешений;
-/// - `--probe-frontmost` — печать JSON с контекстом переднего окна (BIND).
+/// Entry point. Command-line flags are handled before SwiftUI starts:
+/// - `--self-test` — self-test of all components without windows or permission prompts;
+/// - `--probe-frontmost` — print JSON with the frontmost window context (BIND).
 @main
 enum JugglerEntry {
     @MainActor
@@ -19,7 +19,7 @@ enum JugglerEntry {
     }
 }
 
-/// Приложение в меню-баре. Сцены (меню-бар и настройки) строит UI в `UIModule.scenes`.
+/// Menu bar app. The scenes (menu bar and settings) are built by UI in `UIModule.scenes`.
 struct JugglerApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
 
@@ -31,7 +31,7 @@ struct JugglerApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Без .app и LSUIElement (`swift run Juggler`) скрываем значок в Dock вручную.
+        // Without .app and LSUIElement (`swift run Juggler`) we hide the Dock icon manually.
         NSApp.setActivationPolicy(.accessory)
         AppEnvironment.shared.start()
     }

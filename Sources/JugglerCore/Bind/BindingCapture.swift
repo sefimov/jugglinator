@@ -1,12 +1,12 @@
 import Foundation
 
-/// Сопоставление заголовков окон: какое окно приложения поднять при активации.
+/// Window title matching: which app window to raise on activation.
 public enum WindowTitleMatcher {
-    /// Индекс окна с тем же заголовком: сначала точное совпадение, затем очищенный
-    /// (`TitleCleaner`) заголовок без учёта регистра. Пустой искомый заголовок — `nil`.
+    /// Index of the window with the same title: exact match first, then the cleaned
+    /// (`TitleCleaner`) title, case-insensitive. An empty search title gives `nil`.
     ///
-    /// Для Терминала (`bundleID`) после точного совпадения сравниваются заголовки без размера,
-    /// оболочки и прочего шума (`TerminalTitle`).
+    /// For Terminal (`bundleID`), after the exact match, titles are compared without size,
+    /// shell and other noise (`TerminalTitle`).
     public static func bestIndex(of target: String, in titles: [String], bundleID: String? = nil) -> Int? {
         let raw = target.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty else { return nil }
@@ -22,16 +22,16 @@ public enum WindowTitleMatcher {
     }
 }
 
-/// Привязка по контексту переднего окна (без диалогов).
+/// Binding from the frontmost window context (no dialogs).
 public enum BindingCapture {
-    /// - Chrome → вкладка (нужен AppleScript; без него — ошибка с пояснением);
-    /// - Claude → чат, если id прочитан; сессия Claude Code (вкладка Code), если прочитан её id
-    ///   (название — из метаданных сессии, иначе из заголовка окна); иначе запрос ссылки;
-    /// - ChatGPT → тред, если id известен или тред однозначно найден по заголовку окна
-    ///   в `~/.codex/session_index.jsonl` (`chatGPTLookup`; название — по треду), иначе запрос ссылки `codex://threads/<id>`;
-    /// - Терминал → окно и вкладка (id окна и tty из AppleScript); без разрешения — обычное окно;
-    ///   название — из заголовка без размера, оболочки и прочего шума (`TerminalTitle`);
-    /// - Grok Bot и прочие → окно (bundle id и заголовок, заголовок может быть пустым без Accessibility).
+    /// - Chrome → tab (requires AppleScript; without it — an error with an explanation);
+    /// - Claude → chat if the id was read; Claude Code session (Code tab) if its id was read
+    ///   (title from session metadata, otherwise from the window title); otherwise a link request;
+    /// - ChatGPT → thread if the id is known or the thread is unambiguously found by window title
+    ///   in `~/.codex/session_index.jsonl` (`chatGPTLookup`; title from the thread), otherwise a `codex://threads/<id>` link request;
+    /// - Terminal → window and tab (window id and tty from AppleScript); without permission — a plain window;
+    ///   title from the window title without size, shell and other noise (`TerminalTitle`);
+    /// - Grok Bot and others → window (bundle id and title; the title may be empty without Accessibility).
     public static func capture(
         context: FrontmostContext,
         chromeStatus: AutomationStatus? = nil,
@@ -61,7 +61,7 @@ public enum BindingCapture {
                 let sessionTitle = storedTitle(context.claudeCodeSessionTitle)
                 let suggested = TitleCleaner.suggestedTaskTitle(
                     from: sessionTitle.isEmpty ? context.windowTitle : sessionTitle, fallback: BindTexts.defaultSessionTaskTitle)
-                // Заголовок окна вкладки Code — обычно просто «Claude»: хранится очищенным, чтобы не было «Claude Code: Claude».
+                // The Code tab window title is usually just "Claude": stored cleaned to avoid "Claude Code: Claude".
                 let ref = ClaudeCodeSessionRef(sessionID: id, title: sessionTitle.isEmpty ? TitleCleaner.clean(context.windowTitle ?? "") : sessionTitle)
                 return .captured(.claudeCodeSession(ref), suggestedTitle: suggested)
             }
@@ -73,7 +73,7 @@ public enum BindingCapture {
                 return .captured(.chatGPTThread(ChatGPTThreadRef(threadID: id, title: storedTitle(context.windowTitle))), suggestedTitle: title)
             }
             if let lookup = chatGPTLookup, lookup.applies(toWindowTitle: context.windowTitle), let thread = lookup.uniqueMatch {
-                // В привязке — заголовок окна, как и при ручной ссылке: по нему текущая задача узнаётся при переключении.
+                // The binding keeps the window title, as with a manual link: it is how the current task is recognized when switching.
                 let ref = ChatGPTThreadRef(threadID: thread.id, title: storedTitle(context.windowTitle))
                 return .captured(.chatGPTThread(ref), suggestedTitle: TitleCleaner.suggestedTaskTitle(from: thread.name, fallback: title))
             }
@@ -95,12 +95,12 @@ public enum BindingCapture {
         }
     }
 
-    /// Привязка по ссылке, вставленной пользователем.
+    /// Binding from a link pasted by the user.
     ///
-    /// Для ChatGPT голый UUID считается id треда (а не чатом Claude, как в `ChatLinkParser`).
-    /// Явная ссылка другого источника принимается как есть: `claude.ai/chat/…` в окне ChatGPT — это чат Claude,
-    /// `local_<uuid>` и `claude.ai/epitaxy/local_<uuid>` — сессия Claude Code.
-    /// Ссылка «Поделиться» (`claude.ai/share/…`) распознаётся и отклоняется с пояснением.
+    /// For ChatGPT a bare UUID is treated as a thread id (not a Claude chat, as in `ChatLinkParser`).
+    /// An explicit link to another source is accepted as is: `claude.ai/chat/…` in a ChatGPT window is a Claude chat,
+    /// `local_<uuid>` and `claude.ai/epitaxy/local_<uuid>` are a Claude Code session.
+    /// A "Share" link (`claude.ai/share/…`) is recognized and rejected with an explanation.
     public static func bindingFromManualLink(_ text: String, expected: BindingSource, windowTitle: String?) -> ManualLinkOutcome {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return .invalid(BindTexts.emptyLink) }
@@ -121,14 +121,14 @@ public enum BindingCapture {
         }
     }
 
-    /// Ссылка, заранее вставленная в диалог ссылки ChatGPT: при нескольких тредах с названием окна —
-    /// на последний обновлённый. Иначе `nil` (тогда подставляется ссылка из буфера обмена, если подходит).
+    /// Link prefilled in the ChatGPT link dialog: with several threads named like the window —
+    /// the most recently updated one. Otherwise `nil` (then the clipboard link is used, if suitable).
     public static func chatGPTPrefillLink(lookup: ChatGPTThreadLookup?, windowTitle: String?) -> String? {
         guard let lookup, lookup.applies(toWindowTitle: windowTitle) else { return nil }
         return lookup.prefillLink
     }
 
-    /// Заголовок, сохраняемый в привязке: исходный заголовок окна без лишних пробелов.
+    /// Title stored in the binding: the original window title without extra whitespace.
     static func storedTitle(_ title: String?) -> String {
         (title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
@@ -136,17 +136,17 @@ public enum BindingCapture {
 
 public enum ManualLinkOutcome: Equatable, Sendable {
     case binding(TaskBinding)
-    /// Ссылка не распознана; строка — пояснение на русском.
+    /// The link was not recognized; the string is a localized explanation.
     case invalid(String)
 }
 
-/// Что делать с захваченной привязкой в сценарии «Сделать задачей текущий чат».
+/// What to do with a captured binding in the "Make the current chat a task" flow.
 public enum BindPlan: Equatable, Sendable {
-    /// Этот чат уже привязан к задаче — просто сделать её текущей.
+    /// This chat is already bound to a task — just make it current.
     case alreadyBound(taskID: UUID, number: Int)
-    /// У текущей задачи нет привязки — предложить привязать чат к ней.
+    /// The current task has no binding — offer to bind the chat to it.
     case offerAttach(taskID: UUID, number: Int, taskTitle: String)
-    /// Создать новую задачу.
+    /// Create a new task.
     case createNew
 }
 
@@ -162,7 +162,7 @@ public enum BindPlanner {
         return .createNew
     }
 
-    /// Указывают ли две привязки на одно и то же (вкладку, чат, тред или окно).
+    /// Whether two bindings point to the same thing (tab, chat, thread or window).
     public static func sameTarget(_ a: TaskBinding, _ b: TaskBinding) -> Bool {
         switch (a, b) {
         case (.chromeTab(let x), .chromeTab(let y)):
@@ -189,7 +189,7 @@ public enum BindPlanner {
         }
     }
 
-    /// Новая задача с привязкой в конце списка; она же становится текущей. Возвращает её id.
+    /// A new task with a binding at the end of the list; it also becomes current. Returns its id.
     @discardableResult
     public static func createTask(in document: inout TasksDocument, title: String, binding: TaskBinding, now: Date) -> UUID {
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -199,7 +199,7 @@ public enum BindPlanner {
         return task.id
     }
 
-    /// Привязать к существующей задаче; пустое название заменяется предложенным.
+    /// Bind to an existing task; an empty title is replaced with the suggested one.
     @discardableResult
     public static func attach(_ binding: TaskBinding, to id: UUID, in document: inout TasksDocument, suggestedTitle: String, now: Date) -> Bool {
         guard let i = document.index(of: id) else { return false }

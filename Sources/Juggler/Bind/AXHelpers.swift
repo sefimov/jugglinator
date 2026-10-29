@@ -2,10 +2,10 @@ import AppKit
 import ApplicationServices
 import Foundation
 
-/// Тонкая обёртка над Accessibility API. Все вызовы безопасны без разрешения:
-/// они просто возвращают `nil`/пустые значения (AXError.apiDisabled).
+/// A thin wrapper over the Accessibility API. All calls are safe without permission:
+/// they simply return `nil`/empty values (AXError.apiDisabled).
 enum AX {
-    /// Таймаут ответа приложения, чтобы зависшее приложение не блокировало Juggler.
+    /// App response timeout, so a hung app doesn't block Juggler.
     static let messagingTimeout: Float = 0.5
 
     static var isTrusted: Bool { AXIsProcessTrusted() }
@@ -38,7 +38,7 @@ enum AX {
         }
     }
 
-    /// Адрес из атрибута, который бывает и CFURL, и строкой.
+    /// URL from an attribute that can be either a CFURL or a string.
     static func urlString(_ element: AXUIElement, _ name: String) -> String? {
         guard let value = attribute(element, name) else { return nil }
         if let url = value as? URL { return url.absoluteString }
@@ -64,7 +64,7 @@ enum AX {
         string(window, kAXTitleAttribute)
     }
 
-    /// Поднять окно: снять свёрнутость, сделать главным и выполнить AXRaise.
+    /// Raise a window: unminimize it, make it main and perform AXRaise.
     @discardableResult
     static func raise(_ window: AXUIElement, pid: pid_t) -> Bool {
         if let minimized = attribute(window, kAXMinimizedAttribute) as? Bool, minimized {
@@ -76,15 +76,15 @@ enum AX {
         return raised
     }
 
-    /// Включить у Electron-приложения дерево веб-содержимого (`AXManualAccessibility`).
-    /// Возвращает `true`, если приложение приняло флаг.
+    /// Enable the web content tree in an Electron app (`AXManualAccessibility`).
+    /// Returns `true` if the app accepted the flag.
     @discardableResult
     static func enableManualAccessibility(pid: pid_t) -> Bool {
         set(application(pid: pid), "AXManualAccessibility", kCFBooleanTrue) == .success
     }
 
-    /// Адреса веб-областей окна (AXWebArea → AXURL) и AXDocument окна.
-    /// Обход ограничен по числу узлов; внутрь веб-областей не спускаемся.
+    /// URLs of the window's web areas (AXWebArea → AXURL) and the window's AXDocument.
+    /// Traversal is limited by node count; we don't descend into web areas.
     static func webAreaURLs(in window: AXUIElement, maxNodes: Int = 1500) -> (urls: [String], foundWebArea: Bool) {
         var urls: [String] = []
         var foundWebArea = false

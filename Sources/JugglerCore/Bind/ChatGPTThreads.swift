@@ -1,12 +1,12 @@
 import Foundation
 
-/// Тред ChatGPT desktop из `~/.codex/session_index.jsonl`: id и последнее название.
+/// A ChatGPT desktop thread from `~/.codex/session_index.jsonl`: id and latest name.
 public struct ChatGPTThreadEntry: Codable, Equatable, Sendable {
-    /// Id треда — то, что идёт в ссылку `codex://threads/<id>`.
+    /// Thread id — what goes into the `codex://threads/<id>` link.
     public var id: String
-    /// Последнее название треда (по `updated_at`).
+    /// Latest thread name (by `updated_at`).
     public var name: String
-    /// `updated_at` как в файле (ISO 8601), если есть.
+    /// `updated_at` as in the file (ISO 8601), if present.
     public var updatedAt: String?
 
     public init(id: String, name: String, updatedAt: String? = nil) {
@@ -15,36 +15,36 @@ public struct ChatGPTThreadEntry: Codable, Equatable, Sendable {
         self.updatedAt = updatedAt
     }
 
-    /// Ссылка, по которой ChatGPT открывает тред.
+    /// The link ChatGPT opens the thread with.
     public var link: String { ChatLinkParser.chatGPTAppURL(threadID: id).absoluteString }
 }
 
-/// Что получилось прочитать из `session_index.jsonl`.
+/// What could be read from `session_index.jsonl`.
 public enum ChatGPTSessionIndexRead: Equatable, Sendable {
-    /// Треды (по одному на id, с последним названием), сначала недавно обновлённые;
-    /// `skippedLines` — сколько непустых строк пропущено как битые.
+    /// Threads (one per id, with the latest name), most recently updated first;
+    /// `skippedLines` — how many non-empty lines were skipped as broken.
     case loaded([ChatGPTThreadEntry], skippedLines: Int)
-    /// Файла нет (ChatGPT не установлен или ещё не создал список).
+    /// No file (ChatGPT is not installed or has not created the list yet).
     case missing
-    /// Файл больше `ChatGPTSessionIndex.maxFileSize` — не читается.
+    /// The file is larger than `ChatGPTSessionIndex.maxFileSize` — not read.
     case tooLarge
-    /// Файл есть, но не читается (права, это папка и т. п.).
+    /// The file exists but cannot be read (permissions, it is a folder, etc.).
     case unreadable
 }
 
-/// Чтение списка тредов ChatGPT desktop (`com.openai.codex`) из `~/.codex/session_index.jsonl`.
+/// Reads the ChatGPT desktop (`com.openai.codex`) thread list from `~/.codex/session_index.jsonl`.
 ///
-/// Формат — JSON Lines, по строке на изменение: `{"id":"…","thread_name":"…","updated_at":"…Z"}`.
-/// Один id встречается несколько раз (тред переименовывали) — берётся строка с самым поздним
-/// `updated_at`, при равенстве или без даты — последняя в файле. Разные id могут иметь одно название.
+/// Format: JSON Lines, one line per change: `{"id":"…","thread_name":"…","updated_at":"…Z"}`.
+/// The same id appears several times (the thread was renamed) — the line with the latest
+/// `updated_at` wins; on a tie or without a date — the last one in the file. Different ids may share a name.
 ///
-/// Только чтение: Juggler туда ничего не пишет. Нет файла, слишком большой файл, битые строки —
-/// без ошибок. Формат чужой и может меняться, поэтому разбор терпимый.
+/// Read-only: Juggler never writes there. Missing file, oversized file, broken lines —
+/// no errors. The format is someone else's and may change, so parsing is lenient.
 public enum ChatGPTSessionIndex {
-    /// Файлы больше этого размера не читаются: настоящий список — десятки килобайт.
+    /// Files larger than this are not read: the real list is tens of kilobytes.
     public static let maxFileSize = 16 * 1024 * 1024
 
-    /// `$CODEX_HOME/session_index.jsonl`, если `CODEX_HOME` задан, иначе `~/.codex/session_index.jsonl`.
+    /// `$CODEX_HOME/session_index.jsonl` if `CODEX_HOME` is set, otherwise `~/.codex/session_index.jsonl`.
     public static func defaultURL(
         environment: [String: String] = ProcessInfo.processInfo.environment,
         home: URL = FileManager.default.homeDirectoryForCurrentUser
@@ -58,7 +58,7 @@ public enum ChatGPTSessionIndex {
         return codexHome.appendingPathComponent("session_index.jsonl")
     }
 
-    /// `maxSize` — предел размера файла (для проверок; по умолчанию `maxFileSize`).
+    /// `maxSize` — file size limit (for checks; defaults to `maxFileSize`).
     public static func read(url: URL?, maxSize: Int = maxFileSize, fileManager: FileManager = .default) -> ChatGPTSessionIndexRead {
         guard let url else { return .missing }
         var isDirectory: ObjCBool = false
@@ -67,13 +67,13 @@ public enum ChatGPTSessionIndex {
               let size = (try? fileManager.attributesOfItem(atPath: url.path))?[.size] as? NSNumber else { return .unreadable }
         guard size.int64Value <= Int64(maxSize) else { return .tooLarge }
         guard let data = try? Data(contentsOf: url) else { return .unreadable }
-        // Файл мог вырасти между проверкой размера и чтением.
+        // The file may have grown between the size check and the read.
         guard data.count <= maxSize else { return .tooLarge }
         let parsed = parse(data)
         return .loaded(parsed.entries, skippedLines: parsed.skippedLines)
     }
 
-    /// Разбор содержимого файла: последнее название по каждому id, сначала недавно обновлённые.
+    /// Parses the file contents: latest name per id, most recently updated first.
     public static func parse(_ data: Data) -> (entries: [ChatGPTThreadEntry], skippedLines: Int) {
         var latest: [String: (entry: ChatGPTThreadEntry, date: Date?, line: Int)] = [:]
         var skipped = 0
@@ -90,7 +90,7 @@ public enum ChatGPTSessionIndex {
             }
             latest[entry.id] = (entry, date, lineNumber)
         }
-        // Порядок полный: треды без даты — как самые старые, при равенстве — позже в файле выше.
+        // Total order: threads without a date count as oldest; on a tie, later in the file comes first.
         let ordered = latest.values.sorted { a, b in
             let da = a.date ?? .distantPast, db = b.date ?? .distantPast
             return da != db ? da > db : a.line > b.line
@@ -98,21 +98,21 @@ public enum ChatGPTSessionIndex {
         return (ordered.map(\.entry), skipped)
     }
 
-    /// Одна строка JSON Lines. Нужны строковые `id` (годный для `codex://threads/<id>`) и `thread_name`;
-    /// `updated_at` необязателен. Иначе `nil`.
+    /// One JSON Lines line. Requires string `id` (valid for `codex://threads/<id>`) and `thread_name`;
+    /// `updated_at` is optional. Otherwise `nil`.
     public static func parseLine(_ data: Data) -> ChatGPTThreadEntry? {
         guard let object = try? JSONSerialization.jsonObject(with: data),
               let dict = object as? [String: Any],
               let rawID = dict["id"] as? String,
               let name = dict["thread_name"] as? String else { return nil }
         let id = rawID.trimmingCharacters(in: .whitespacesAndNewlines)
-        // Id попадёт в ссылку: принимаем только то, что ChatLinkParser сам распознаёт как id треда.
+        // The id goes into a link: accept only what ChatLinkParser itself recognizes as a thread id.
         guard !id.isEmpty, ChatLinkParser.parse("codex://threads/\(id)") == .chatGPT(threadID: id) else { return nil }
         let updatedAt = (dict["updated_at"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
         return ChatGPTThreadEntry(id: id, name: name, updatedAt: updatedAt?.isEmpty == true ? nil : updatedAt)
     }
 
-    /// ISO 8601 с любым числом знаков дробной части (`2026-10-25T19:24:19.612216Z`) или без неё.
+    /// ISO 8601 with any number of fractional digits (`2026-10-25T19:24:19.612216Z`) or none.
     public static func parseDate(_ text: String) -> Date? {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         var base = trimmed
@@ -129,9 +129,9 @@ public enum ChatGPTSessionIndex {
         return formatter.date(from: base).map { $0.addingTimeInterval(fraction) }
     }
 
-    // MARK: - Внутреннее
+    // MARK: - Internals
 
-    /// Новее ли кандидат: сравниваются даты, если обе есть; иначе (или при равенстве) — позже в файле.
+    /// Whether the candidate is newer: compares dates if both exist; otherwise (or on a tie) — later in the file.
     private static func isNewer(existing: (date: Date?, line: Int), candidate: (date: Date?, line: Int)) -> Bool {
         if let a = existing.date, let b = candidate.date, a != b { return b > a }
         return candidate.line > existing.line
@@ -142,16 +142,16 @@ public enum ChatGPTSessionIndex {
     }
 }
 
-/// Итог поиска треда ChatGPT по заголовку окна (печатается в `--probe-frontmost`).
+/// Result of looking up a ChatGPT thread by window title (printed in `--probe-frontmost`).
 public struct ChatGPTThreadLookup: Codable, Equatable, Sendable {
     public enum Status: String, Codable, Equatable, Sendable {
-        /// Ровно один тред с таким названием — привязывается сразу.
+        /// Exactly one thread with this name — bound right away.
         case found
-        /// Несколько разных тредов с таким названием — диалог с уже вставленной ссылкой на последний обновлённый.
+        /// Several different threads with this name — a dialog with a prefilled link to the most recently updated one.
         case ambiguous
-        /// Тред с таким названием не найден.
+        /// No thread with this name found.
         case notFound
-        /// Заголовок окна не прочитан или пустой (например, без Accessibility).
+        /// The window title was not read or is empty (e.g. without Accessibility).
         case noWindowTitle
         case indexMissing
         case indexTooLarge
@@ -159,15 +159,15 @@ public struct ChatGPTThreadLookup: Codable, Equatable, Sendable {
     }
 
     public var status: Status
-    /// Заголовок окна, по которому искали.
+    /// The window title that was searched for.
     public var windowTitle: String?
-    /// Путь к `session_index.jsonl`.
+    /// Path to `session_index.jsonl`.
     public var indexPath: String?
-    /// Сколько тредов в списке (разных id).
+    /// How many threads are in the list (distinct ids).
     public var indexThreadCount: Int
-    /// Пропущенные битые строки.
+    /// Skipped broken lines.
     public var skippedLines: Int
-    /// Совпавшие треды, сначала недавно обновлённые.
+    /// Matched threads, most recently updated first.
     public var matches: [ChatGPTThreadEntry]
 
     public init(status: Status, windowTitle: String? = nil, indexPath: String? = nil,
@@ -180,22 +180,22 @@ public struct ChatGPTThreadLookup: Codable, Equatable, Sendable {
         self.matches = matches
     }
 
-    /// Тред для привязки без диалога: только при единственном совпадении.
+    /// Thread to bind without a dialog: only on a single match.
     public var uniqueMatch: ChatGPTThreadEntry? { status == .found ? matches.first : nil }
 
-    /// Ссылка для диалога при нескольких совпадениях: последний обновлённый тред.
+    /// Link for the dialog on multiple matches: the most recently updated thread.
     public var prefillLink: String? { status == .ambiguous ? matches.first?.link : nil }
 
-    /// Относится ли поиск к окну с этим заголовком (защита от устаревшей диагностики).
+    /// Whether the lookup refers to the window with this title (guards against stale diagnostics).
     public func applies(toWindowTitle title: String?) -> Bool {
         ChatGPTThreadMatcher.normalize(windowTitle ?? "") == ChatGPTThreadMatcher.normalize(title ?? "")
     }
 }
 
-/// Поиск треда по заголовку окна ChatGPT. Заголовок окна ChatGPT — название открытого треда.
+/// Looks up a thread by ChatGPT window title. The ChatGPT window title is the name of the open thread.
 public enum ChatGPTThreadMatcher {
-    /// Сначала точное совпадение без лишних пробелов; если его нет — без учёта регистра
-    /// и хвостов вида « - ChatGPT» (`TitleCleaner`). Разные id с одним названием — `ambiguous`.
+    /// Exact match without extra whitespace first; if none — case-insensitive
+    /// and without suffixes like " - ChatGPT" (`TitleCleaner`). Different ids with one name — `ambiguous`.
     public static func lookup(windowTitle: String?, index: ChatGPTSessionIndexRead, indexPath: String? = nil) -> ChatGPTThreadLookup {
         let title = windowTitle.map(normalize)
         var result = ChatGPTThreadLookup(status: .notFound, windowTitle: title, indexPath: indexPath)
@@ -219,7 +219,7 @@ public enum ChatGPTThreadMatcher {
         return result
     }
 
-    /// Совпавшие треды в порядке `entries` (сначала недавно обновлённые).
+    /// Matched threads in `entries` order (most recently updated first).
     public static func matches(title: String, in entries: [ChatGPTThreadEntry]) -> [ChatGPTThreadEntry] {
         let target = normalize(title)
         guard !target.isEmpty else { return [] }
@@ -233,7 +233,7 @@ public enum ChatGPTThreadMatcher {
         }
     }
 
-    /// Пробелы и переводы строк схлопываются в один пробел, по краям — обрезаются.
+    /// Whitespace and newlines collapse into a single space; edges are trimmed.
     public static func normalize(_ text: String) -> String {
         text.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).joined(separator: " ")
     }

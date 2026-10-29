@@ -1,21 +1,21 @@
 import Foundation
 
-/// Состояние управления приложением через Apple Events (AppleScript): Chrome и Терминал.
+/// State of controlling an app via Apple Events (AppleScript): Chrome and Terminal.
 public enum AutomationStatus: String, Codable, Equatable, Sendable {
-    /// Разрешено, скрипт выполнился.
+    /// Allowed, the script ran.
     case granted
-    /// Пользователь запретил управление (ошибка -1743, errAEEventNotPermitted).
+    /// The user denied control (error -1743, errAEEventNotPermitted).
     case denied
-    /// Разрешение ещё не спрашивали (-1744): нужен системный запрос.
+    /// Permission has not been asked yet (-1744): a system prompt is needed.
     case requiresConsent
-    /// Приложение не запущено (-600, -609).
+    /// The app is not running (-600, -609).
     case notRunning
-    /// У приложения нет окна или вкладки (-1728, -1719).
+    /// The app has no window or tab (-1728, -1719).
     case noWindow
-    /// Другая ошибка AppleScript.
+    /// Another AppleScript error.
     case failed
 
-    /// Классификация кода ошибки Apple Events / AppleScript (`OSStatus` или `NSAppleScript.errorNumber`).
+    /// Classifies an Apple Events / AppleScript error code (`OSStatus` or `NSAppleScript.errorNumber`).
     public static func classify(code: Int) -> AutomationStatus {
         switch code {
         case 0: return .granted
@@ -27,41 +27,41 @@ public enum AutomationStatus: String, Codable, Equatable, Sendable {
         }
     }
 
-    /// Признак отказа в разрешении: нужно показать инструкцию.
+    /// Permission denied: instructions need to be shown.
     public static func isPermissionDenied(code: Int) -> Bool { code == -1743 }
 }
 
-/// Что удалось узнать об id чата Claude через Accessibility.
+/// What was learned about the Claude chat id via Accessibility.
 public enum ClaudeChatReadStatus: String, Codable, Equatable, Sendable {
-    /// Id прочитан из адреса веб-области окна (AXURL).
+    /// The id was read from the window's web area URL (AXURL).
     case read
-    /// Впереди вкладка Code: прочитан id сессии Claude Code (`claude.ai/epitaxy/local_<uuid>`), а не чата.
+    /// The Code tab is frontmost: a Claude Code session id was read (`claude.ai/epitaxy/local_<uuid>`), not a chat id.
     case codeSession
-    /// Нет разрешения Accessibility — читать нечего.
+    /// No Accessibility permission — nothing to read.
     case noAccessibility
-    /// Дерево доступно, но адреса чата в нём нет (например, открыт не чат, а проект или настройки).
+    /// The tree is available but contains no chat URL (e.g. a project or settings is open, not a chat).
     case notFound
-    /// Electron не отдал дерево веб-содержимого даже после `AXManualAccessibility`.
+    /// Electron did not expose the web content tree even after `AXManualAccessibility`.
     case treeUnavailable
 }
 
-/// Диагностика последнего чтения контекста: что получилось, что нет и почему.
-/// Печатается в `--probe-frontmost` и используется для сообщений пользователю.
+/// Diagnostics of the last context read: what worked, what did not, and why.
+/// Printed in `--probe-frontmost` and used for user-facing messages.
 public struct ContextDiagnostics: Codable, Equatable, Sendable {
     public var accessibilityTrusted: Bool
-    /// Контекст взят у запомненного приложения, потому что впереди был сам Juggler.
+    /// The context was taken from the remembered app because Juggler itself was frontmost.
     public var usedRememberedApp: Bool
-    /// Заголовок окна прочитан через Accessibility.
+    /// The window title was read via Accessibility.
     public var windowTitleRead: Bool
     public var chromeAutomation: AutomationStatus?
     public var chromeErrorCode: Int?
-    /// Управление Терминалом (окно и tty вкладки читаются только с ним).
+    /// Terminal control (the window and tab tty are read only with it).
     public var terminalAutomation: AutomationStatus?
     public var terminalErrorCode: Int?
     public var claudeChat: ClaudeChatReadStatus?
-    /// Адреса, найденные в дереве Accessibility Claude (для отладки).
+    /// URLs found in Claude's Accessibility tree (for debugging).
     public var claudeCandidateURLs: [String]
-    /// Поиск треда ChatGPT по заголовку окна в `~/.codex/session_index.jsonl` (только при привязке).
+    /// ChatGPT thread lookup by window title in `~/.codex/session_index.jsonl` (only when binding).
     public var chatGPTThread: ChatGPTThreadLookup?
     public var notes: [String]
 
@@ -92,11 +92,11 @@ public struct ContextDiagnostics: Codable, Equatable, Sendable {
     }
 }
 
-/// Поиск id чата Claude или сессии Claude Code среди адресов, найденных в дереве Accessibility
-/// (AXURL веб-областей, AXDocument окна). Берётся первый адрес, который является чатом или сессией.
+/// Finds a Claude chat id or Claude Code session id among URLs found in the Accessibility tree
+/// (AXURL of web areas, the window's AXDocument). The first URL that is a chat or session wins.
 public enum ClaudeChatURLExtractor {
-    /// Первая ссылка на чат (`claude.ai/chat/<uuid>`) или сессию (`claude.ai/epitaxy/local_<uuid>`).
-    /// Голые id не считаются: в дереве ищутся только адреса.
+    /// The first link to a chat (`claude.ai/chat/<uuid>`) or session (`claude.ai/epitaxy/local_<uuid>`).
+    /// Bare ids do not count: only URLs are searched for in the tree.
     public static func link(fromCandidates candidates: [String]) -> ChatLink? {
         for raw in candidates where raw.contains("/") {
             switch ChatLinkParser.parse(raw) {
@@ -117,7 +117,7 @@ public enum ClaudeChatURLExtractor {
         return nil
     }
 
-    /// Итог чтения для диагностики.
+    /// Read outcome for diagnostics.
     public static func status(candidates: [String], treeAvailable: Bool, accessibilityTrusted: Bool) -> ClaudeChatReadStatus {
         guard accessibilityTrusted else { return .noAccessibility }
         switch link(fromCandidates: candidates) {

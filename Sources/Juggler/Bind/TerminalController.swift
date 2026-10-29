@@ -2,17 +2,17 @@ import AppKit
 import Foundation
 import JugglerCore
 
-/// AppleScript для Terminal.app: переднее окно и вкладка (id окна, tty), список вкладок, переход.
+/// AppleScript for Terminal.app: front window and tab (window id, tty), tab list, switching.
 ///
-/// Как и у Chrome, скрипт выполняется только при уже выданном разрешении — проверка без запроса
-/// (`automationStatus`), поэтому чтение контекста и переключение никогда не показывают системный диалог.
+/// As with Chrome, a script runs only when permission is already granted — a check without prompting
+/// (`automationStatus`), so reading context and switching never show a system dialog.
 @MainActor
 final class TerminalController: AppleScriptController {
     init(bundleID: String = BindApps.terminal) {
         super.init(bundleID: bundleID, logName: "Terminal")
     }
 
-    /// Переднее окно и выбранная вкладка, если разрешение выдано. Статус объясняет, почему окна нет.
+    /// The front window and selected tab, if permission is granted. The status explains why there's no window.
     func frontWindow() -> (window: TerminalWindowRef?, status: AutomationStatus, code: Int) {
         let permission = automationStatus()
         guard permission.status == .granted else { return (nil, permission.status, permission.code) }
@@ -31,7 +31,7 @@ final class TerminalController: AppleScriptController {
         run(TerminalScripts.focusSource(windowID: match.windowID, tabIndex: match.tabIndex, bundleID: bundleID))
     }
 
-    /// Проверка для самопроверки: скрипты компилируются (без отправки событий Терминалу).
+    /// Check for the self-test: the scripts compile (without sending events to Terminal).
     func compileScripts() -> String? {
         compile([TerminalScripts.frontWindowSource(bundleID: bundleID),
                  TerminalScripts.tabListingSource(bundleID: bundleID),

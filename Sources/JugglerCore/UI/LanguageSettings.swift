@@ -1,7 +1,7 @@
 import Foundation
 
-/// Язык интерфейса, который можно выбрать в настройках: код папки `Localization/<код>.lproj`
-/// и название языка на нём самом (не переводится: человек должен найти свой язык в любом интерфейсе).
+/// A UI language selectable in settings: the folder code of `Localization/<code>.lproj`
+/// and the language's name in itself (not translated: people must find their language in any UI).
 public struct AppLanguage: Equatable, Hashable, Identifiable, Sendable {
     public let code: String
     public let nativeName: String
@@ -13,7 +13,7 @@ public struct AppLanguage: Equatable, Hashable, Identifiable, Sendable {
         self.nativeName = nativeName
     }
 
-    /// 12 языков локализации (совпадают с `Localization/*.lproj` и `CFBundleLocalizations`).
+    /// 12 localization languages (match `Localization/*.lproj` and `CFBundleLocalizations`).
     public static let all: [AppLanguage] = [
         AppLanguage(code: "ru", nativeName: "Русский"),
         AppLanguage(code: "en", nativeName: "English"),
@@ -34,15 +34,15 @@ public struct AppLanguage: Equatable, Hashable, Identifiable, Sendable {
     }
 }
 
-/// Выбор языка: «Как в системе» (значения в домене приложения нет) или один из `AppLanguage.all`.
+/// Language choice: "Same as system" (no value in the app domain) or one of `AppLanguage.all`.
 public enum LanguageChoice: Equatable, Hashable, Sendable {
     case system
     case language(String)
 
-    /// Какой язык показывает приложение при списке предпочтений `AppleLanguages`.
-    /// Берётся первый язык из списка, для которого есть перевод: код целиком («pt-BR»),
-    /// затем без хвостов («zh-Hans-CN» → «zh-Hans», «de-AT» → «de»), затем любой вариант того же
-    /// языка («pt-PT» → «pt-BR»). Если перевода нет ни для одного — английский (регион разработки).
+    /// Which language the app shows for a given `AppleLanguages` preference list.
+    /// Takes the first language in the list that has a translation: the full code ("pt-BR"),
+    /// then without suffixes ("zh-Hans-CN" → "zh-Hans", "de-AT" → "de"), then any variant of the same
+    /// language ("pt-PT" → "pt-BR"). If none has a translation — English (development region).
     public static func resolving(preferred: [String]) -> LanguageChoice {
         for entry in preferred {
             if let code = supportedCode(for: entry) { return .language(code) }
@@ -67,21 +67,21 @@ public enum LanguageChoice: Equatable, Hashable, Sendable {
     }
 }
 
-/// Хранение выбранного языка только для Juggler: ключ `AppleLanguages` в собственном домене
-/// настроек приложения (`com.sefimov.juggler`). Глобальный язык системы не меняется.
-/// Тексты Juggler переключаются сразу (`Localizer`); системные надписи AppKit и Info.plist
-/// берут это значение только при следующем запуске.
+/// Stores the selected language for Juggler only: the `AppleLanguages` key in the app's own
+/// defaults domain (`com.sefimov.juggler`). The global system language is not changed.
+/// Juggler texts switch immediately (`Localizer`); system AppKit labels and Info.plist
+/// pick up this value only on the next launch.
 public struct LanguageSettings {
     public static let key = "AppleLanguages"
 
-    /// Настоящий домен приложения. Под `swift run` пакета нет, берётся имя процесса.
+    /// The real app domain. Under `swift run` there is no bundle, so the process name is used.
     public static var app: LanguageSettings {
         LanguageSettings(
             defaults: .standard,
             domain: Bundle.main.bundleIdentifier ?? ProcessInfo.processInfo.processName)
     }
 
-    /// Языки системы (глобальный домен, без значения из домена Juggler), по порядку предпочтения.
+    /// System languages (global domain, without the Juggler domain value), in preference order.
     public static func systemPreferredLanguages(defaults: UserDefaults = .standard) -> [String] {
         if let global = defaults.persistentDomain(forName: UserDefaults.globalDomain)?[key] as? [String], !global.isEmpty {
             return global
@@ -92,27 +92,27 @@ public struct LanguageSettings {
     private let defaults: UserDefaults
     private let domain: String
 
-    /// `defaults` и `domain` — пара «хранилище и имя его домена»: для приложения это
-    /// `UserDefaults.standard` и идентификатор пакета, для проверок — отдельный suite,
-    /// чтобы настоящие настройки не затрагивались.
+    /// `defaults` and `domain` are a "store and its domain name" pair: for the app these are
+    /// `UserDefaults.standard` and the bundle identifier, for checks — a separate suite,
+    /// so the real settings are not affected.
     public init(defaults: UserDefaults, domain: String) {
         self.defaults = defaults
         self.domain = domain
     }
 
-    /// Значение, записанное именно в домен приложения (не из глобального домена и не язык системы).
+    /// The value written specifically in the app domain (not from the global domain and not the system language).
     public var storedOverride: [String]? {
         defaults.persistentDomain(forName: domain)?[Self.key] as? [String]
     }
 
-    /// Действующий выбор: при значении в домене — язык, который оно задаёт; иначе «Как в системе».
+    /// The effective choice: with a value in the domain — the language it sets; otherwise "Same as system".
     public var choice: LanguageChoice {
         guard let stored = storedOverride, !stored.isEmpty else { return .system }
         return LanguageChoice.resolving(preferred: stored)
     }
 
-    /// Код языка, на котором показывать тексты: выбранный или, при «Как в системе», первый из языков
-    /// системы, для которого есть перевод (иначе английский).
+    /// Code of the language to show texts in: the selected one or, with "Same as system", the first system
+    /// language that has a translation (otherwise English).
     public func effectiveLanguage(systemPreferred: [String]) -> String {
         Self.code(for: choice, systemPreferred: systemPreferred)
     }
@@ -128,7 +128,7 @@ public struct LanguageSettings {
         }
     }
 
-    /// «Как в системе» убирает значение, язык — записывает его одним элементом.
+    /// "Same as system" removes the value; a language writes it as a single element.
     public func select(_ choice: LanguageChoice) {
         switch choice {
         case .system:
@@ -139,10 +139,10 @@ public struct LanguageSettings {
     }
 }
 
-/// Перезапуск приложения: закрыть Juggler и открыть его снова.
+/// App relaunch: quit Juggler and open it again.
 public enum AppRestart {
-    /// Команда, которая ждёт выхода процесса `pid` (не дольше 10 с) и открывает `bundlePath` новым экземпляром.
-    /// `nil`, если Juggler запущен не из `.app` (`swift run`): открывать нечего.
+    /// A command that waits for process `pid` to exit (at most 10 s) and opens `bundlePath` as a new instance.
+    /// `nil` if Juggler is not running from a `.app` (`swift run`): nothing to open.
     public static func relaunchCommand(bundlePath: String, pid: Int32) -> (executable: String, arguments: [String])? {
         guard bundlePath.hasSuffix(".app") else { return nil }
         let script = "i=0; while kill -0 \"$1\" 2>/dev/null && [ $i -lt 100 ]; do sleep 0.1; i=$((i+1)); done; exec /usr/bin/open -n \"$0\""

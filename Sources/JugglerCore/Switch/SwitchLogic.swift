@@ -1,34 +1,72 @@
 import Foundation
 
-// Чистая логика области SWITCH (только Foundation): выбор задачи при переключении
-// и тексты карточки перехода. Приложение (Sources/Juggler/Switch/) лишь вызывает её.
+// Pure logic of the SWITCH area (Foundation only): picking a task when switching
+// and the transition card texts. The app (Sources/Juggler/Switch/) only calls it.
 
-/// Пространство имён области SWITCH.
+/// Namespace of the SWITCH area.
 public enum SwitchLogic {}
 
-/// Выбор задачи при «следующая / предыдущая».
+/// Picking a task for "next / previous".
 public enum SwitchPlanner {
-    /// Текущая задача: по переднему окну, иначе последняя активная.
+    /// Current task: by the frontmost window, otherwise the last active one.
     public static func currentTaskID(context: FrontmostContext, document: TasksDocument) -> UUID? {
         CurrentTaskResolver.resolve(context: context, tasks: document.tasks, fallbackID: document.lastActiveTaskID)
     }
 
-    /// Соседняя по кругу задача (с пропуском «сделано») или `nil`, если переключаться не на что.
+    /// The neighboring task in the cycle (skipping "done"), or `nil` if there is nothing to switch to.
     public static func target(direction: CycleDirection, context: FrontmostContext, document: TasksDocument) -> UUID? {
         let current = currentTaskID(context: context, document: document)
         return TaskCycler.neighbor(of: current, in: document.tasks, direction: direction)?.id
     }
+
+    /// What the frontmost window is for ⌃§: a task, a window to add, or neither.
+    ///
+    /// The window is a task on an exact match (`ExactTaskMatcher`) or if its binding is already in the list.
+    /// Otherwise its binding is captured without dialogs: a window without a title (desktop, no Accessibility)
+    /// would be just "the app" and is not added. `capture` is called only when there is no exact match.
+    public static func frontWindow(
+        context: FrontmostContext, document: TasksDocument,
+        capture: (FrontmostContext) -> BindingCaptureResult
+    ) -> FrontWindowPlan {
+        if let id = ExactTaskMatcher.match(context: context, document: document) { return .task(id) }
+        switch capture(context) {
+        case .captured(let binding, let title):
+            if let task = document.tasks.first(where: { $0.binding.map { BindPlanner.sameTarget($0, binding) } ?? false }) {
+                return .task(task.id)
+            }
+            if case .appWindow(let ref) = binding,
+               ref.windowTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { return .unavailable(message: nil) }
+            return .add(binding, title: title)
+        case .needsManualLink:
+            return .needsLink
+        case .failed(let message):
+            return .unavailable(message: message)
+        }
+    }
 }
 
-/// Сборка содержимого карточки перехода.
+/// What the frontmost window is, for ⌃§ (`SwitchPlanner.frontWindow`).
+public enum FrontWindowPlan: Equatable, Sendable {
+    /// The window is this task.
+    case task(UUID)
+    /// The window is not in the list: add it as a new task with this binding and title.
+    case add(TaskBinding, title: String)
+    /// Not in the list, and the binding needs a link (Claude, ChatGPT): only the flow with dialogs can add it.
+    case needsLink
+    /// Cannot be added: no window, Juggler itself, Chrome without permission, a window without a title.
+    /// `message` explains why, when known.
+    case unavailable(message: String?)
+}
+
+/// Builds the transition card contents.
 public enum TransitionCardBuilder {
-    /// Заметка длиннее — обрезается с «…».
+    /// A longer note is truncated with "…".
     public static let maxNoteLength = 240
     public static let maxTitleLength = 120
 
-    /// Карточка для задачи `id` в момент `now` (до обновления времени захода).
-    /// - `bindHotkey`: текущее сочетание «добавить или удалить текущее окно» для подсказки (`nil` — не назначено).
-    /// - `activation`: итог активации привязки; запасной вариант или ошибка попадают в подсказку.
+    /// Card for task `id` at time `now` (before the visit time is updated).
+    /// - `bindHotkey`: the current "add or remove the current window" combination for the hint (`nil` — not assigned).
+    /// - `activation`: binding activation outcome; a fallback or an error goes into the hint.
     public static func content(
         for id: UUID, in document: TasksDocument, now: Date,
         bindHotkey: Hotkey?, activation: ActivationResult? = nil
@@ -49,7 +87,7 @@ public enum TransitionCardBuilder {
         return t.isEmpty ? loc("Без названия") : truncate(t, to: maxTitleLength)
     }
 
-    /// Заметка: обрезаются пробелы по краям и пустые строки, длинная — укорачивается.
+    /// Note: whitespace at the edges and blank lines are trimmed, a long one is shortened.
     public static func note(_ raw: String) -> String {
         let lines = raw.components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespaces) }
@@ -71,7 +109,7 @@ public enum TransitionCardBuilder {
         }
     }
 
-    /// Подсказка для задачи без привязки.
+    /// Hint for a task without a binding.
     public static func unboundHint(bindHotkey: Hotkey?) -> String {
         if let bindHotkey {
             return loc("Нет привязки: откройте чат и нажмите \(bindHotkey.displayString)")
@@ -79,7 +117,7 @@ public enum TransitionCardBuilder {
         return loc("Нет привязки: откройте чат и выберите в меню «\(TaskToggleTexts.menuAddTitle)»")
     }
 
-    /// Строка заголовка карточки: «2. Название».
+    /// Card title line: "2. Title".
     public static func headline(_ content: TransitionCardContent) -> String {
         "\(content.number). \(content.title)"
     }
@@ -95,7 +133,7 @@ public enum TransitionCardBuilder {
     }
 }
 
-/// Тайминги карточки: появление, показ, плавное исчезновение. Всего 1–1,5 с.
+/// Card timings: fade in, display, smooth fade out. 1–1.5 s in total.
 public struct CardTiming: Equatable, Sendable {
     public var fadeIn: TimeInterval
     public var hold: TimeInterval

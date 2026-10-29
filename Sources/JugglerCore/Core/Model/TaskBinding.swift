@@ -1,17 +1,17 @@
 import Foundation
 
-/// Источник привязки: определяет значок в списке и способ активации.
+/// Binding source: determines the icon in the list and the activation method.
 public enum BindingSource: String, Codable, CaseIterable, Sendable {
     case chromeTab
     case claudeChat
-    /// Сессия Claude Code на вкладке Code в Claude desktop.
+    /// A Claude Code session on the Code tab in Claude desktop.
     case claudeCodeSession
     case chatGPTThread
-    /// Окно и вкладка Terminal.app: id окна и tty вкладки из AppleScript.
+    /// A Terminal.app window and tab: window id and tab tty from AppleScript.
     case terminalWindow
     case appWindow
 
-    /// Короткое название источника для интерфейса.
+    /// Short source name for the UI.
     public var displayName: String {
         switch self {
         case .chromeTab: return "Chrome"
@@ -23,7 +23,7 @@ public enum BindingSource: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// Имя SF Symbol для значка источника.
+    /// SF Symbol name for the source icon.
     public var symbolName: String {
         switch self {
         case .chromeTab: return "globe"
@@ -36,8 +36,8 @@ public enum BindingSource: String, Codable, CaseIterable, Sendable {
     }
 }
 
-/// Вкладка Chrome. `tabID`/`windowID` — числовые id из AppleScript (`id of tab`);
-/// они живут до перезапуска Chrome, поэтому всегда хранится и адрес.
+/// A Chrome tab. `tabID`/`windowID` are numeric ids from AppleScript (`id of tab`);
+/// they live until Chrome restarts, so the URL is always stored too.
 public struct ChromeTabRef: Codable, Equatable, Hashable, Sendable {
     public var tabID: Int?
     public var windowID: Int?
@@ -52,7 +52,7 @@ public struct ChromeTabRef: Codable, Equatable, Hashable, Sendable {
     }
 }
 
-/// Чат Claude desktop. `conversationID` — UUID в нижнем регистре.
+/// A Claude desktop chat. `conversationID` is a lowercase UUID.
 public struct ClaudeChatRef: Codable, Equatable, Hashable, Sendable {
     public var conversationID: String
     public var title: String
@@ -62,12 +62,12 @@ public struct ClaudeChatRef: Codable, Equatable, Hashable, Sendable {
         self.title = title
     }
 
-    /// Официальная ссылка, которая открывает чат в Claude desktop.
+    /// The official link that opens the chat in Claude desktop.
     public var appURL: URL { ChatLinkParser.claudeAppURL(conversationID: conversationID) }
 }
 
-/// Сессия Claude Code (вкладка Code в Claude desktop). `sessionID` — `local_<uuid>`
-/// в нижнем регистре; `title` — название сессии на момент привязки (может быть пустым).
+/// A Claude Code session (Code tab in Claude desktop). `sessionID` is a lowercase
+/// `local_<uuid>`; `title` is the session title at binding time (may be empty).
 public struct ClaudeCodeSessionRef: Equatable, Hashable, Sendable {
     public var sessionID: String
     public var title: String
@@ -77,14 +77,14 @@ public struct ClaudeCodeSessionRef: Equatable, Hashable, Sendable {
         self.title = title
     }
 
-    /// Официальная ссылка, которая открывает сессию в Claude desktop.
+    /// The official link that opens the session in Claude desktop.
     public var appURL: URL { ChatLinkParser.claudeCodeSessionAppURL(sessionID: sessionID) }
 }
 
 extension ClaudeCodeSessionRef: Codable {
     private enum CodingKeys: String, CodingKey { case sessionID, title }
 
-    /// Без id привязка бессмысленна (ошибка — и задача читается без привязки); без названия — пустое.
+    /// Without an id the binding is meaningless (an error, and the task is read without a binding); without a title — empty.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(sessionID: try c.decode(String.self, forKey: .sessionID),
@@ -98,7 +98,7 @@ extension ClaudeCodeSessionRef: Codable {
     }
 }
 
-/// Тред ChatGPT desktop (`codex://threads/<id>`).
+/// A ChatGPT desktop thread (`codex://threads/<id>`).
 public struct ChatGPTThreadRef: Codable, Equatable, Hashable, Sendable {
     public var threadID: String
     public var title: String
@@ -111,11 +111,11 @@ public struct ChatGPTThreadRef: Codable, Equatable, Hashable, Sendable {
     public var appURL: URL { ChatLinkParser.chatGPTAppURL(threadID: threadID) }
 }
 
-/// Окно и вкладка Terminal.app (`com.apple.Terminal`).
+/// A Terminal.app window and tab (`com.apple.Terminal`).
 ///
-/// `windowID` — `id of window` из AppleScript, `tty` — `tty of tab` (например, `/dev/ttys003`).
-/// Оба живут до закрытия окна/вкладки или перезапуска Терминала, поэтому хранится и заголовок окна
-/// на момент привязки — запасной путь, когда ни tty, ни id уже не найти.
+/// `windowID` is `id of window` from AppleScript, `tty` is `tty of tab` (e.g. `/dev/ttys003`).
+/// Both live until the window/tab is closed or Terminal restarts, so the window title at binding time
+/// is stored too — a fallback when neither the tty nor the id can be found anymore.
 public struct TerminalWindowRef: Equatable, Hashable, Sendable {
     public var windowID: Int?
     public var tty: String
@@ -127,14 +127,14 @@ public struct TerminalWindowRef: Equatable, Hashable, Sendable {
         self.title = title
     }
 
-    /// Есть ли хоть один постоянный признак (tty или id окна).
+    /// Whether there is at least one persistent identifier (tty or window id).
     public var hasIdentity: Bool { windowID != nil || !tty.isEmpty }
 }
 
 extension TerminalWindowRef: Codable {
     private enum CodingKeys: String, CodingKey { case windowID, tty, title }
 
-    /// Все поля необязательны: недостающее читается пустым, а не ломает задачу.
+    /// All fields are optional: missing ones read as empty instead of breaking the task.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(windowID: (try? c.decodeIfPresent(Int.self, forKey: .windowID)) ?? nil,
@@ -150,7 +150,7 @@ extension TerminalWindowRef: Codable {
     }
 }
 
-/// Окно любого приложения (Grok Bot и прочие): bundle id и заголовок окна.
+/// A window of any app (Grok Bot and others): bundle id and window title.
 public struct AppWindowRef: Codable, Equatable, Hashable, Sendable {
     public var bundleID: String
     public var windowTitle: String
@@ -163,11 +163,11 @@ public struct AppWindowRef: Codable, Equatable, Hashable, Sendable {
     }
 }
 
-/// Привязка задачи к чату, вкладке или окну.
+/// A task's binding to a chat, tab or window.
 ///
 /// JSON: `{"kind": "<BindingSource>", "<kind>": { ...payload... }}`.
-/// Новые виды только добавляются: старые файлы читаются как раньше, а неизвестный
-/// вид (файл от более новой версии) превращается в «без привязки» (`JugglerTask`).
+/// New kinds are only ever added: old files read as before, and an unknown
+/// kind (a file from a newer version) turns into "no binding" (`JugglerTask`).
 public enum TaskBinding: Equatable, Hashable, Sendable {
     case chromeTab(ChromeTabRef)
     case claudeChat(ClaudeChatRef)
@@ -187,7 +187,7 @@ public enum TaskBinding: Equatable, Hashable, Sendable {
         }
     }
 
-    /// Заголовок, сохранённый при привязке (может быть пустым).
+    /// Title saved at binding time (may be empty).
     public var title: String {
         switch self {
         case .chromeTab(let ref): return ref.title
@@ -235,23 +235,23 @@ extension TaskBinding: Codable {
     }
 }
 
-/// Bundle id известных приложений.
+/// Bundle ids of known apps.
 public enum KnownBundleIDs {
     public static let chrome = "com.google.Chrome"
     public static let claude = "com.anthropic.claudefordesktop"
-    /// ChatGPT desktop: сейчас поставляется как `com.openai.codex` (схема `codex`).
+    /// ChatGPT desktop: currently ships as `com.openai.codex` (scheme `codex`).
     public static let chatGPT = "com.openai.codex"
-    /// Все bundle id ChatGPT desktop: текущий и старый `com.openai.chat`.
+    /// All ChatGPT desktop bundle ids: the current one and the old `com.openai.chat`.
     public static let chatGPTAll = ["com.openai.codex", "com.openai.chat"]
     public static let grokBot = "com.anysphere.sand"
     public static let terminal = "com.apple.Terminal"
 
-    /// Это ChatGPT desktop (любой из известных bundle id)?
+    /// Is this ChatGPT desktop (any of the known bundle ids)?
     public static func isChatGPT(_ bundleID: String?) -> Bool {
         chatGPTAll.contains { same(bundleID, $0) }
     }
 
-    /// Сравнение bundle id без учёта регистра.
+    /// Case-insensitive bundle id comparison.
     public static func same(_ a: String?, _ b: String?) -> Bool {
         guard let a, let b, !a.isEmpty, !b.isEmpty else { return false }
         return a.caseInsensitiveCompare(b) == .orderedSame

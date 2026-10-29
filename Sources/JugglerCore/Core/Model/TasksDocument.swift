@@ -1,14 +1,14 @@
 import Foundation
 
-/// Содержимое `tasks.json`: упорядоченный список задач и последняя активная задача.
+/// Contents of `tasks.json`: an ordered task list and the last active task.
 public struct TasksDocument: Equatable, Sendable {
     public static let currentVersion = 1
 
     public var version: Int
-    /// Порядок списка задаёт номера (1, 2, 3…) и порядок переключения по кругу.
+    /// List order defines the numbers (1, 2, 3…) and the cycling order.
     public var tasks: [JugglerTask]
-    /// Задача, активированная последней. Иконка меню-бара показывает её номер;
-    /// она же служит запасным вариантом, если по переднему окну задачу определить не удалось.
+    /// The most recently activated task. The menu bar icon shows its number;
+    /// it is also the fallback when the task cannot be determined from the frontmost window.
     public var lastActiveTaskID: UUID?
 
     public init(tasks: [JugglerTask] = [], lastActiveTaskID: UUID? = nil, version: Int = TasksDocument.currentVersion) {
@@ -25,7 +25,7 @@ public struct TasksDocument: Equatable, Sendable {
         index(of: id).map { tasks[$0] }
     }
 
-    /// Номер задачи для показа (позиция в списке с 1).
+    /// Task number for display (1-based position in the list).
     public func number(of id: UUID) -> Int? {
         index(of: id).map { $0 + 1 }
     }
@@ -34,8 +34,8 @@ public struct TasksDocument: Equatable, Sendable {
         lastActiveTaskID.flatMap { task(withID: $0) }
     }
 
-    /// Отмечает заход в задачу: обновляет время и последнюю активную задачу.
-    /// Возвращает `false`, если задачи с таким id нет.
+    /// Records a visit to a task: updates the time and the last active task.
+    /// Returns `false` if there is no task with this id.
     @discardableResult
     public mutating func markVisited(_ id: UUID, at date: Date) -> Bool {
         guard let i = index(of: id) else { return false }
@@ -44,8 +44,8 @@ public struct TasksDocument: Equatable, Sendable {
         return true
     }
 
-    /// Приводит документ в согласованное состояние: убирает дубликаты id
-    /// (остаётся первый) и висячую ссылку на последнюю активную задачу.
+    /// Brings the document to a consistent state: removes duplicate ids
+    /// (the first one stays) and a dangling reference to the last active task.
     public mutating func normalize() {
         var seen = Set<UUID>()
         tasks = tasks.filter { seen.insert($0.id).inserted }
@@ -63,7 +63,7 @@ extension TasksDocument: Codable {
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         version = (try? c.decodeIfPresent(Int.self, forKey: .version)) ?? TasksDocument.currentVersion
-        // Список обязателен: без него это не наш файл, и его нужно считать битым.
+        // The list is required: without it this is not our file and must be treated as broken.
         let lossy = try c.decode([Lossy<JugglerTask>].self, forKey: .tasks)
         tasks = lossy.compactMap(\.value)
         lastActiveTaskID = try? c.decodeIfPresent(UUID.self, forKey: .lastActiveTaskID)
@@ -78,7 +78,7 @@ extension TasksDocument: Codable {
     }
 }
 
-/// Элемент массива, который не роняет разбор всего массива при ошибке.
+/// An array element that does not fail decoding of the whole array on error.
 private struct Lossy<T: Decodable>: Decodable {
     let value: T?
     init(from decoder: Decoder) throws {

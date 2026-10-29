@@ -1,7 +1,7 @@
 import Foundation
 import JugglerCore
 
-// Сессии Claude Code в списке (задача SESSION): свой значок и подпись источника.
+// Claude Code sessions in the list (task SESSION): their own icon and source label.
 
 extension UIChecks {
     static func checkSessionRows(_ c: CheckRunner) {
@@ -9,7 +9,7 @@ extension UIChecks {
             var (doc, _) = sample()
             doc.tasks[0].binding = .claudeCodeSession(ClaudeCodeSessionRef(sessionID: "local_fae5c400-6c06-4fa7-8cb8-eecc594fc296", title: "Сессии Code"))
             doc.tasks[1].binding = .claudeChat(ClaudeChatRef(conversationID: "0f8fad5b-d9cb-469f-a165-70867728950e", title: "Чат"))
-            let rows = TaskListPresenter.rows(for: doc, now: t0)
+            let rows = TaskListPresenter.rows(for: doc, now: t0, currentTaskID: nil)
             c.expectEqual(rows[0].source, .claudeCodeSession, "источник строки — сессия Claude Code")
             c.expectEqual(rows[0].bindingHelp, "Claude Code: Сессии Code", "справка: «Claude Code: название»")
             c.expectEqual(BindingSource.claudeCodeSession.displayName, "Claude Code", "подпись источника")

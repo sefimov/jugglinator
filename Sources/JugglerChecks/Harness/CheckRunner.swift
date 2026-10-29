@@ -1,12 +1,12 @@
 import Foundation
 
-/// Набор проверок одной области. Каждая область — свой тип в своей папке.
+/// A set of checks for one area. Each area is its own type in its own folder.
 protocol CheckSuite {
     static var name: String { get }
     static func run(_ c: CheckRunner)
 }
 
-/// Минимальный исполнитель проверок (XCTest и Swift Testing на Command Line Tools недоступны).
+/// Minimal check runner (XCTest and Swift Testing are unavailable with Command Line Tools).
 final class CheckRunner {
     private(set) var passed = 0
     private(set) var failures: [String] = []
@@ -30,7 +30,7 @@ final class CheckRunner {
         group = ""
     }
 
-    /// Группа связанных проверок; брошенная ошибка считается провалом.
+    /// A group of related checks; a thrown error counts as a failure.
     func group(_ name: String, _ body: () throws -> Void) {
         group = name
         do {
@@ -65,7 +65,7 @@ final class CheckRunner {
         }
     }
 
-    /// Итог: печатает сводку и возвращает код выхода (0 — всё прошло).
+    /// Summary: prints the totals and returns the exit code (0 — everything passed).
     func finish() -> Int32 {
         if failures.isEmpty {
             print("Все проверки прошли: \(passed)")

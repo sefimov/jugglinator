@@ -4,9 +4,9 @@ import Foundation
 import JugglerCore
 import ServiceManagement
 
-/// Самопроверка UI: логика списка, сохранение через `AppModel` и перезапуск,
-/// значки меню-бара, чтение статуса запуска при входе. Окон не показывает,
-/// разрешений не запрашивает, запуск при входе не меняет.
+/// UI self-test: list logic, saving via `AppModel` and relaunch,
+/// menu bar icons, reading the launch-at-login status. Shows no windows,
+/// requests no permissions, does not change launch at login.
 @MainActor
 enum UISelfTest {
     static func run() -> [SelfTestResult] {
@@ -22,7 +22,7 @@ enum UISelfTest {
         TaskListOps.move(&doc, id: b, by: -1)
         TaskListOps.toggleDone(&doc, id: a)
         doc.markVisited(b, at: now)
-        let rows = TaskListPresenter.rows(for: doc, now: now)
+        let rows = TaskListPresenter.rows(for: doc, now: now, currentTaskID: b)
         let ok = rows.map(\.title) == ["Вторая", "Первая"] && rows[0].isCurrent && rows[1].isDone
         return SelfTestResult("UI: операции со списком", passed: ok)
     }
@@ -61,9 +61,12 @@ enum UISelfTest {
     private static func menuBarSymbols() -> SelfTestResult {
         let appearances: [MenuBarDot.Appearance] = [.outline] + MenuBarDotColor.allCases.map { .filled($0) }
         let images = appearances.map { MenuBarDotImage.image(for: $0) }
-        // Серый контур — шаблон (красится системой), цветные кружки — нет (иначе потеряют цвет).
-        let ok = images.first?.isTemplate == true
-            && images.dropFirst().allSatisfy { !$0.isTemplate && $0.size.width > 0 }
+        // With the frontmost window's task number inside.
+        let numbered = appearances.map { MenuBarDotImage.image(for: $0, number: 12) }
+        // The gray outline is a template (tinted by the system), colored dots are not (or they'd lose color).
+        let ok = [images, numbered].allSatisfy { set in
+            set.first?.isTemplate == true && set.dropFirst().allSatisfy { !$0.isTemplate && $0.size.width > 0 }
+        } && numbered.allSatisfy { $0.cgImage(forProposedRect: nil, context: nil, hints: nil) != nil }
         return SelfTestResult("UI: кружок меню-бара рисуется (контур — шаблон, цветные — нет)", passed: ok,
                               detail: ok ? "" : "признаки шаблона: \(images.map(\.isTemplate))")
     }
@@ -73,8 +76,8 @@ enum UISelfTest {
         return SelfTestResult("UI: статус запуска при входе читается", passed: true, detail: state.rawValue)
     }
 
-    /// Выбор языка на временном домене настроек и отдельном переводчике: настоящий `com.sefimov.juggler`
-    /// и язык приложения не затрагиваются. Тексты переключаются сразу, без перезапуска.
+    /// Language choice on a temporary defaults domain and a separate localizer: the real `com.sefimov.juggler`
+    /// and the app language are untouched. Texts switch immediately, without a relaunch.
     private static func languageSelection() -> SelfTestResult {
         let suite = "com.sefimov.juggler.self-test.language.\(UUID().uuidString)"
         guard let defaults = UserDefaults(suiteName: suite) else {

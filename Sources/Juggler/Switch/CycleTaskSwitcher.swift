@@ -2,8 +2,8 @@ import AppKit
 import Foundation
 import JugglerCore
 
-/// Переключатель задач. Выбор соседней задачи и тексты карточки — в JugglerCore
-/// (`SwitchPlanner`, `TransitionCardBuilder`); здесь только связка с BIND и карточкой.
+/// Task switcher. Picking the neighboring task and the card texts live in JugglerCore
+/// (`SwitchPlanner`, `TransitionCardBuilder`); this only wires them to BIND and the card.
 @MainActor
 final class CycleTaskSwitcher: TaskSwitching {
     private let model: AppModel
@@ -24,7 +24,7 @@ final class CycleTaskSwitcher: TaskSwitching {
     }
 
     func switchTask(_ direction: CycleDirection) {
-        // Контекст читается в момент нажатия: текущая задача — по переднему окну или вкладке.
+        // Context is read at key-press time: the current task comes from the front window or tab.
         let context = bind.contextProvider.currentContext()
         guard let target = SwitchPlanner.target(direction: direction, context: context, document: model.document) else {
             beep()
@@ -39,7 +39,7 @@ final class CycleTaskSwitcher: TaskSwitching {
 
     func activateTask(id: UUID) {
         guard let task = model.document.task(withID: id) else { return }
-        // «не был N мин» — на момент перехода, до обновления времени захода.
+        // "away N min" — as of the switch, before the visit time is updated.
         let now = model.clock()
         let activation = task.binding.map { bind.activator.activate($0) }
         if let activation, !activation.succeeded {

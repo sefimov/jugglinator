@@ -3,7 +3,7 @@ import JugglerCore
 import ServiceManagement
 import SwiftUI
 
-/// Окно настроек: раздел хоткеев (компонент SWITCH), язык интерфейса, запуск при входе, файл данных.
+/// Settings window: hotkeys section (SWITCH component), interface language, launch at login, data file.
 struct SettingsView: View {
     let environment: AppEnvironment
     @StateObject private var loginItem = LoginItemController()
@@ -78,7 +78,7 @@ struct SettingsView: View {
     }
 }
 
-/// Запуск при входе в систему через `SMAppService.mainApp`.
+/// Launch at login via `SMAppService.mainApp`.
 @MainActor
 final class LoginItemController: ObservableObject {
     @Published private(set) var state: LoginItemState

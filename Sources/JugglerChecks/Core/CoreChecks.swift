@@ -1,7 +1,7 @@
 import Foundation
 import JugglerCore
 
-// Проверки ядра (задача CORE). Разнесены по файлам этой папки через extension CoreChecks.
+// Core checks (task CORE). Split across the files in this folder via extension CoreChecks.
 
 enum CoreChecks: CheckSuite {
     static let name = "Core"
@@ -20,7 +20,7 @@ enum CoreChecks: CheckSuite {
     }
 }
 
-// MARK: - Общие помощники
+// MARK: - Shared helpers
 
 enum Fixture {
     static let t0 = Date(timeIntervalSince1970: 1_800_000_000)

@@ -49,9 +49,17 @@ public enum TaskListPresenter {
         return min(total, maxListHeight)
     }
 
-    /// List rows in document order.
+    /// The task marked current (▸) in the menu: the one the frontmost window exactly matches
+    /// (`ExactTaskMatcher`). A window that is not a task (or not read yet) — no task is marked,
+    /// even if another one was active last.
+    public static func currentTaskID(context: FrontmostContext?, document: TasksDocument) -> UUID? {
+        guard let context else { return nil }
+        return ExactTaskMatcher.match(context: context, document: document)
+    }
+
+    /// List rows in document order; `currentTaskID` gets the ▸ mark (see `currentTaskID(context:document:)`).
     public static func rows(
-        for document: TasksDocument, now: Date, thresholds: StalenessThresholds = .standard
+        for document: TasksDocument, now: Date, currentTaskID: UUID?, thresholds: StalenessThresholds = .standard
     ) -> [TaskRow] {
         document.tasks.enumerated().map { index, task in
             TaskRow(
@@ -60,7 +68,7 @@ public enum TaskListPresenter {
                 title: task.title.isEmpty ? loc("Без названия") : task.title,
                 note: task.note,
                 isDone: task.isDone,
-                isCurrent: task.id == document.lastActiveTaskID,
+                isCurrent: task.id == currentTaskID,
                 source: task.binding?.source,
                 absenceText: Staleness.absenceText(lastVisited: task.lastVisitedAt, now: now),
                 staleness: Staleness.level(lastVisited: task.lastVisitedAt, now: now, thresholds: thresholds),

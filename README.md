@@ -190,7 +190,7 @@ It initializes the store, the composition root and the UI, SWITCH and BIND modul
 - Juggler detects the keyboard type (ISO with § or ANSI with `) and picks the "done" default accordingly.
 - The hotkeys are global: while Juggler is running, ⌃⇥ and ⌃⇧⇥ no longer switch tabs in Chrome, Safari, Terminal, iTerm2, VS Code or Xcode, and ⌃§ / ⌃` is taken from them too (in VS Code ⌃` normally toggles the terminal). Reassign any of them in Settings → "Hotkeys" if that gets in the way.
 - The switching order is fixed: 1→2→3→1. Tasks marked "done" are skipped. The current task is determined at the moment of the key press from the frontmost window or tab.
-- **⌃⇥ in a window that is not a task** adds it as a new task (card "Task N “…” added") instead of switching; the next press switches as usual. A window that needs a link (a Claude chat whose id was not read, an ambiguous ChatGPT thread), a window without a title, or Juggler itself is not added: ⌃⇥ just switches, and ⌃⌥⇥ adds such a window with a dialog.
+- **⌃⇥ in a window that is not a task** switches to a task window as usual (counting from the last active task); nothing is added. To add the window, press ⌃§ or ⌃⌥⇥.
 - On each switch, a card with the number, title, note and "away N min" appears for a second or so. The card does not take focus and lets clicks through.
 - **Reassigning:** Juggler settings → "Hotkeys". Click the field, then press the desired combination; Esc cancels, "Default" restores the default.
 - `~/Library/Application Support/Juggler/hotkeys.json` stores only reassigned combinations. Defaults are computed at launch from the keyboard type. To reset everything, quit Juggler and delete this file.

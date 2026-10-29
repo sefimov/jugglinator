@@ -1,22 +1,22 @@
 import Foundation
 
-/// Снимок переднего окна в момент нажатия хоткея. Заполняет BIND
-/// (NSWorkspace, Accessibility, AppleScript); ядро по нему ищет текущую задачу.
+/// Snapshot of the frontmost window at the moment the hotkey is pressed. Filled by BIND
+/// (NSWorkspace, Accessibility, AppleScript); the core uses it to find the current task.
 public struct FrontmostContext: Codable, Equatable, Sendable {
     public var bundleID: String?
     public var appName: String?
     public var windowTitle: String?
-    /// Активная вкладка, если впереди Chrome и AppleScript разрешён.
+    /// The active tab, if Chrome is frontmost and AppleScript is allowed.
     public var chromeTab: ChromeTabRef?
-    /// UUID чата Claude desktop, если его удалось прочитать.
+    /// Claude desktop chat UUID, if it could be read.
     public var claudeConversationID: String?
-    /// Id треда ChatGPT desktop, если он известен.
+    /// ChatGPT desktop thread id, if known.
     public var chatGPTThreadID: String?
-    /// Id сессии Claude Code (`local_<uuid>`), если впереди вкладка Code и id прочитан.
+    /// Claude Code session id (`local_<uuid>`), if the Code tab is frontmost and the id was read.
     public var claudeCodeSessionID: String?
-    /// Название этой сессии из её метаданных Claude (`claude-code-sessions`), если найдено.
+    /// This session's title from its Claude metadata (`claude-code-sessions`), if found.
     public var claudeCodeSessionTitle: String?
-    /// Переднее окно и выбранная вкладка Терминала (id окна, tty), если AppleScript разрешён.
+    /// Front window and selected Terminal tab (window id, tty), if AppleScript is allowed.
     public var terminalWindow: TerminalWindowRef?
 
     public init(
@@ -41,6 +41,6 @@ public struct FrontmostContext: Codable, Equatable, Sendable {
         self.terminalWindow = terminalWindow
     }
 
-    /// Пустой контекст: ничего не известно (нет разрешений, нет окна).
+    /// Empty context: nothing is known (no permissions, no window).
     public static let unknown = FrontmostContext()
 }

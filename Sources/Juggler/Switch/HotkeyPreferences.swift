@@ -3,27 +3,27 @@ import Foundation
 import JugglerCore
 import os
 
-/// Назначения хоткеев приложения: умолчания по типу клавиатуры + свои сочетания
-/// пользователя из `~/Library/Application Support/Juggler/hotkeys.json`.
+/// The app's hotkey assignments: defaults by keyboard type + the user's custom shortcuts
+/// from `~/Library/Application Support/Juggler/hotkeys.json`.
 ///
-/// Один экземпляр (`SwitchModule.preferences`) разделяют регистратор хоткеев,
-/// переключатель (подсказка на карточке) и раздел настроек.
+/// A single instance (`SwitchModule.preferences`) is shared by the hotkey registrar,
+/// the switcher (hint on the card) and the settings section.
 @MainActor
 final class HotkeyPreferences: ObservableObject {
     let keyboard: KeyboardKind
     let defaults: HotkeyAssignments
 
     @Published private(set) var overrides: HotkeyOverrides
-    /// Итоговые назначения (что реально регистрируется).
+    /// Effective assignments (what actually gets registered).
     @Published private(set) var assignments: HotkeyAssignments
-    /// Ошибки регистрации по действиям (OSStatus ≠ noErr), заполняет `CarbonHotkeyCenter`.
+    /// Registration errors per action (OSStatus ≠ noErr), filled in by `CarbonHotkeyCenter`.
     @Published var registrationErrors: [HotkeyAction: OSStatus] = [:]
-    /// Текст последней ошибки записи файла или `nil`.
+    /// Text of the last file write error, or `nil`.
     @Published private(set) var lastSaveError: String?
 
     private let store: HotkeyOverridesStore?
 
-    /// `store == nil` — только в памяти (самопроверка).
+    /// `store == nil` — in memory only (self-test).
     init(store: HotkeyOverridesStore?, keyboard: KeyboardKind = KeyboardDetector.current()) {
         self.store = store
         self.keyboard = keyboard
@@ -44,7 +44,7 @@ final class HotkeyPreferences: ObservableObject {
         overrides.hotkeys[action] != nil
     }
 
-    /// Назначить сочетание. Возвращает ошибку проверки или `nil` при успехе.
+    /// Assign a shortcut. Returns a validation error, or `nil` on success.
     @discardableResult
     func assign(_ hotkey: Hotkey, to action: HotkeyAction) -> HotkeyValidationError? {
         var copy = overrides
@@ -78,9 +78,9 @@ final class HotkeyPreferences: ObservableObject {
     }
 }
 
-/// Тип физической клавиатуры через Carbon `KBGetLayoutType(LMGetKbdType())`.
-/// Функции нет в заголовках SDK Command Line Tools, но она экспортируется
-/// HIToolbox — берём её через `dlsym`. Не нашлась — считаем клавиатуру ANSI.
+/// Physical keyboard type via Carbon `KBGetLayoutType(LMGetKbdType())`.
+/// The function is missing from the Command Line Tools SDK headers, but HIToolbox
+/// exports it — we get it via `dlsym`. If not found, assume an ANSI keyboard.
 enum KeyboardDetector {
     private typealias LayoutTypeFunction = @convention(c) (Int16) -> UInt32
 

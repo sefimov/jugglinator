@@ -1,7 +1,7 @@
 import JugglerCore
 import SwiftUI
 
-/// Действия над строкой списка.
+/// Actions on a list row.
 struct TaskRowActions {
     var canMoveUp: Bool
     var canMoveDown: Bool
@@ -15,8 +15,8 @@ struct TaskRowActions {
     var delete: () -> Void
 }
 
-/// Строка задачи: отметка текущей, номер, значок источника, название и заметка,
-/// «не был N мин» с цветом старения, «сделано» и меню действий.
+/// Task row: current-task marker, number, source icon, title and note,
+/// "away N min" colored by staleness, "done" and the actions menu.
 struct TaskRowView: View {
     let row: TaskRow
     let actions: TaskRowActions

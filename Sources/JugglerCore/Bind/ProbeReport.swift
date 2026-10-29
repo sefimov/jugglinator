@@ -1,8 +1,8 @@
 import Foundation
 
-/// Итог привязки в виде, пригодном для JSON (`BindingCaptureResult` не Codable).
+/// Binding outcome in a JSON-friendly form (`BindingCaptureResult` is not Codable).
 public struct CaptureSummary: Codable, Equatable, Sendable {
-    /// `captured`, `needsManualLink` или `failed`.
+    /// `captured`, `needsManualLink` or `failed`.
     public var status: String
     public var source: BindingSource?
     public var binding: TaskBinding?
@@ -22,7 +22,7 @@ public struct CaptureSummary: Codable, Equatable, Sendable {
     }
 }
 
-/// JSON для `Juggler --probe-frontmost`.
+/// JSON for `Juggler --probe-frontmost`.
 public struct ProbeReport: Codable, Equatable, Sendable {
     public var context: FrontmostContext
     public var diagnostics: ContextDiagnostics
@@ -42,15 +42,15 @@ public struct ProbeReport: Codable, Equatable, Sendable {
     }
 }
 
-/// Ключи `--probe-frontmost`: `--delay <сек>`, `--app <bundle id>`, `--prompt`, `--window-title <заголовок>`.
+/// `--probe-frontmost` options: `--delay <sec>`, `--app <bundle id>`, `--prompt`, `--window-title <title>`.
 public struct ProbeOptions: Equatable, Sendable {
-    /// Пауза перед чтением, чтобы успеть переключиться на нужное окно.
+    /// Pause before reading, to have time to switch to the right window.
     public var delay: Double = 0
-    /// Читать контекст указанного запущенного приложения, а не переднего.
+    /// Read the context of the given running app instead of the frontmost one.
     public var bundleID: String?
-    /// Разрешить системные запросы разрешений (Automation для Chrome).
+    /// Allow system permission prompts (Automation for Chrome).
     public var allowPrompts = false
-    /// Подставить этот заголовок окна вместо прочитанного: проверить поиск треда ChatGPT без Accessibility.
+    /// Use this window title instead of the one read: to test ChatGPT thread lookup without Accessibility.
     public var windowTitle: String?
 
     public init(delay: Double = 0, bundleID: String? = nil, allowPrompts: Bool = false, windowTitle: String? = nil) {

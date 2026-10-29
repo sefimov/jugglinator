@@ -1,8 +1,8 @@
 import Foundation
 import JugglerCore
 
-// Выбор языка: список, определение языка по AppleLanguages, запись и снятие значения
-// в отдельном домене (настоящие настройки com.sefimov.juggler не затрагиваются), команда перезапуска.
+// Language choice: the list, language detection from AppleLanguages, writing and clearing the value
+// in a separate domain (the real com.sefimov.juggler defaults are untouched), the relaunch command.
 
 extension UIChecks {
     static func checkLanguage(_ c: CheckRunner) {
@@ -57,13 +57,13 @@ extension UIChecks {
             c.expectNil(settings.storedOverride, "«Как в системе» снимает значение")
             c.expectEqual(settings.choice, .system, "снова «Как в системе»")
 
-            // Значение, записанное не нами (например, системными настройками «Язык для приложения»).
+            // A value not written by us (e.g. by the system's per-app "Language" setting).
             defaults.set(["ja-JP", "en-US"], forKey: LanguageSettings.key)
             c.expectEqual(settings.choice, .language("ja"), "чужое значение ja-JP читается как ja")
             defaults.set([String](), forKey: LanguageSettings.key)
             c.expectEqual(settings.choice, .system, "пустой список — как в системе")
 
-            // Другой домен не видит выбранного.
+            // Another domain doesn't see the chosen value.
             let other = "com.sefimov.juggler.checks.language.other.\(UUID().uuidString)"
             if let otherDefaults = UserDefaults(suiteName: other) {
                 defer { otherDefaults.removePersistentDomain(forName: other) }

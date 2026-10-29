@@ -1,4 +1,4 @@
-# Сборка и проверки на каждый push и PR в main; на тег v* — релиз с Juggler.app.zip.
+# Build and checks on every push and PR to main; on a v* tag — a release with Juggler.app.zip.
 name: CI
 
 on:
@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          # CFBundleVersion в bundle.sh — число коммитов, нужна полная история.
+          # CFBundleVersion in bundle.sh is the commit count, so full history is needed.
           fetch-depth: 0
 
       - name: Версии инструментов
@@ -47,7 +47,7 @@ jobs:
 
       - name: Сборка .app (scripts/bundle.sh)
         run: |
-          # На тег v1.2.3 версия 1.2.3, иначе значение по умолчанию из bundle.sh.
+          # On tag v1.2.3 the version is 1.2.3, otherwise the default from bundle.sh.
           if [ "$GITHUB_REF_TYPE" = tag ]; then export JUGGLER_VERSION="${GITHUB_REF_NAME#v}"; fi
           scripts/bundle.sh
 

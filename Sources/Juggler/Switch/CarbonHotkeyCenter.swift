@@ -3,16 +3,16 @@ import Combine
 import Foundation
 import JugglerCore
 
-/// Глобальные хоткеи через Carbon `RegisterEventHotKey`.
+/// Global hotkeys via Carbon `RegisterEventHotKey`.
 ///
-/// Регистрируются виртуальные коды клавиш, а не символы, поэтому хоткеи одинаково
-/// работают в русской и английской раскладках. Разрешение Accessibility не нужно.
-/// При изменении назначений в `HotkeyPreferences` хоткеи перерегистрируются сами.
+/// Virtual key codes are registered, not characters, so hotkeys work the same
+/// in Russian and English layouts. No Accessibility permission is needed.
+/// When assignments in `HotkeyPreferences` change, hotkeys re-register themselves.
 @MainActor
 final class CarbonHotkeyCenter: HotkeyRegistering {
-    /// 'JGLR' — подпись хоткеев приложения.
+    /// 'JGLR' — signature of the app's hotkeys.
     nonisolated static let appSignature: OSType = 0x4A47_4C52
-    /// 'JGLT' — подпись для самопроверки.
+    /// 'JGLT' — signature for the self-test.
     nonisolated static let testSignature: OSType = 0x4A47_4C54
 
     let preferences: HotkeyPreferences
@@ -43,8 +43,8 @@ final class CarbonHotkeyCenter: HotkeyRegistering {
             .dropFirst()
             .removeDuplicates()
             .sink { [weak self] (new: HotkeyAssignments) in
-                // @Published шлёт значение до записи в свойство — регистрируем именно его.
-                // Назначения меняются только на главном потоке.
+                // @Published emits the value before it is stored in the property — register that value.
+                // Assignments change only on the main thread.
                 guard let self else { return }
                 MainActor.assumeIsolated { self.applyAssignments(new) }
             }
@@ -65,9 +65,9 @@ final class CarbonHotkeyCenter: HotkeyRegistering {
         registerAll(assignments)
     }
 
-    // MARK: Пауза на время записи сочетания в настройках
+    // MARK: Pause while a shortcut is being recorded in settings
 
-    /// Снять хоткеи, чтобы записываемое нажатие дошло до окна настроек.
+    /// Unregister hotkeys so the key press being recorded reaches the settings window.
     func suspend() {
         suspendCount += 1
         if suspendCount == 1 { unregisterAll() }
@@ -79,9 +79,9 @@ final class CarbonHotkeyCenter: HotkeyRegistering {
         if suspendCount == 0, isStarted { registerAll() }
     }
 
-    // MARK: Регистрация
+    // MARK: Registration
 
-    /// Перерегистрирует все назначенные хоткеи. Возвращает ошибки по действиям.
+    /// Re-registers all assigned hotkeys. Returns errors per action.
     @discardableResult
     func registerAll(_ assignments: HotkeyAssignments? = nil) -> [HotkeyAction: OSStatus] {
         unregisterAll()
@@ -106,7 +106,7 @@ final class CarbonHotkeyCenter: HotkeyRegistering {
         return errors
     }
 
-    /// Снимает все хоткеи. Возвращает ошибки `UnregisterEventHotKey`, если были.
+    /// Unregisters all hotkeys. Returns `UnregisterEventHotKey` errors, if any.
     @discardableResult
     func unregisterAll() -> [OSStatus] {
         var failures: [OSStatus] = []
@@ -134,7 +134,7 @@ final class CarbonHotkeyCenter: HotkeyRegistering {
         let index = Int(id.id) - 1
         guard HotkeyAction.allCases.indices.contains(index) else { return OSStatus(eventNotHandledErr) }
         let action = HotkeyAction.allCases[index]
-        // Выходим из Carbon-колбэка прежде, чем выполнять действие (AppleScript, активация).
+        // Leave the Carbon callback before performing the action (AppleScript, activation).
         DispatchQueue.main.async { [weak self] in
             MainActor.assumeIsolated { self?.handler?(action) }
         }
@@ -142,7 +142,7 @@ final class CarbonHotkeyCenter: HotkeyRegistering {
     }
 }
 
-/// C-колбэк Carbon: события приходят в цель приложения на главном потоке.
+/// Carbon C callback: events arrive at the application target on the main thread.
 private func carbonHotkeyCallback(
     _ next: EventHandlerCallRef?, _ event: EventRef?, _ userData: UnsafeMutableRawPointer?
 ) -> OSStatus {

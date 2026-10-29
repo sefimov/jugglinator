@@ -5,18 +5,18 @@ import os
 
 private let log = Logger(subsystem: JugglerLog.subsystem, category: "bind")
 
-/// Читает контекст переднего окна: приложение (NSWorkspace), заголовок окна (Accessibility),
-/// активную вкладку Chrome и переднее окно Терминала с tty вкладки (AppleScript, только при выданном
-/// разрешении), id чата Claude
-/// или сессии Claude Code (Accessibility + `AXManualAccessibility`). Системных запросов не показывает.
+/// Reads the frontmost window context: app (NSWorkspace), window title (Accessibility),
+/// the active Chrome tab and the front Terminal window with the tab's tty (AppleScript, only when
+/// permission is granted), Claude chat id
+/// or Claude Code session id (Accessibility + `AXManualAccessibility`). Shows no system prompts.
 ///
-/// Название сессии Claude Code читается из её метаданных (`claude-code-sessions`, только чтение)
-/// лишь в интерактивном режиме — при привязке; при переключении хватает id.
-/// Так же только при привязке тред ChatGPT ищется по заголовку окна в `~/.codex/session_index.jsonl`
-/// (только чтение; итог — в `lastDiagnostics.chatGPTThread`). При переключении ChatGPT, как и раньше,
-/// узнаётся по заголовку окна.
+/// The Claude Code session name is read from its metadata (`claude-code-sessions`, read-only)
+/// only in interactive mode — when binding; for switching the id is enough.
+/// Likewise, only when binding, the ChatGPT thread is looked up by window title in `~/.codex/session_index.jsonl`
+/// (read-only; the outcome goes to `lastDiagnostics.chatGPTThread`). When switching, ChatGPT is, as before,
+/// recognized by window title.
 ///
-/// Если впереди сам Juggler (меню в меню-баре), берётся последнее активное другое приложение.
+/// If Juggler itself is in front (menu bar menu), the last other active app is used.
 @MainActor
 final class LiveFrontmostContextProvider: FrontmostContextProviding {
     let chrome: ChromeController
@@ -26,11 +26,11 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
     private var observer: NSObjectProtocol?
     private let ownPID = ProcessInfo.processInfo.processIdentifier
     private let ownBundleID = Bundle.main.bundleIdentifier
-    /// Приложения, у которых уже включён `AXManualAccessibility` (pid).
+    /// Apps that already have `AXManualAccessibility` enabled (pid).
     private var manualAccessibilityEnabled = Set<pid_t>()
-    /// Папка метаданных сессий Claude Code.
+    /// Claude Code session metadata folder.
     private let claudeCodeSessionsRoot: URL?
-    /// Список тредов ChatGPT (`session_index.jsonl`).
+    /// List of ChatGPT threads (`session_index.jsonl`).
     private let chatGPTIndexURL: URL?
 
     init(chrome: ChromeController,
@@ -58,9 +58,9 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
         context(interactive: false)
     }
 
-    /// `interactive` — сценарий привязки, запущенный пользователем: для Claude даём Electron
-    /// чуть больше времени построить дерево веб-содержимого.
-    /// `windowTitleOverride` — только для `--probe-frontmost --window-title`: заголовок вместо прочитанного.
+    /// `interactive` — a binding flow started by the user: for Claude we give Electron
+    /// a bit more time to build the web content tree.
+    /// `windowTitleOverride` — only for `--probe-frontmost --window-title`: a title used instead of the read one.
     func context(interactive: Bool, bundleID: String? = nil, windowTitleOverride: String? = nil) -> FrontmostContext {
         var diagnostics = ContextDiagnostics(accessibilityTrusted: AX.isTrusted)
         guard let app = targetApp(bundleID: bundleID, diagnostics: &diagnostics) else {
@@ -146,7 +146,7 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
         return context
     }
 
-    // MARK: - Внутреннее
+    // MARK: - Internal
 
     private static func note(for lookup: ChatGPTThreadLookup) -> String? {
         switch lookup.status {
@@ -191,7 +191,7 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
             manualAccepted = AX.enableManualAccessibility(pid: pid)
             manualAccessibilityEnabled.insert(pid)
         }
-        // Electron строит дерево после включения флага не сразу: несколько коротких попыток.
+        // Electron doesn't build the tree right after the flag is enabled: a few short attempts.
         let attempts = interactive ? 6 : 2
         var last: (urls: [String], foundWebArea: Bool) = ([], false)
         for attempt in 0..<attempts {

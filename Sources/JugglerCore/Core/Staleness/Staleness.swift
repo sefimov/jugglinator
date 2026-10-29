@@ -1,21 +1,21 @@
 import Foundation
 
-/// Уровень «старения» задачи: по нему UI и карточка выбирают цвет.
+/// A task's "staleness" level: the UI and the card pick a color by it.
 public enum StalenessLevel: String, Codable, CaseIterable, Sendable {
-    /// Ни разу не открывалась.
+    /// Never opened.
     case never
-    /// Недавно: меньше `aging` минут.
+    /// Recent: less than `aging` minutes.
     case fresh
-    /// Пора бы вернуться.
+    /// Time to come back.
     case aging
-    /// Давно не был.
+    /// Away for a long time.
     case stale
-    /// Похоже, забыта.
+    /// Looks forgotten.
     case forgotten
 }
 
-/// Пороги уровней в минутах. По умолчанию рассчитаны на сценарий
-/// «три задачи по ~3 минуты»: обычный круг укладывается в «свежую» зону.
+/// Level thresholds in minutes. Defaults are tuned for the
+/// "three tasks of ~3 minutes each" scenario: a normal cycle stays in the "fresh" zone.
 public struct StalenessThresholds: Equatable, Codable, Sendable {
     public var agingMinutes: Int
     public var staleMinutes: Int
@@ -31,8 +31,8 @@ public struct StalenessThresholds: Equatable, Codable, Sendable {
 }
 
 public enum Staleness {
-    /// Целые минуты с последнего захода (округление вниз). Время в будущем
-    /// (сдвиг часов) считается нулём. `nil` — захода не было.
+    /// Whole minutes since the last visit (rounded down). A time in the future
+    /// (clock shift) counts as zero. `nil` — no visit yet.
     public static func minutesSince(_ lastVisited: Date?, now: Date) -> Int? {
         guard let lastVisited else { return nil }
         let seconds = now.timeIntervalSince(lastVisited)
@@ -50,13 +50,13 @@ public enum Staleness {
         return .fresh
     }
 
-    /// Текст «не был N мин».
+    /// The "away N min" text.
     ///
-    /// - нет захода → «ещё не был»
-    /// - меньше минуты → «был только что»
-    /// - до часа → «не был 7 мин»
-    /// - до суток → «не был 2 ч» / «не был 1 ч 5 мин»
-    /// - дальше → «не был 3 дн»
+    /// - no visit → "not visited yet"
+    /// - under a minute → "just visited"
+    /// - under an hour → "away 7 min"
+    /// - under a day → "away 2 h" / "away 1 h 5 min"
+    /// - longer → "away 3 d"
     public static func absenceText(lastVisited: Date?, now: Date) -> String {
         guard let minutes = minutesSince(lastVisited, now: now) else { return loc("ещё не был") }
         if minutes < 1 { return loc("был только что") }
