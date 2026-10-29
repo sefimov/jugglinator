@@ -5,7 +5,7 @@ import JugglerCore
 ///
 /// Components come only from the module factories in their folders:
 /// `BindModule` (Sources/Juggler/Bind/), `SwitchModule` (Sources/Juggler/Switch/),
-/// `UIModule` (Sources/Juggler/UI/). Second-stage tasks change implementations inside
+/// `UIModule` (Sources/Juggler/UI/), `MCPModule` (Sources/Juggler/MCP/). Second-stage tasks change implementations inside
 /// their modules and don't touch this file; PACK verifies the final wiring.
 @MainActor
 final class AppEnvironment {
@@ -18,6 +18,8 @@ final class AppEnvironment {
     let switcher: TaskSwitching
     let doneToggler: DoneToggling
     let hotkeys: HotkeyRegistering
+    /// The MCP server for AI assistants (`nil` in wiring self-tests that don't need it).
+    let mcp: MCPServerController?
 
     private(set) var isStarted = false
 
@@ -28,7 +30,8 @@ final class AppEnvironment {
         card: TransitionCardPresenting,
         switcher: TaskSwitching,
         doneToggler: DoneToggling,
-        hotkeys: HotkeyRegistering
+        hotkeys: HotkeyRegistering,
+        mcp: MCPServerController? = nil
     ) {
         self.model = model
         self.bind = bind
@@ -37,6 +40,7 @@ final class AppEnvironment {
         self.switcher = switcher
         self.doneToggler = doneToggler
         self.hotkeys = hotkeys
+        self.mcp = mcp
     }
 
     /// Production build. `store` can be substituted (e.g., for the self-test).
@@ -51,20 +55,23 @@ final class AppEnvironment {
         let doneToggler = SwitchModule.makeDoneToggler(model: model, bind: bind, card: card,
                                                        addWithDialogs: { [weak binder] in binder?.bindCurrentChat() })
         let hotkeys = SwitchModule.makeHotkeys()
+        let mcp = MCPModule.makeServer(model: model, bind: bind, switcher: switcher, card: card)
         return AppEnvironment(model: model, bind: bind, binder: binder, card: card, switcher: switcher,
-                              doneToggler: doneToggler, hotkeys: hotkeys)
+                              doneToggler: doneToggler, hotkeys: hotkeys, mcp: mcp)
     }
 
-    /// Start after `applicationDidFinishLaunching`: registers hotkeys.
+    /// Start after `applicationDidFinishLaunching`: registers hotkeys, starts the MCP server if it is enabled.
     func start() {
         guard !isStarted else { return }
         isStarted = true
         hotkeys.start { [weak self] action in
             self?.perform(action)
         }
+        mcp?.startIfEnabled()
     }
 
     func stop() {
+        mcp?.stop()
         hotkeys.stop()
         isStarted = false
     }

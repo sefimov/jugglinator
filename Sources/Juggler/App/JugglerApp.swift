@@ -1,14 +1,20 @@
 import AppKit
+import JugglerCore
 import SwiftUI
 
 /// Entry point. Command-line flags are handled before SwiftUI starts:
 /// - `--self-test` — self-test of all components without windows or permission prompts;
-/// - `--probe-frontmost` — print JSON with the frontmost window context (BIND).
+/// - `--probe-frontmost` — print JSON with the frontmost window context (BIND);
+/// - `--mcp` — stdio MCP server for AI assistants, relayed to the running app (MCP).
 @main
 enum JugglerEntry {
     @MainActor
     static func main() {
         let arguments = Array(CommandLine.arguments.dropFirst())
+        if arguments.contains(MCPConfig.flag) {
+            // A plain stdio process launched by Claude Desktop or Claude Code: no AppKit, no windows.
+            exit(MCPModule.runStdioBridge())
+        }
         if arguments.contains("--self-test") {
             exit(SelfTest.run())
         }

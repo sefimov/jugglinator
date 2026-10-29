@@ -184,3 +184,15 @@
 "Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: 작업 %lld번이 가장 오래 대기 중 — %@, %@";
 "Juggler: других задач в работе нет" = "Juggler: 진행 중인 다른 작업 없음";
 "Juggler: нет задач в работе" = "Juggler: 진행 중인 작업 없음";
+
+/* MCP-сервер (настройки) */
+"MCP-сервер" = "MCP 서버";
+"Включить MCP-сервер" = "MCP 서버 켜기";
+"ИИ-ассистенты — Claude Desktop, Claude Code, ChatGPT — смогут видеть список задач, переключаться на задачу, добавлять текущее окно, отмечать задачи сделанными и менять заметки. Работает только на этом Mac, через сокет в папке данных Juggler, без сети." = "AI 어시스턴트(Claude Desktop, Claude Code, ChatGPT)가 작업 목록을 보고, 작업으로 전환하고, 현재 윈도우를 추가하고, 작업을 완료로 표시하고, 메모를 변경할 수 있습니다. 이 Mac에서만, Juggler 데이터 폴더의 소켓을 통해 네트워크 없이 작동합니다.";
+"Juggler запущен не из Juggler.app: в примерах ниже путь к текущей сборке." = "Juggler가 Juggler.app에서 실행되고 있지 않습니다. 아래 예시는 현재 빌드의 경로를 가리킵니다.";
+"Claude Desktop: добавьте в claude_desktop_config.json" = "Claude Desktop: claude_desktop_config.json에 추가";
+"Claude Code: выполните в Терминале" = "Claude Code: 터미널에서 실행";
+"ChatGPT (Codex): добавьте в ~/.codex/config.toml" = "ChatGPT (Codex): ~/.codex/config.toml에 추가";
+"Сокет" = "소켓";
+"Скопировать" = "복사";
+"Не удалось запустить MCP-сервер: %@" = "MCP 서버를 시작할 수 없습니다: %@";

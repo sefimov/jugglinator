@@ -3,7 +3,7 @@ import JugglerCore
 import ServiceManagement
 import SwiftUI
 
-/// Settings window: hotkeys section (SWITCH component), interface language, launch at login, data file.
+/// Settings window: hotkeys section (SWITCH component), interface language, launch at login, MCP server, data file.
 struct SettingsView: View {
     let environment: AppEnvironment
     @StateObject private var loginItem = LoginItemController()
@@ -42,6 +42,8 @@ struct SettingsView: View {
                     }
                 }
             }
+
+            MCPModule.settingsView(environment: environment)
 
             Section(loc("Данные")) {
                 LabeledContent(loc("Файл задач")) {

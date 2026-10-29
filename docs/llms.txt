@@ -10,6 +10,8 @@ Bindings: Claude desktop chat by UUID (claude:// link); Claude Code session (Cod
 
 Install: download Juggler.app.zip from GitHub Releases (Apple silicon), unzip, move to Applications; the app is not notarized, so on first launch choose "Open Anyway" in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine /Applications/Juggler.app`. Or build from source with the Command Line Tools: `scripts/bundle.sh`. Not on Homebrew (casks require notarization) and not on the Mac App Store (needs Accessibility and Apple Events, which the sandbox forbids).
 
+MCP server (Model Context Protocol): built in, off by default; turn on "MCP server" in Settings and add `/Applications/Juggler.app/Contents/MacOS/Juggler --mcp` as a stdio MCP server to Claude Desktop (claude_desktop_config.json), Claude Code (`claude mcp add juggler -- /Applications/Juggler.app/Contents/MacOS/Juggler --mcp`) or ChatGPT desktop / Codex (~/.codex/config.toml). Tools: list_tasks, switch_to_task, add_current_window, mark_done, mark_in_progress, set_note. The relay talks to the running app over a local Unix socket; no network.
+
 Privacy: no network code, no analytics. Reads ChatGPT's local session_index.jsonl and Claude Code's local session files for ids and titles; stores its list in ~/Library/Application Support/Juggler/tasks.json.
 
 Interface languages: Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish.
@@ -17,7 +19,7 @@ Interface languages: Arabic, Chinese (Simplified), English, French, German, Hind
 ## Docs
 
 - [Website](https://sefimov.github.io/juggler/): problem, features, install, hotkeys, comparison with Cmd-Tab, AltTab, Contexts, rcmd, tmux and Raycast, FAQ
-- [README](https://github.com/sefimov/juggler/blob/main/README.md): everything above plus building, bindings in detail, permissions, signing for development, localization, package layout
+- [README](https://github.com/sefimov/juggler/blob/main/README.md): everything above plus the MCP server (setup snippets, tool list, protocol), building, bindings in detail, permissions, signing for development, localization, package layout
 - [Releases](https://github.com/sefimov/juggler/releases): Juggler.app.zip per version
 - [Source code](https://github.com/sefimov/juggler): Swift package, MIT license
 

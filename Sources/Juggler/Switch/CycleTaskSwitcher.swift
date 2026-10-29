@@ -38,7 +38,14 @@ final class CycleTaskSwitcher: TaskSwitching {
     }
 
     func activateTask(id: UUID) {
-        guard let task = model.document.task(withID: id) else { return }
+        activate(id: id)
+    }
+
+    /// `activateTask` that also reports how the binding opened (for the MCP server);
+    /// `nil` for a task without a binding or an unknown id.
+    @discardableResult
+    func activate(id: UUID) -> ActivationResult? {
+        guard let task = model.document.task(withID: id) else { return nil }
         // "away N min" — as of the switch, before the visit time is updated.
         let now = model.clock()
         let activation = task.binding.map { bind.activator.activate($0) }
@@ -50,5 +57,6 @@ final class CycleTaskSwitcher: TaskSwitching {
             card.show(content)
         }
         model.markVisited(id)
+        return activation
     }
 }

@@ -3,7 +3,7 @@ import JugglerCore
 
 // `swift run JugglerChecks [-v] [Area…]`
 //   -v        — print every passing check;
-//   Area      — run only the suites with these names (Core, UI, Switch, Bind);
+//   Area      — run only the suites with these names (Core, UI, Switch, Bind, MCP);
 //   --self-fail — add a deliberately failing check (to verify the exit code is non-zero).
 // Exit code 0 — everything passed, 1 — there are failures.
 //
@@ -15,6 +15,7 @@ let suites: [CheckSuite.Type] = [
     UIChecks.self,
     SwitchChecks.self,
     BindChecks.self,
+    MCPChecks.self,
 ]
 
 let arguments = Array(CommandLine.arguments.dropFirst())
