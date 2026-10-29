@@ -1,19 +1,19 @@
 import Foundation
 
-// ⌃⌥D «отметить сделанной / вернуть в работу» (D24): чистая логика.
-//   - DoneToggle      — выбор задачи (точное совпадение переднего окна, иначе текущая) и переключение;
-//   - DoneToggleTexts — тексты карточки и название действия в настройках хоткеев.
+// ⌃§ "mark done / back to work" (D24): pure logic.
+//   - DoneToggle      — picks the task (exact match of the frontmost window, otherwise the current one) and toggles;
+//   - DoneToggleTexts — card texts and the action name in hotkey settings.
 
-/// Итог нажатия ⌃⌥D.
+/// Outcome of pressing ⌃§.
 public enum DoneToggleResult: Equatable, Sendable {
-    /// Отметка переключена. `isDone` — новое значение.
+    /// The mark was toggled. `isDone` is the new value.
     case changed(taskID: UUID, number: Int, title: String, isDone: Bool)
-    /// Задач нет: ничего не менялось.
+    /// No tasks: nothing changed.
     case noTasks
-    /// Задачи есть, но текущей нет (▸ не стоит) и переднее окно ни с одной не совпало: ничего не менялось.
+    /// There are tasks, but no current one (no ▸) and the frontmost window matched none: nothing changed.
     case noCurrentTask
 
-    /// Менялась ли отметка (иначе — звук и карточка с пояснением).
+    /// Whether the mark changed (otherwise — a sound and a card with an explanation).
     public var didChange: Bool {
         if case .changed = self { return true }
         return false
@@ -21,16 +21,16 @@ public enum DoneToggleResult: Equatable, Sendable {
 }
 
 public enum DoneToggle {
-    /// Цель: задача, которой точно соответствует переднее окно (`ExactTaskMatcher`),
-    /// иначе текущая задача (▸ в списке — последняя активная). `nil`, если нет ни той, ни другой.
+    /// Target: the task the frontmost window exactly matches (`ExactTaskMatcher`),
+    /// otherwise the current task (▸ in the list — the last active one). `nil` if there is neither.
     public static func target(document: TasksDocument, context: FrontmostContext) -> UUID? {
         if let exact = ExactTaskMatcher.match(context: context, document: document) { return exact }
         guard let current = document.lastActiveTaskID, document.index(of: current) != nil else { return nil }
         return current
     }
 
-    /// Переключает отметку «сделано» у цели. Контекст читается только если задачи есть.
-    /// Без задач и без цели документ не меняется.
+    /// Toggles the "done" mark on the target. The context is read only if there are tasks.
+    /// Without tasks and without a target the document is not changed.
     @discardableResult
     public static func toggle(_ document: inout TasksDocument, context: () -> FrontmostContext) -> DoneToggleResult {
         guard !document.tasks.isEmpty else { return .noTasks }
@@ -43,16 +43,16 @@ public enum DoneToggle {
     }
 }
 
-/// Тексты ⌃⌥D: карточка и настройки хоткеев.
+/// ⌃§ texts: card and hotkey settings.
 public enum DoneToggleTexts {
-    /// Название действия ⌃⌥D: настройки хоткеев, README.
+    /// Name of the ⌃§ action: hotkey settings, README.
     public static var actionTitle: String { loc("Отметить сделанной / вернуть в работу") }
-    /// Карточка при пустом списке.
+    /// Card for an empty list.
     public static var noTasksMessage: String { loc("Задач пока нет: добавьте задачу в меню Juggler") }
-    /// Карточка, когда задачи есть, но текущая не выбрана.
+    /// Card when there are tasks but no current one is selected.
     public static var noCurrentTaskMessage: String { loc("Текущей задачи нет: перейдите к одной из задач") }
 
-    /// «Задача 2 «Название» сделана» / «Задача 2 «Название» вернулась в работу».
+    /// "Task 2 "Title" done" / "Task 2 "Title" back to work".
     public static func card(number: Int, title: String, isDone: Bool) -> String {
         let shown = TransitionCardBuilder.title(title)
         return isDone
@@ -60,7 +60,7 @@ public enum DoneToggleTexts {
             : loc("Задача \(number) «\(shown)» вернулась в работу")
     }
 
-    /// Текст карточки по итогу.
+    /// Card text for the outcome.
     public static func message(for result: DoneToggleResult) -> String {
         switch result {
         case .changed(_, let number, let title, let isDone): return card(number: number, title: title, isDone: isDone)

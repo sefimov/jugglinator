@@ -1,11 +1,11 @@
 import Foundation
 
-// Хоткей = виртуальный код физической клавиши (kVK_*) + модификаторы.
-// Коды не зависят от раскладки, поэтому один и тот же хоткей работает в РУ и EN.
-// Здесь только Foundation: значения масок Carbon продублированы константами,
-// приложение сверяет их с настоящими в самопроверке.
+// Hotkey = virtual code of a physical key (kVK_*) + modifiers.
+// Codes do not depend on the keyboard layout, so the same hotkey works in RU and EN.
+// Foundation only here: Carbon mask values are duplicated as constants,
+// the app checks them against the real ones in its self-check.
 
-/// Модификаторы хоткея. Порядок показа — как в macOS: ⌃⌥⇧⌘.
+/// Hotkey modifiers. Display order is as in macOS: ⌃⌥⇧⌘.
 public struct HotkeyModifiers: OptionSet, Hashable, Sendable {
     public let rawValue: UInt32
     public init(rawValue: UInt32) { self.rawValue = rawValue }
@@ -17,7 +17,7 @@ public struct HotkeyModifiers: OptionSet, Hashable, Sendable {
 
     public static let all: HotkeyModifiers = [.control, .option, .shift, .command]
 
-    /// Маски Carbon (`Events.h`): cmdKey, shiftKey, optionKey, controlKey.
+    /// Carbon masks (`Events.h`): cmdKey, shiftKey, optionKey, controlKey.
     public enum CarbonMask {
         public static let command: UInt32 = 0x0100
         public static let shift: UInt32 = 0x0200
@@ -25,7 +25,7 @@ public struct HotkeyModifiers: OptionSet, Hashable, Sendable {
         public static let control: UInt32 = 0x1000
     }
 
-    /// Маска модификаторов для `RegisterEventHotKey`.
+    /// Modifier mask for `RegisterEventHotKey`.
     public var carbonFlags: UInt32 {
         var flags: UInt32 = 0
         if contains(.command) { flags |= CarbonMask.command }
@@ -44,7 +44,7 @@ public struct HotkeyModifiers: OptionSet, Hashable, Sendable {
         self = m
     }
 
-    /// «⌃⌥⇧⌘» в стандартном порядке.
+    /// "⌃⌥⇧⌘" in standard order.
     public var symbols: String {
         var s = ""
         if contains(.control) { s += "⌃" }
@@ -54,7 +54,7 @@ public struct HotkeyModifiers: OptionSet, Hashable, Sendable {
         return s
     }
 
-    /// Имена для хранения: ["control", "option", "shift", "command"].
+    /// Names for storage: ["control", "option", "shift", "command"].
     public var names: [String] {
         var n: [String] = []
         if contains(.control) { n.append("control") }
@@ -64,7 +64,7 @@ public struct HotkeyModifiers: OptionSet, Hashable, Sendable {
         return n
     }
 
-    /// Модификатор по символу или слову (без учёта регистра).
+    /// Modifier by symbol or word (case-insensitive).
     public static func named(_ token: String) -> HotkeyModifiers? {
         switch token.lowercased() {
         case "⌃", "^", "ctrl", "control", "ctl": return .control
@@ -76,19 +76,21 @@ public struct HotkeyModifiers: OptionSet, Hashable, Sendable {
     }
 }
 
-/// Виртуальные коды клавиш (`kVK_*` из Carbon `Events.h`), которые нужны логике.
+/// Virtual key codes (`kVK_*` from Carbon `Events.h`) needed by the logic.
 public enum KeyCode {
-    /// ISO: клавиша над Tab, слева от 1 (§ на английской раскладке).
+    /// Tab (kVK_Tab): the same key on every keyboard type.
+    public static let tab: UInt32 = 0x30
+    /// ISO: the key above Tab, left of 1 (§ on the English layout).
     public static let isoSection: UInt32 = 0x0A
-    /// ANSI: клавиша над Tab, слева от 1 (`); на ISO-клавиатуре — у левого Shift.
+    /// ANSI: the key above Tab, left of 1 (`); on an ISO keyboard — next to the left Shift.
     public static let ansiGrave: UInt32 = 0x32
-    /// Физическая клавиша D (kVK_ANSI_D): на русской раскладке печатает «В», хоткей работает так же.
+    /// Physical D key (kVK_ANSI_D): types "В" on the Russian layout, the hotkey works the same.
     public static let ansiD: UInt32 = 0x02
     public static let escape: UInt32 = 0x35
     public static let delete: UInt32 = 0x33
     public static let forwardDelete: UInt32 = 0x75
 
-    /// Коды клавиш-модификаторов: сами по себе хоткеем быть не могут.
+    /// Modifier key codes: cannot be a hotkey on their own.
     public static let modifierKeys: Set<UInt32> = [
         0x37, 0x36, // Command, Right Command
         0x38, 0x3C, // Shift, Right Shift
@@ -104,16 +106,16 @@ public enum KeyCode {
         0x6A: 16, 0x40: 17, 0x4F: 18, 0x50: 19, 0x5A: 20,
     ]
 
-    /// Имя физической клавиши (по американской раскладке) для показа.
+    /// Physical key name (per the US layout) for display.
     public static func displayName(_ code: UInt32) -> String {
-        if code == 0x31 { return loc("Пробел") } // переводится на выбранный сейчас язык, не кэшируется
+        if code == 0x31 { return loc("Пробел") } // translated into the currently selected language, not cached
         if let name = names[code] { return name }
         if let f = functionKeys[code] { return "F\(f)" }
         return loc("Клавиша \(Int(code))")
     }
 
-    /// Код клавиши по имени: символ («§», «A», «1»), слово («space», «f5»)
-    /// или явный код («#10», «key10», «0x0A»).
+    /// Key code by name: a symbol ("§", "A", "1"), a word ("space", "f5")
+    /// or an explicit code ("#10", "key10", "0x0A").
     public static func code(named raw: String) -> UInt32? {
         let token = raw.trimmingCharacters(in: .whitespaces)
         guard !token.isEmpty else { return nil }
@@ -176,7 +178,7 @@ public enum KeyCode {
     ]
 }
 
-/// Глобальный хоткей: физическая клавиша и модификаторы.
+/// Global hotkey: physical key and modifiers.
 public struct Hotkey: Hashable, Sendable {
     public var keyCode: UInt32
     public var modifiers: HotkeyModifiers
@@ -186,21 +188,21 @@ public struct Hotkey: Hashable, Sendable {
         self.modifiers = modifiers.intersection(.all)
     }
 
-    /// Для показа: «⌃⇧§».
+    /// For display: "⌃⇧§".
     public var displayString: String {
         modifiers.symbols + KeyCode.displayName(keyCode)
     }
 
-    /// Для хранения и журналов: «control+shift+#10». Разбирается обратно `Hotkey(parsing:)`.
+    /// For storage and logs: "control+shift+#10". Parsed back by `Hotkey(parsing:)`.
     public var storageString: String {
         (modifiers.names + ["#\(keyCode)"]).joined(separator: "+")
     }
 
-    /// Разбор строки хоткея. Понимает:
-    /// - символы модификаторов перед клавишей: «⌃⇧§», «⌘⌥K»;
-    /// - слова через «+»: «ctrl+shift+section», «Control+Option+F5»;
-    /// - явный код клавиши: «control+#10», «ctrl+0x0A».
-    /// Повтор модификатора допускается, неизвестное слово — `nil`.
+    /// Parses a hotkey string. Understands:
+    /// - modifier symbols before the key: "⌃⇧§", "⌘⌥K";
+    /// - words joined by "+": "ctrl+shift+section", "Control+Option+F5";
+    /// - an explicit key code: "control+#10", "ctrl+0x0A".
+    /// Repeated modifiers are allowed, an unknown word gives `nil`.
     public init?(parsing raw: String) {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return nil }
@@ -212,7 +214,7 @@ public struct Hotkey: Hashable, Sendable {
             var parts = text.split(separator: "+", omittingEmptySubsequences: false).map {
                 $0.trimmingCharacters(in: .whitespaces)
             }
-            // «ctrl++» — клавиша «+» не поддерживается (её нет на физической раскладке без Shift).
+            // "ctrl++" — the "+" key is not supported (it does not exist on the physical layout without Shift).
             guard let last = parts.popLast(), !last.isEmpty else { return nil }
             for part in parts {
                 guard !part.isEmpty else { return nil }
@@ -229,7 +231,7 @@ public struct Hotkey: Hashable, Sendable {
             keyToken = text
         }
 
-        // Символы модификаторов прямо перед клавишей: «⌃⇧§».
+        // Modifier symbols right before the key: "⌃⇧§".
         if let symbols = Hotkey.symbolModifiers(keyToken), !symbols.rest.isEmpty {
             modifiers.formUnion(symbols.modifiers)
             keyToken = symbols.rest
@@ -239,7 +241,7 @@ public struct Hotkey: Hashable, Sendable {
         self.init(keyCode: code, modifiers: modifiers)
     }
 
-    /// Отделяет ведущие символы ⌃⌥⇧⌘ от остатка строки.
+    /// Splits leading ⌃⌥⇧⌘ symbols from the rest of the string.
     private static func symbolModifiers(_ s: String) -> (modifiers: HotkeyModifiers, rest: String)? {
         var modifiers: HotkeyModifiers = []
         var rest = Substring(s)
@@ -276,15 +278,15 @@ extension Hotkey: Codable {
     }
 }
 
-/// Почему записанное сочетание не годится в глобальный хоткей.
+/// Why a recorded combination is not valid as a global hotkey.
 public enum HotkeyValidationError: Equatable, Sendable {
-    /// Нажат только модификатор.
+    /// Only a modifier was pressed.
     case modifierOnly
-    /// Нет ни ⌃, ни ⌥, ни ⌘: такое сочетание мешало бы обычному набору текста.
+    /// None of ⌃, ⌥ or ⌘: such a combination would interfere with normal typing.
     case needsModifier
-    /// Код клавиши вне допустимого диапазона.
+    /// Key code out of the allowed range.
     case invalidKey
-    /// Уже назначено другому действию.
+    /// Already assigned to another action.
     case conflict(HotkeyAction)
 
     public var message: String {
@@ -298,8 +300,8 @@ public enum HotkeyValidationError: Equatable, Sendable {
 }
 
 public enum HotkeyValidator {
-    /// Проверка одного сочетания без учёта других действий.
-    /// Функциональные клавиши F1–F20 допускаются и без модификаторов.
+    /// Validates a single combination without regard to other actions.
+    /// Function keys F1–F20 are allowed even without modifiers.
     public static func validate(_ hotkey: Hotkey) -> HotkeyValidationError? {
         if KeyCode.modifierKeys.contains(hotkey.keyCode) { return .modifierOnly }
         guard hotkey.keyCode < 0x80 else { return .invalidKey }

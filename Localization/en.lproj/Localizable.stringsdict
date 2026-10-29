@@ -51,5 +51,21 @@
 			<string>Delete all %lld tasks?</string>
 		</dict>
 	</dict>
+	<key>clearDone.confirm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>one</key>
+			<string>Delete %lld done task?</string>
+			<key>other</key>
+			<string>Delete %lld done tasks?</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

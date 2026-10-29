@@ -24,7 +24,7 @@
 "Вернуть сочетание по умолчанию: %@" = "Restaurar el atajo por defecto: %@";
 "Не удалось зарегистрировать (код %d). Возможно, сочетание занято системой — выберите другое." = "No se pudo registrar (código %d). Puede que el sistema ya use este atajo; elige otro.";
 "Вернуть все по умолчанию" = "Restaurar todo por defecto";
-"Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). %@ — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена." = "Los atajos están asociados a teclas físicas y funcionan con cualquier distribución de teclado. %@ es la tecla situada encima de Tab, a la izquierda del 1. Para asignar un atajo, haz clic en el campo y pulsa las teclas; Esc cancela.";
+"Хоткеи привязаны к физическим клавишам и работают в любой раскладке (РУ и EN). ⇥ — Tab, %@ — клавиша над Tab, слева от 1. Чтобы назначить сочетание, нажмите на поле и затем нужные клавиши; Esc — отмена." = "Los atajos están asociados a teclas físicas y funcionan con cualquier distribución de teclado. ⇥ es Tab, %@ es la tecla situada encima de Tab, a la izquierda del 1. Para asignar un atajo, haz clic en el campo y pulsa las teclas; Esc cancela.";
 "Нажмите сочетание…" = "Pulsa un atajo…";
 "Не задано" = "Sin asignar";
 "Нажмите новое сочетание или Esc для отмены" = "Pulsa un atajo nuevo o Esc para cancelar";
@@ -51,7 +51,7 @@
 "Удалить" = "Eliminar";
 "Задач пока нет." = "Aún no hay tareas.";
 "Откройте чат и выберите «%@» ниже." = "Abre un chat y elige “%@” abajo.";
-"Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥ + клавиша над Tab)" = "El chat o la pestaña que estaba al frente antes de abrir el menú: si ya es una tarea, se elimina; si no, se convierte en tarea (⌃⌥ + la tecla encima de Tab)";
+"Чат или вкладка, которые были впереди до открытия меню: уже задача — удалить её, иначе — сделать задачей (⌃⌥⇥)" = "El chat o la pestaña que estaba al frente antes de abrir el menú: si ya es una tarea, se elimina; si no, se convierte en tarea (⌃⌥⇥)";
 "Текущая задача" = "Tarea actual";
 "сделано" = "hecha";
 "Вернуть в работу" = "Reanudar";
@@ -134,6 +134,7 @@
 "%@ — вернуть: «%@» в меню Juggler" = "%@ — para restaurarla: “%@” en el menú de Juggler";
 "%@ — %@ в течение %lld с вернёт" = "%@ — %@ en %lld s la restaura";
 "Задача %lld «%@» возвращена" = "Tarea %lld “%@” restaurada";
+"Задача %lld «%@» добавлена" = "Tarea %lld “%@” añadida";
 "Отметить сделанной / вернуть в работу" = "Marcar como hecha / volver a en curso";
 "Текущей задачи нет: перейдите к одной из задач" = "No hay tarea actual: cambia a una de tus tareas";
 "Задача %lld «%@» сделана" = "Tarea %lld «%@» hecha";
@@ -177,6 +178,7 @@
 "Перезапустить сейчас" = "Reiniciar ahora";
 "Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "El reinicio solo funciona en la aplicación Juggler.app. Cierra Juggler y ábrelo de nuevo.";
 "Не удалось перезапустить Juggler: %@" = "No se pudo reiniciar Juggler: %@";
+"Удалить сделанные задачи" = "Eliminar las tareas hechas";
 "Очистить все задачи" = "Eliminar todas las tareas";
 "Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "Se eliminarán las tareas, sus notas y sus vínculos. Esta acción no se puede deshacer.";
 "Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: la tarea %lld lleva más tiempo esperando — %@, %@";

@@ -33,7 +33,7 @@ Juggler is a macOS menu bar app that keeps the list of those tasks and cycles th
   - Google Chrome: the tab by id, then by URL.
   - Terminal.app: the window and tab by tty.
   - Any other app (Cursor, VS Code, iTerm2, Grok, Safari…): the window by title.
-- **Mark a task done** with ⌃§ (⌃` on an ANSI keyboard); done tasks are skipped in the cycle. Press again to bring it back.
+- **Mark a task done** with ⌃§ (⌃` on an ANSI keyboard); done tasks are skipped in the cycle. Press again to bring it back, or clear them all with "Delete Done Tasks" in the menu.
 - **The menu bar circle** turns from green to yellow, orange and red as the longest-waiting task waits 10, 30 and 60 minutes. Hover it to see which task that is.
 - **Private by design.** No account, no network, no analytics. Juggler reads a few local files (ChatGPT's thread index, Claude Code session titles) and writes its own `tasks.json`. No third-party dependencies, about 3 MB on disk.
 - **12 languages:** Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish. Switch in Settings → Language without a restart.
@@ -137,7 +137,7 @@ swift run Juggler --probe-frontmost # JSON with the frontmost window context
 scripts/bundle.sh                                   # ad-hoc signing
 JUGGLER_SIGN_IDENTITY="Juggler Dev" scripts/bundle.sh  # sign with your own certificate
 scripts/bundle.sh --no-self-test                    # skip the self-test at the end
-JUGGLER_VERSION=0.2.0 scripts/bundle.sh             # custom version (default 0.1.0)
+JUGGLER_VERSION=0.3.0 scripts/bundle.sh             # custom version (default 0.2.0)
 ```
 
 What the script does:

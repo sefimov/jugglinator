@@ -2,60 +2,60 @@ import Foundation
 import JugglerCore
 import os
 
-// Точки расширения приложения. Реализации живут в папках своих задач:
-//   Sources/Juggler/Bind/   — BIND: контекст переднего окна, привязка, активация, разрешения;
-//   Sources/Juggler/Switch/ — SWITCH: переключатель, карточка перехода, хоткеи;
-//   Sources/Juggler/UI/     — UI: сцены меню-бара и окна настроек.
-// Корень композиции (CompositionRoot.swift) получает реализации только через
-// фабрики `BindModule`, `SwitchModule`, `UIModule` — их сигнатуры и есть контракт.
-// Всё взаимодействие идёт на главном потоке (@MainActor).
+// App extension points. Implementations live in their tasks' folders:
+//   Sources/Juggler/Bind/   — BIND: frontmost window context, binding, activation, permissions;
+//   Sources/Juggler/Switch/ — SWITCH: switcher, transition card, hotkeys;
+//   Sources/Juggler/UI/     — UI: menu bar and settings window scenes.
+// The composition root (CompositionRoot.swift) gets implementations only through
+// the `BindModule`, `SwitchModule`, `UIModule` factories — their signatures are the contract.
+// All interaction happens on the main thread (@MainActor).
 
 // MARK: - BIND
 
-/// Читает контекст переднего окна (bundle id, заголовок, вкладка Chrome, id чата).
-/// Не должен падать и не должен показывать системные запросы: без разрешений
-/// просто возвращает то, что удалось узнать.
+/// Reads the frontmost window context (bundle id, title, Chrome tab, chat id).
+/// Must not crash or show system prompts: without permissions it
+/// simply returns whatever it managed to find out.
 @MainActor
 protocol FrontmostContextProviding: AnyObject {
     func currentContext() -> FrontmostContext
 }
 
-/// Строит привязку по контексту переднего окна (без диалогов).
+/// Builds a binding from the frontmost window context (no dialogs).
 @MainActor
 protocol BindingCapturing: AnyObject {
     func captureBinding(from context: FrontmostContext) -> BindingCaptureResult
 }
 
-/// Открывает привязанную вкладку, чат или окно; при необходимости запускает приложение.
+/// Opens the bound tab, chat or window; launches the app if needed.
 @MainActor
 protocol BindingActivating: AnyObject {
     func activate(_ binding: TaskBinding) -> ActivationResult
 }
 
-/// Разрешения Accessibility и Automation.
+/// Accessibility and Automation permissions.
 @MainActor
 protocol PermissionsProviding: AnyObject {
-    /// Выдано ли приложению разрешение Accessibility (без запроса).
+    /// Whether the app has been granted Accessibility (without prompting).
     var isAccessibilityTrusted: Bool { get }
-    /// Показать пользователю понятный запрос Accessibility.
+    /// Show the user a clear Accessibility prompt.
     func requestAccessibility()
 }
 
-/// Сценарий «Сделать задачей текущий чат»: захват привязки,
-/// при необходимости запрос ссылки, создание задачи или привязка к текущей задаче.
+/// The "Make the current chat a task" flow: capture the binding,
+/// ask for a link if needed, create a task or bind to the current task.
 @MainActor
 protocol CurrentChatBinding: AnyObject {
     func bindCurrentChat()
-    /// ⌃⌥§ и «Добавить или удалить текущее окно» (D15): в окне отмены — вернуть
-    /// удалённую задачу; переднее окно точно совпадает с задачей — удалить её с карточкой;
-    /// иначе — `bindCurrentChat`.
+    /// ⌃⌥⇥ and "Add or remove current window" (D15): within the undo window — restore
+    /// the removed task; frontmost window exactly matches a task — remove it with a card;
+    /// otherwise — `bindCurrentChat`.
     func toggleCurrentChat()
-    /// Пункт меню «Добавить/Удалить текущее окно» (D16): окно отмены не учитывается (возврат — отдельный
-    /// пункт), поэтому действие совпадает с подписью: точное совпадение — удалить с карточкой, иначе — добавить.
+    /// "Add/Remove current window" menu item (D16): the undo window is ignored (restoring is a separate
+    /// item), so the action matches the label: exact match — remove with a card, otherwise — add.
     func toggleCurrentWindow()
 }
 
-/// Набор сервисов BIND, который передаётся остальным частям приложения.
+/// The set of BIND services passed to the rest of the app.
 @MainActor
 struct BindServices {
     let contextProvider: FrontmostContextProviding
@@ -66,40 +66,40 @@ struct BindServices {
 
 // MARK: - SWITCH
 
-/// Переключение задач: по кругу (хоткеи) и напрямую (клик по задаче в списке).
+/// Task switching: cyclic (hotkeys) and direct (click on a task in the list).
 @MainActor
 protocol TaskSwitching: AnyObject {
-    /// Определить текущую задачу по переднему окну, выбрать соседнюю по кругу,
-    /// активировать её привязку, показать карточку и обновить время захода.
+    /// Determine the current task from the frontmost window, pick the next one in the cycle,
+    /// activate its binding, show the card and update the visit time.
     func switchTask(_ direction: CycleDirection)
-    /// Перейти к конкретной задаче.
+    /// Go to a specific task.
     func activateTask(id: UUID)
 }
 
-/// ⌃⌥D «отметить сделанной / вернуть в работу»: задача переднего окна при точном совпадении,
-/// иначе текущая; сохраняет tasks.json, показывает карточку, окна не переключает.
+/// ⌃§ "mark done / back to in progress": the frontmost window's task on exact match,
+/// otherwise the current one; saves tasks.json, shows a card, doesn't switch windows.
 @MainActor
 protocol DoneToggling: AnyObject {
     func toggleDone()
 }
 
-/// Карточка перехода: неактивирующая панель поверх всех рабочих столов.
+/// Transition card: a non-activating panel above all desktops.
 @MainActor
 protocol TransitionCardPresenting: AnyObject {
     func show(_ content: TransitionCardContent)
 }
 
-/// Глобальные хоткеи. `start` регистрирует их и вызывает `handler` на главном потоке.
+/// Global hotkeys. `start` registers them and calls `handler` on the main thread.
 @MainActor
 protocol HotkeyRegistering: AnyObject {
     func start(handler: @escaping (HotkeyAction) -> Void)
     func stop()
 }
 
-// MARK: - Самопроверка
+// MARK: - Self-test
 
-/// Результат одной самопроверки компонента для `Juggler --self-test`.
-/// Самопроверка не запрашивает разрешений и не показывает окон.
+/// Result of a single component self-test for `Juggler --self-test`.
+/// The self-test requests no permissions and shows no windows.
 struct SelfTestResult {
     let name: String
     let passed: Bool
@@ -112,7 +112,7 @@ struct SelfTestResult {
     }
 }
 
-/// Журнал приложения: `Logger(subsystem: JugglerLog.subsystem, category: "<область>")`.
+/// App log: `Logger(subsystem: JugglerLog.subsystem, category: "<area>")`.
 enum JugglerLog {
     static let subsystem = "com.sefimov.juggler"
     static let app = Logger(subsystem: subsystem, category: "app")

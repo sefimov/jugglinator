@@ -45,5 +45,19 @@
 			<string>작업 %lld개를 모두 삭제할까요?</string>
 		</dict>
 	</dict>
+	<key>clearDone.confirm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>other</key>
+			<string>완료한 작업 %lld개를 삭제할까요?</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

@@ -5,13 +5,13 @@ import os
 
 let uiLog = Logger(subsystem: JugglerLog.subsystem, category: "ui")
 
-/// Действия меню, которые уводят фокус в другое приложение.
+/// Menu actions that move focus to another app.
 @MainActor
 enum UIActions {
-    /// Пауза после закрытия панели меню-бара: передним успевает стать окно, где был пользователь.
+    /// Pause after closing the menu bar panel: lets the window the user was in come to front.
     static let handOffDelay: TimeInterval = 0.3
 
-    /// Закрыть панель меню-бара, вернуть фокус предыдущему приложению и выполнить действие.
+    /// Close the menu bar panel, return focus to the previous app and perform the action.
     static func afterClosingMenu(_ dismiss: () -> Void, _ action: @escaping @MainActor () -> Void) {
         dismiss()
         NSApp.deactivate()
@@ -20,28 +20,28 @@ enum UIActions {
         }
     }
 
-    /// Перейти к задаче через переключатель (SWITCH): активация привязки, карточка, время захода.
+    /// Go to a task via the switcher (SWITCH): binding activation, card, visit time.
     static func open(taskID: UUID, environment: AppEnvironment, dismiss: () -> Void) {
         afterClosingMenu(dismiss) {
             environment.switcher.activateTask(id: taskID)
         }
     }
 
-    /// Контекст окна, которое было впереди до открытия меню (если впереди сам Juggler — последнего
-    /// активного другого приложения). Системных запросов не показывает: без разрешений вернёт то, что удалось.
+    /// Context of the window that was in front before the menu opened (if Juggler itself is in front — of the last
+    /// active other app). Shows no system prompts: without permissions returns whatever it could get.
     static func readWindowContext(environment: AppEnvironment) -> FrontmostContext {
         environment.bind.contextProvider.currentContext()
     }
 
-    /// «Добавить/Удалить текущее окно» (D16): окно уже задача — удалить её (карточка и возврат, как у ⌃⌥§),
-    /// иначе — сделать задачей текущий чат. Окно отмены не учитывается: возврат — отдельный пункт.
+    /// "Add/Remove current window" (D16): if the window is already a task, remove it (card and undo, like ⌃⌥⇥),
+    /// otherwise make the current chat a task. The undo window is ignored: restore is a separate item.
     static func toggleCurrentWindow(environment: AppEnvironment, dismiss: () -> Void) {
         afterClosingMenu(dismiss) {
             environment.binder.toggleCurrentWindow()
         }
     }
 
-    /// Открыть окно настроек и вывести его вперёд (приложение без значка в Dock).
+    /// Open the settings window and bring it to front (the app has no Dock icon).
     static func activateForSettings() {
         NSApp.activate(ignoringOtherApps: true)
     }

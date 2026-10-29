@@ -1,18 +1,18 @@
 import Foundation
 import JugglerCore
 
-/// Общее состояние списка задач. Единственный владелец `TasksDocument`:
-/// все изменения идут через `update`, после которого документ сохраняется на диск.
+/// Shared task list state. The sole owner of `TasksDocument`:
+/// all changes go through `update`, after which the document is saved to disk.
 ///
-/// Логику операций (добавить, переименовать, переставить…) держите чистыми
-/// функциями над `TasksDocument` в JugglerCore, а здесь только вызывайте их:
+/// Keep operation logic (add, rename, reorder…) as pure
+/// functions over `TasksDocument` in JugglerCore, and only call them here:
 /// `model.update { TaskListOps.rename(&$0, id: id, to: title) }`.
 @MainActor
 final class AppModel: ObservableObject {
     @Published private(set) var document: TasksDocument
-    /// Итог последней загрузки: UI может сообщить о восстановлении битого файла.
+    /// Result of the last load: the UI can report recovery of a corrupted file.
     @Published private(set) var loadOutcome: TaskStore.LoadOutcome?
-    /// Текст последней ошибки записи (на русском) или `nil`.
+    /// Text of the last write error (localized) or `nil`.
     @Published private(set) var lastSaveError: String?
 
     let store: TaskStore
@@ -26,7 +26,7 @@ final class AppModel: ObservableObject {
 
     var tasks: [JugglerTask] { document.tasks }
 
-    /// Последняя активная задача — её номер показывает иконка меню-бара.
+    /// The last active task — the menu bar icon shows its number.
     var currentTask: JugglerTask? { document.lastActiveTask }
 
     var currentTaskNumber: Int? {
@@ -42,7 +42,7 @@ final class AppModel: ObservableObject {
         }
     }
 
-    /// Изменить документ и сохранить его, если он действительно изменился.
+    /// Modify the document and save it if it actually changed.
     func update(_ mutate: (inout TasksDocument) -> Void) {
         var copy = document
         mutate(&copy)
@@ -52,20 +52,20 @@ final class AppModel: ObservableObject {
         save()
     }
 
-    /// Отметить заход в задачу «сейчас».
+    /// Mark a visit to the task "now".
     func markVisited(_ id: UUID) {
         let now = clock()
         update { $0.markVisited(id, at: now) }
     }
 
-    // MARK: - Удаление с возвратом (D15)
+    // MARK: - Removal with undo (D15)
 
-    /// Последняя удалённая задача (только в памяти, до выхода из Juggler):
-    /// её возвращает пункт меню «Вернуть удалённую задачу», а в окне отмены — и ⌃⌥§.
+    /// The last removed task (in memory only, until Juggler quits):
+    /// restored by the "Restore removed task" menu item, and within the undo window also by ⌃⌥⇥.
     @Published private(set) var lastRemoved: RemovedTask?
 
-    /// Удалить задачу (удаление сразу сохраняется в tasks.json) и запомнить её для возврата.
-    /// `undoableByToggle` — удалено переключателем ⌃⌥§, повтор хоткея в течение 5 с вернёт.
+    /// Remove a task (the removal is saved to tasks.json immediately) and remember it for restoring.
+    /// `undoableByToggle` — removed by the ⌃⌥⇥ toggle; repeating the hotkey within 5 s restores it.
     @discardableResult
     func removeTask(_ id: UUID, undoableByToggle: Bool) -> RemovedTask? {
         let now = clock()
@@ -75,7 +75,7 @@ final class AppModel: ObservableObject {
         return removed
     }
 
-    /// Вернуть последнюю удалённую задачу на прежнее место. `nil`, если возвращать нечего.
+    /// Restore the last removed task to its previous position. `nil` if there is nothing to restore.
     @discardableResult
     func restoreLastRemoved() -> RemovedTask? {
         guard let removed = lastRemoved else { return nil }
@@ -85,13 +85,22 @@ final class AppModel: ObservableObject {
         return restored ? removed : nil
     }
 
-    /// Удалить все задачи и снять текущую (сохраняется сразу). Возврата очищенных задач нет:
-    /// `lastRemoved` сбрасывается, чтобы «Вернуть удалённую задачу» не вернула задачу из очистки.
+    /// Remove all tasks and clear the current one (saved immediately). Cleared tasks can't be restored:
+    /// `lastRemoved` is reset so that "Restore removed task" doesn't bring back a task from the clear.
     @discardableResult
     func clearAllTasks() -> Int {
         var count = 0
         update { count = TaskListOps.clearAll(&$0) }
         lastRemoved = nil
+        return count
+    }
+
+    /// Remove every task marked "done" (saved immediately). Like a clear, this can't be undone;
+    /// a task removed earlier stays restorable via "Restore removed task".
+    @discardableResult
+    func clearDoneTasks() -> Int {
+        var count = 0
+        update { count = TaskListOps.clearDone(&$0) }
         return count
     }
 

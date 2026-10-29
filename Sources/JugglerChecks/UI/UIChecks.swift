@@ -1,9 +1,9 @@
 import Foundation
 import JugglerCore
 
-// Проверки чистой логики UI из Sources/JugglerCore/UI/:
-// операции со списком (TaskListOps), строки и тексты меню-бара (TaskListPresenter),
-// формы слов, состояния запуска при входе и сохранение списка между запусками.
+// Checks for the pure UI logic in Sources/JugglerCore/UI/:
+// list operations (TaskListOps), rows and menu bar texts (TaskListPresenter),
+// word forms, launch-at-login states and persisting the list between launches.
 
 enum UIChecks: CheckSuite {
     static let name = "UI"
@@ -14,6 +14,7 @@ enum UIChecks: CheckSuite {
         checkEdit(c)
         checkDelete(c)
         checkClearAll(c)
+        checkClearDone(c)
         checkDone(c)
         checkMoveOffsets(c)
         checkMoveByAndBefore(c)
@@ -27,11 +28,11 @@ enum UIChecks: CheckSuite {
         checkLiveLanguage(c)
     }
 
-    // MARK: - Вспомогательное
+    // MARK: - Helpers
 
     static let t0 = Date(timeIntervalSince1970: 1_800_000_000)
 
-    /// Документ A, B, C, D с фиксированными id.
+    /// Document A, B, C, D with fixed ids.
     static func sample() -> (TasksDocument, [UUID]) {
         let ids = (0..<4).map { UUID(uuidString: String(format: "00000000-0000-0000-0000-%012d", $0 + 1))! }
         let tasks = zip(ids, ["A", "B", "C", "D"]).map { JugglerTask(id: $0, title: $1, createdAt: t0) }

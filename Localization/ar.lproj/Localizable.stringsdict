@@ -75,5 +75,29 @@
 			<string>حذف جميع المهام الـ%lld؟</string>
 		</dict>
 	</dict>
+	<key>clearDone.confirm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@tasks@</string>
+		<key>tasks</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>lld</string>
+			<key>zero</key>
+			<string>حذف المهام المنجزة (%lld)؟</string>
+			<key>one</key>
+			<string>حذف المهمة المنجزة الوحيدة؟</string>
+			<key>two</key>
+			<string>حذف المهمتين المنجزتين؟</string>
+			<key>few</key>
+			<string>حذف المهام المنجزة الـ%lld؟</string>
+			<key>many</key>
+			<string>حذف المهام المنجزة الـ%lld؟</string>
+			<key>other</key>
+			<string>حذف المهام المنجزة الـ%lld؟</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

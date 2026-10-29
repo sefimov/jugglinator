@@ -1,37 +1,37 @@
 import Foundation
 
-/// Операции со списком задач для меню-бара (задача UI).
+/// Task list operations for the menu bar (UI task).
 ///
-/// Чистые функции над `TasksDocument`; приложение вызывает их внутри
+/// Pure functions over `TasksDocument`; the app calls them inside
 /// `model.update { TaskListOps.rename(&$0, id: id, to: title) }`.
-/// Номер задачи — её позиция в списке, поэтому перестановка меняет номера
-/// и порядок переключения по кругу.
+/// A task's number is its position in the list, so reordering changes the numbers
+/// and the cycling order.
 public enum TaskListOps {
-    /// Максимальная длина названия (в символах) после очистки.
+    /// Maximum title length (in characters) after cleaning.
     public static let maxTitleLength = 200
 
-    /// Очистка названия: переводы строк и повторные пробелы схлопываются в один пробел,
-    /// края обрезаются, слишком длинное название укорачивается.
+    /// Title cleaning: newlines and repeated spaces collapse into a single space,
+    /// edges are trimmed, a title that is too long is shortened.
     public static func cleanTitle(_ raw: String) -> String {
         let words = raw.split(whereSeparator: { $0.isWhitespace || $0.isNewline })
         let joined = words.joined(separator: " ")
         return joined.count > maxTitleLength ? String(joined.prefix(maxTitleLength)) : joined
     }
 
-    /// Очистка заметки: обрезаются пробелы и пустые строки по краям, переносы внутри сохраняются.
+    /// Note cleaning: whitespace and blank lines at the edges are trimmed, inner line breaks are kept.
     public static func cleanNote(_ raw: String) -> String {
         raw.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    /// Название по умолчанию для новой задачи: «Задача N», где N — её будущий номер.
+    /// Default title for a new task: "Task N", where N is its future number.
     public static func defaultTitle(for document: TasksDocument) -> String {
         loc("Задача \(document.tasks.count + 1)")
     }
 
-    // MARK: - Добавление, правка, удаление
+    // MARK: - Add, edit, delete
 
-    /// Добавляет задачу в конец списка. Пустое название заменяется на «Задача N».
-    /// Возвращает id новой задачи.
+    /// Adds a task to the end of the list. An empty title is replaced with "Task N".
+    /// Returns the new task's id.
     @discardableResult
     public static func add(
         _ document: inout TasksDocument,
@@ -50,8 +50,8 @@ public enum TaskListOps {
         return task.id
     }
 
-    /// Переименовывает задачу. Пустое после очистки название не принимается.
-    /// Возвращает `true`, если название изменилось.
+    /// Renames a task. A title that is empty after cleaning is rejected.
+    /// Returns `true` if the title changed.
     @discardableResult
     public static func rename(_ document: inout TasksDocument, id: UUID, to title: String) -> Bool {
         let cleaned = cleanTitle(title)
@@ -62,7 +62,7 @@ public enum TaskListOps {
         return true
     }
 
-    /// Меняет заметку «зачем / дальше». Пустая заметка допустима (очистка).
+    /// Changes the "why / next" note. An empty note is allowed (clearing).
     @discardableResult
     public static func setNote(_ document: inout TasksDocument, id: UUID, to note: String) -> Bool {
         let cleaned = cleanNote(note)
@@ -71,7 +71,7 @@ public enum TaskListOps {
         return true
     }
 
-    /// Удаляет задачу. Если она была последней активной, отметка текущей снимается.
+    /// Deletes a task. If it was the last active one, the current marker is cleared.
     @discardableResult
     public static func delete(_ document: inout TasksDocument, id: UUID) -> Bool {
         guard let i = document.index(of: id) else { return false }
@@ -82,7 +82,7 @@ public enum TaskListOps {
         return true
     }
 
-    /// Удаляет все задачи и снимает отметку текущей. Возвращает, сколько задач было удалено.
+    /// Deletes all tasks and clears the current marker. Returns how many tasks were deleted.
     @discardableResult
     public static func clearAll(_ document: inout TasksDocument) -> Int {
         let count = document.tasks.count
@@ -91,7 +91,19 @@ public enum TaskListOps {
         return count
     }
 
-    /// Ставит или снимает отметку «сделано».
+    /// Deletes every task marked "done". The current marker is cleared if it pointed at one of them.
+    /// Returns how many tasks were deleted.
+    @discardableResult
+    public static func clearDone(_ document: inout TasksDocument) -> Int {
+        let before = document.tasks.count
+        document.tasks.removeAll(where: \.isDone)
+        if let active = document.lastActiveTaskID, document.index(of: active) == nil {
+            document.lastActiveTaskID = nil
+        }
+        return before - document.tasks.count
+    }
+
+    /// Sets or clears the "done" mark.
     @discardableResult
     public static func setDone(_ document: inout TasksDocument, id: UUID, _ done: Bool) -> Bool {
         guard let i = document.index(of: id), document.tasks[i].isDone != done else { return false }
@@ -99,7 +111,7 @@ public enum TaskListOps {
         return true
     }
 
-    /// Переключает отметку «сделано». Возвращает новое значение или `nil`, если задачи нет.
+    /// Toggles the "done" mark. Returns the new value, or `nil` if there is no such task.
     @discardableResult
     public static func toggleDone(_ document: inout TasksDocument, id: UUID) -> Bool? {
         guard let i = document.index(of: id) else { return nil }
@@ -107,7 +119,7 @@ public enum TaskListOps {
         return document.tasks[i].isDone
     }
 
-    /// Снимает привязку: задача остаётся, но больше никуда не ведёт.
+    /// Removes the binding: the task stays but no longer leads anywhere.
     @discardableResult
     public static func clearBinding(_ document: inout TasksDocument, id: UUID) -> Bool {
         guard let i = document.index(of: id), document.tasks[i].binding != nil else { return false }
@@ -115,12 +127,12 @@ public enum TaskListOps {
         return true
     }
 
-    // MARK: - Порядок
+    // MARK: - Order
 
-    /// Перестановка в стиле SwiftUI `onMove`: элементы с позиций `offsets` ставятся
-    /// перед элементом, который до перестановки стоял на позиции `destination`
-    /// (`destination == count` — в конец). Неверные позиции игнорируются.
-    /// Возвращает `true`, если порядок изменился.
+    /// SwiftUI `onMove`-style reordering: elements at `offsets` are placed
+    /// before the element that was at position `destination` before the move
+    /// (`destination == count` — at the end). Invalid positions are ignored.
+    /// Returns `true` if the order changed.
     @discardableResult
     public static func move(_ document: inout TasksDocument, fromOffsets offsets: IndexSet, toOffset destination: Int) -> Bool {
         let count = document.tasks.count
@@ -137,7 +149,7 @@ public enum TaskListOps {
         return true
     }
 
-    /// Сдвигает задачу на `delta` позиций (−1 — выше, +1 — ниже), не выходя за края списка.
+    /// Moves a task by `delta` positions (−1 — up, +1 — down), staying within the list bounds.
     @discardableResult
     public static func move(_ document: inout TasksDocument, id: UUID, by delta: Int) -> Bool {
         guard let from = document.index(of: id), delta != 0 else { return false }
@@ -148,8 +160,8 @@ public enum TaskListOps {
         return true
     }
 
-    /// Ставит задачу перед задачей `targetID` (перетаскивание на строку);
-    /// `nil` или неизвестный `targetID` — в конец списка.
+    /// Places a task before task `targetID` (dragging onto a row);
+    /// `nil` or an unknown `targetID` — at the end of the list.
     @discardableResult
     public static func move(_ document: inout TasksDocument, id: UUID, before targetID: UUID?) -> Bool {
         guard let from = document.index(of: id) else { return false }

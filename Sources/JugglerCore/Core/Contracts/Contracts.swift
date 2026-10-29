@@ -1,17 +1,17 @@
 import Foundation
 
-// Общие типы-результаты для протоколов приложения (Sources/Juggler/App/ExtensionPoints.swift).
-// Лежат в JugglerCore, чтобы их можно было использовать в чистой логике
-// UI/SWITCH/BIND и проверять из JugglerChecks.
+// Shared result types for the app's protocols (Sources/Juggler/App/ExtensionPoints.swift).
+// They live in JugglerCore so they can be used in pure logic
+// of UI/SWITCH/BIND and checked from JugglerChecks.
 
-/// Итог активации привязки (BIND → SWITCH).
+/// Outcome of activating a binding (BIND → SWITCH).
 public enum ActivationResult: Equatable, Sendable {
-    /// Открыто именно то, что привязано (вкладка, чат, окно).
+    /// Exactly what was bound was opened (tab, chat, window).
     case activated
-    /// Открыт запасной вариант: например, адрес вкладки заново или просто приложение.
-    /// Строка — пояснение для пользователя на русском.
+    /// A fallback was opened: e.g. the tab URL again, or just the app.
+    /// The string is a localized user-facing explanation.
     case fallback(String)
-    /// Ничего не открылось. Строка — пояснение для пользователя на русском.
+    /// Nothing opened. The string is a localized user-facing explanation.
     case failed(String)
 
     public var succeeded: Bool {
@@ -20,27 +20,27 @@ public enum ActivationResult: Equatable, Sendable {
     }
 }
 
-/// Итог попытки привязать текущий чат (BIND).
+/// Outcome of trying to bind the current chat (BIND).
 public enum BindingCaptureResult: Equatable, Sendable {
-    /// Привязка готова. `suggestedTitle` — очищенный заголовок для новой задачи.
+    /// The binding is ready. `suggestedTitle` is the cleaned title for a new task.
     case captured(TaskBinding, suggestedTitle: String)
-    /// Id чата автоматически не прочитать — нужно попросить ссылку у пользователя
-    /// (Claude без Accessibility, ChatGPT всегда).
+    /// The chat id cannot be read automatically — the user must be asked for a link
+    /// (Claude without Accessibility, ChatGPT always).
     case needsManualLink(BindingSource, suggestedTitle: String)
-    /// Привязать нельзя. Строка — пояснение для пользователя на русском.
+    /// Cannot bind. The string is a localized user-facing explanation.
     case failed(String)
 }
 
-/// Содержимое карточки перехода (SWITCH строит, презентер показывает).
+/// Contents of the transition card (SWITCH builds it, the presenter shows it).
 public struct TransitionCardContent: Equatable, Sendable {
     public var number: Int
     public var title: String
     public var note: String
-    /// «не был N мин» на момент перехода (до обновления времени захода).
+    /// "away N min" at the time of the switch (before the visit time is updated).
     public var absenceText: String
     public var staleness: StalenessLevel
     public var source: BindingSource?
-    /// Подсказка, например про хоткей привязки у задачи без привязки.
+    /// A hint, e.g. about the bind hotkey for a task without a binding.
     public var hint: String?
 
     public init(
@@ -57,15 +57,15 @@ public struct TransitionCardContent: Equatable, Sendable {
     }
 }
 
-/// Действия, которые запускаются глобальными хоткеями.
+/// Actions triggered by global hotkeys.
 public enum HotkeyAction: String, Codable, CaseIterable, Sendable {
     case nextTask
     case previousTask
-    /// ⌃⌥§: добавить переднее окно задачей или удалить задачу, если оно уже задача (D15).
-    /// Имя случая не меняется: это ключ в hotkeys.json.
+    /// ⌃⌥⇥: add the frontmost window as a task, or remove the task if it already is one (D15).
+    /// The case name does not change: it is the key in hotkeys.json.
     case bindCurrentChat
-    /// ⌃⌥D: отметить задачу сделанной или вернуть в работу (D24). Новый случай добавлен в конец:
-    /// старые hotkeys.json читаются, действие без записи берёт умолчание.
+    /// ⌃§: mark the task done or return it to work (D24). The new case is added at the end:
+    /// old hotkeys.json files still read, and an action without an entry gets the default.
     case toggleDone
 
     public var displayName: String {

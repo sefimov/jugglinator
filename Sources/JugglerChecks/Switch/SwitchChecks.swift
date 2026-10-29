@@ -1,8 +1,8 @@
 import Foundation
 import JugglerCore
 
-// Проверки чистой логики SWITCH (Sources/JugglerCore/Switch/):
-// разбор и показ хоткеев, назначения и их хранение, выбор задачи, тексты карточки.
+// Checks for the pure SWITCH logic (Sources/JugglerCore/Switch/):
+// hotkey parsing and display, assignments and their storage, task selection, card texts.
 
 enum SwitchChecks: CheckSuite {
     static let name = "Switch"
@@ -19,6 +19,7 @@ enum SwitchChecks: CheckSuite {
 
     static let section = KeyCode.isoSection
     static let grave = KeyCode.ansiGrave
+    static let tab = KeyCode.tab
 
     static func hotkeyFormatChecks(_ c: CheckRunner) {
         c.group("хоткей: показ и маски Carbon") {
@@ -99,13 +100,15 @@ enum SwitchChecks: CheckSuite {
             c.expectEqual(KeyboardKind.ansi.keyAboveTab, grave, "ANSI: над Tab — `")
 
             let iso = HotkeyAssignments.defaults(for: .iso)
-            c.expectEqual(iso[.nextTask], Hotkey(keyCode: section, modifiers: [.control]), "по умолчанию «следующая» ⌃§")
-            c.expectEqual(iso[.previousTask], Hotkey(keyCode: section, modifiers: [.control, .shift]), "по умолчанию «предыдущая» ⌃⇧§")
-            c.expectEqual(iso[.bindCurrentChat], Hotkey(keyCode: section, modifiers: [.control, .option]), "по умолчанию «привязать» ⌃⌥§")
-            c.expectEqual(HotkeyAssignments.defaults(for: .ansi)[.nextTask]?.displayString, "⌃`", "ANSI: ⌃`")
-            c.expectEqual(iso[.toggleDone], Hotkey(keyCode: 2, modifiers: [.control, .option]), "по умолчанию «сделано» ⌃⌥D (kVK_ANSI_D)")
-            c.expectEqual(HotkeyAssignments.defaults(for: .ansi)[.toggleDone], iso[.toggleDone], "⌃⌥D одинаково на ISO и ANSI")
-            c.expectEqual(iso[.toggleDone]?.displayString, "⌃⌥D", "показ ⌃⌥D")
+            c.expectEqual(tab, 0x30, "Tab — kVK_Tab")
+            c.expectEqual(iso[.nextTask], Hotkey(keyCode: tab, modifiers: [.control]), "по умолчанию «следующая» ⌃⇥")
+            c.expectEqual(iso[.previousTask], Hotkey(keyCode: tab, modifiers: [.control, .shift]), "по умолчанию «предыдущая» ⌃⇧⇥")
+            c.expectEqual(iso[.bindCurrentChat], Hotkey(keyCode: tab, modifiers: [.control, .option]), "по умолчанию «привязать» ⌃⌥⇥")
+            c.expectEqual(HotkeyAssignments.defaults(for: .ansi)[.nextTask], iso[.nextTask], "⌃⇥ одинаково на ISO и ANSI")
+            c.expectEqual(iso[.nextTask]?.displayString, "⌃⇥", "показ ⌃⇥")
+            c.expectEqual(iso[.toggleDone], Hotkey(keyCode: section, modifiers: [.control]), "по умолчанию «сделано» ⌃§ на ISO")
+            c.expectEqual(HotkeyAssignments.defaults(for: .ansi)[.toggleDone], Hotkey(keyCode: grave, modifiers: [.control]), "ANSI: «сделано» ⌃`")
+            c.expectEqual(HotkeyAssignments.defaults(for: .ansi)[.toggleDone]?.displayString, "⌃`", "показ ⌃`")
             c.expectEqual(iso.hotkeys.count, HotkeyAction.allCases.count, "у каждого действия есть умолчание")
             for kind in KeyboardKind.allCases {
                 let defaults = HotkeyAssignments.defaults(for: kind)
@@ -131,7 +134,7 @@ enum SwitchChecks: CheckSuite {
             c.expectNil(overrides.assign(iso[.nextTask]!, to: .nextTask, defaults: iso), "возврат к умолчанию записью")
             c.expect(overrides.hotkeys.isEmpty, "совпадение с умолчанием не хранится")
 
-            // Своё сочетание совпало с умолчанием другого действия (например, после смены клавиатуры).
+            // A custom shortcut collides with another action's default (e.g. after a keyboard change).
             let clash = HotkeyOverrides([.nextTask: iso[.bindCurrentChat]!])
             effective = HotkeyAssignments.resolve(overrides: clash, defaults: iso)
             c.expectEqual(effective[.nextTask], iso[.bindCurrentChat], "своё сочетание сохраняется")
@@ -165,12 +168,12 @@ enum SwitchChecks: CheckSuite {
             let lossy = try JSONDecoder().decode(HotkeyOverrides.self, from: Data(json.utf8))
             c.expectEqual(lossy.hotkeys, [.nextTask: Hotkey(keyCode: section, modifiers: [.control, .shift])],
                           "неизвестные действия и битые записи пропускаются")
-            // Старый hotkeys.json без «сделано»: загружается, у «сделано» остаётся умолчание.
+            // Old hotkeys.json without "done": loads, and "done" keeps its default.
             let old = try JSONDecoder().decode(HotkeyOverrides.self, from: Data("""
                 {"version": 1, "hotkeys": {"nextTask": {"keyCode": 96, "modifiers": ["control"]}}}
                 """.utf8))
             let oldResolved = HotkeyAssignments.resolve(overrides: old, defaults: HotkeyAssignments.defaults(for: .iso))
-            c.expectEqual(oldResolved[.toggleDone], Hotkey(keyCode: 2, modifiers: [.control, .option]), "старый файл: «сделано» — по умолчанию")
+            c.expectEqual(oldResolved[.toggleDone], Hotkey(keyCode: section, modifiers: [.control]), "старый файл: «сделано» — по умолчанию ⌃§")
             let ownDone = Hotkey(keyCode: 0x60, modifiers: [.control, .option])
             let doneData = try JSONEncoder().encode(HotkeyOverrides([.toggleDone: ownDone]))
             c.expect(String(decoding: doneData, as: UTF8.self).contains("\"toggleDone\""), "ключ в hotkeys.json — toggleDone")
@@ -222,7 +225,7 @@ enum SwitchChecks: CheckSuite {
             c.expectNil(SwitchPlanner.target(direction: .next, context: chromeCtx, document: TasksDocument()), "пустой список → некуда")
             c.expectNil(SwitchPlanner.target(direction: .next, context: .unknown, document: TasksDocument(tasks: [done])), "все «сделано» → некуда")
 
-            // Передняя вкладка совпала со «сделано» — отсчёт всё равно от неё.
+            // The front tab matches a "done" task — counting still starts from it.
             let doneTab = JugglerTask(title: "Готово", isDone: true, binding: .chromeTab(ChromeTabRef(tabID: 9, url: "https://b.example")))
             let doc2 = TasksDocument(tasks: [chrome, doneTab, claude])
             let doneCtx = FrontmostContext(bundleID: KnownBundleIDs.chrome, chromeTab: ChromeTabRef(tabID: 9, url: "https://b.example"))
@@ -239,7 +242,7 @@ enum SwitchChecks: CheckSuite {
                 binding: .claudeChat(ClaudeChatRef(conversationID: "0f8fad5b-d9cb-469f-a165-70867728950e")))
             let unbound = JugglerTask(title: "", lastVisitedAt: nil)
             let doc = TasksDocument(tasks: [bound, unbound])
-            let bindKey = Hotkey(keyCode: section, modifiers: [.control, .option])
+            let bindKey = Hotkey(keyCode: tab, modifiers: [.control, .option])
 
             let card = TransitionCardBuilder.content(for: bound.id, in: doc, now: now, bindHotkey: bindKey, activation: .activated)
             c.expectEqual(card?.number, 1, "номер — позиция в списке")
@@ -256,7 +259,7 @@ enum SwitchChecks: CheckSuite {
             c.expectEqual(free?.title, "Без названия", "пустое название")
             c.expectEqual(free?.absenceText, "ещё не был", "ни разу не открывалась")
             c.expectEqual(free?.staleness, .never, "уровень «никогда»")
-            c.expectEqual(free?.hint, "Нет привязки: откройте чат и нажмите ⌃⌥§", "подсказка с текущим хоткеем привязки")
+            c.expectEqual(free?.hint, "Нет привязки: откройте чат и нажмите ⌃⌥⇥", "подсказка с текущим хоткеем привязки")
             c.expectEqual(
                 TransitionCardBuilder.content(for: unbound.id, in: doc, now: now, bindHotkey: nil)?.hint,
                 "Нет привязки: откройте чат и выберите в меню «Добавить текущее окно»",
