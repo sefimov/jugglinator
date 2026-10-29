@@ -1,2 +1,2 @@
-"CFBundleDisplayName" = "Juggler";
-"NSAppleEventsUsageDescription" = "Juggler legge l'indirizzo e il titolo della scheda attiva di Google Chrome e la finestra e la scheda di Terminale per collegarle a un'attività, e passa a esse quando cambi attività.";
+"CFBundleDisplayName" = "Jugglinator";
+"NSAppleEventsUsageDescription" = "Jugglinator legge l'indirizzo e il titolo della scheda attiva di Google Chrome e la finestra e la scheda di Terminale per collegarle a un'attività, e passa a esse quando cambi attività.";

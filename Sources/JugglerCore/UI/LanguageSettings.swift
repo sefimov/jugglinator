@@ -67,9 +67,9 @@ public enum LanguageChoice: Equatable, Hashable, Sendable {
     }
 }
 
-/// Stores the selected language for Juggler only: the `AppleLanguages` key in the app's own
-/// defaults domain (`com.sefimov.juggler`). The global system language is not changed.
-/// Juggler texts switch immediately (`Localizer`); system AppKit labels and Info.plist
+/// Stores the selected language for Jugglinator only: the `AppleLanguages` key in the app's own
+/// defaults domain (`com.sefimov.jugglinator`). The global system language is not changed.
+/// Jugglinator texts switch immediately (`Localizer`); system AppKit labels and Info.plist
 /// pick up this value only on the next launch.
 public struct LanguageSettings {
     public static let key = "AppleLanguages"
@@ -81,7 +81,7 @@ public struct LanguageSettings {
             domain: Bundle.main.bundleIdentifier ?? ProcessInfo.processInfo.processName)
     }
 
-    /// System languages (global domain, without the Juggler domain value), in preference order.
+    /// System languages (global domain, without the Jugglinator domain value), in preference order.
     public static func systemPreferredLanguages(defaults: UserDefaults = .standard) -> [String] {
         if let global = defaults.persistentDomain(forName: UserDefaults.globalDomain)?[key] as? [String], !global.isEmpty {
             return global
@@ -139,10 +139,10 @@ public struct LanguageSettings {
     }
 }
 
-/// App relaunch: quit Juggler and open it again.
+/// App relaunch: quit Jugglinator and open it again.
 public enum AppRestart {
     /// A command that waits for process `pid` to exit (at most 10 s) and opens `bundlePath` as a new instance.
-    /// `nil` if Juggler is not running from a `.app` (`swift run`): nothing to open.
+    /// `nil` if Jugglinator is not running from a `.app` (`swift run`): nothing to open.
     public static func relaunchCommand(bundlePath: String, pid: Int32) -> (executable: String, arguments: [String])? {
         guard bundlePath.hasSuffix(".app") else { return nil }
         let script = "i=0; while kill -0 \"$1\" 2>/dev/null && [ $i -lt 100 ]; do sleep 0.1; i=$((i+1)); done; exec /usr/bin/open -n \"$0\""

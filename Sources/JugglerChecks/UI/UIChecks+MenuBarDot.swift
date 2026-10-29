@@ -38,7 +38,7 @@ extension UIChecks {
             doc.lastActiveTaskID = ids[0]
             c.expectEqual(color(doc), .outline, "все сделаны — контур")
             c.expectNil(MenuBarDotPresenter.dot(for: doc, now: now).taskID, "у контура нет задачи")
-            c.expectEqual(MenuBarDotPresenter.dot(for: doc, now: now).tooltip, "Juggler: нет задач в работе", "подсказка контура")
+            c.expectEqual(MenuBarDotPresenter.dot(for: doc, now: now).tooltip, "Jugglinator: нет задач в работе", "подсказка контура")
 
             // A single undone task that is also current: green, even if not visited for a long time.
             (doc, ids) = sample()
@@ -46,7 +46,7 @@ extension UIChecks {
             doc.tasks[0].lastVisitedAt = ago(500)
             doc.lastActiveTaskID = ids[0]
             c.expectEqual(color(doc), .filled(.green), "только текущая — зелёный, а не красный")
-            c.expectEqual(MenuBarDotPresenter.dot(for: doc, now: now).tooltip, "Juggler: других задач в работе нет", "подсказка при одной задаче")
+            c.expectEqual(MenuBarDotPresenter.dot(for: doc, now: now).tooltip, "Jugglinator: других задач в работе нет", "подсказка при одной задаче")
             doc.tasks[0].isDone = true
             c.expectEqual(color(doc), .outline, "единственная сделана — контур")
 
@@ -60,7 +60,7 @@ extension UIChecks {
             c.expectEqual(color(doc), .filled(.yellow), "самая давняя 12 мин — жёлтый")
             c.expectEqual(MenuBarDotPresenter.dot(for: doc, now: now).taskID, ids[2], "выбрана задача 3")
             c.expectEqual(MenuBarDotPresenter.dot(for: doc, now: now).tooltip,
-                          "Juggler: дольше всех ждёт задача 3 — C, не был 12 мин", "подсказка с задачей и минутами")
+                          "Jugglinator: дольше всех ждёт задача 3 — C, не был 12 мин", "подсказка с задачей и минутами")
 
             doc.tasks[0].lastVisitedAt = ago(300)    // current, stale: not red
             c.expectEqual(color(doc), .filled(.yellow), "текущая не учитывается, как бы давно ни заходили")
@@ -87,7 +87,7 @@ extension UIChecks {
             doc.tasks[2].createdAt = ago(35)
             c.expectEqual(color(doc), .filled(.orange), "ни разу не открытая считается от создания")
             c.expectEqual(MenuBarDotPresenter.dot(for: doc, now: now).tooltip,
-                          "Juggler: дольше всех ждёт задача 3 — C, не был 35 мин", "подсказка от времени создания")
+                          "Jugglinator: дольше всех ждёт задача 3 — C, не был 35 мин", "подсказка от времени создания")
             doc.tasks[2].lastVisitedAt = ago(2)
             c.expectEqual(color(doc), .filled(.green), "после захода отсчёт с захода")
             c.expectEqual(MenuBarDotPresenter.dot(for: doc, now: now).taskID, ids[1], "теперь давнее — задача 2")

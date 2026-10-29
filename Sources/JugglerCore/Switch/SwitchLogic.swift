@@ -1,7 +1,7 @@
 import Foundation
 
 // Pure logic of the SWITCH area (Foundation only): picking a task when switching
-// and the transition card texts. The app (Sources/Juggler/Switch/) only calls it.
+// and the transition card texts. The app (Sources/Jugglinator/Switch/) only calls it.
 
 /// Namespace of the SWITCH area.
 public enum SwitchLogic {}
@@ -53,7 +53,7 @@ public enum FrontWindowPlan: Equatable, Sendable {
     case add(TaskBinding, title: String)
     /// Not in the list, and the binding needs a link (Claude, ChatGPT): only the flow with dialogs can add it.
     case needsLink
-    /// Cannot be added: no window, Juggler itself, Chrome without permission, a window without a title.
+    /// Cannot be added: no window, Jugglinator itself, Chrome without permission, a window without a title.
     /// `message` explains why, when known.
     case unavailable(message: String?)
 }

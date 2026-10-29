@@ -43,27 +43,27 @@ enum BindChecks: CheckSuite {
 
     static func frontmostChooser(_ c: CheckRunner) {
         c.group("Переднее приложение") {
-            let own = AppIdentity(bundleID: "com.sefimov.juggler", name: "Juggler", pid: 10)
-            let unbundledOwn = AppIdentity(bundleID: nil, name: "Juggler", pid: 10)
+            let own = AppIdentity(bundleID: "com.sefimov.jugglinator", name: "Jugglinator", pid: 10)
+            let unbundledOwn = AppIdentity(bundleID: nil, name: "Jugglinator", pid: 10)
             let claude = AppIdentity(bundleID: BindApps.claude, name: "Claude", pid: 20)
             let grok = AppIdentity(bundleID: BindApps.grokBot, name: "Grok Bot", pid: 30)
 
-            let a = FrontmostAppChooser.choose(frontmost: claude, remembered: grok, ownBundleID: "com.sefimov.juggler", ownPID: 10)
+            let a = FrontmostAppChooser.choose(frontmost: claude, remembered: grok, ownBundleID: "com.sefimov.jugglinator", ownPID: 10)
             c.expectEqual(a?.app, claude, "чужое переднее приложение берётся как есть")
             c.expectEqual(a?.usedRemembered, false, "без запомненного")
 
-            let b = FrontmostAppChooser.choose(frontmost: own, remembered: grok, ownBundleID: "com.sefimov.juggler", ownPID: 10)
-            c.expectEqual(b?.app, grok, "впереди Juggler → последнее другое приложение")
+            let b = FrontmostAppChooser.choose(frontmost: own, remembered: grok, ownBundleID: "com.sefimov.jugglinator", ownPID: 10)
+            c.expectEqual(b?.app, grok, "впереди Jugglinator → последнее другое приложение")
             c.expectEqual(b?.usedRemembered, true, "признак запомненного")
 
             let d = FrontmostAppChooser.choose(frontmost: unbundledOwn, remembered: claude, ownBundleID: nil, ownPID: 10)
             c.expectEqual(d?.app, claude, "swift run (без bundle id): свой процесс узнаётся по pid")
 
             let e = FrontmostAppChooser.choose(
-                frontmost: AppIdentity(bundleID: "com.sefimov.juggler", name: nil, pid: 99), remembered: nil, ownBundleID: nil, ownPID: 10)
-            c.expectNil(e?.app, "Juggler по bundle id и нечего вспомнить → nil")
+                frontmost: AppIdentity(bundleID: "com.sefimov.jugglinator", name: nil, pid: 99), remembered: nil, ownBundleID: nil, ownPID: 10)
+            c.expectNil(e?.app, "Jugglinator по bundle id и нечего вспомнить → nil")
             c.expectNil(FrontmostAppChooser.choose(frontmost: nil, remembered: own, ownBundleID: nil, ownPID: 10)?.app,
-                        "запомненный Juggler не берётся")
+                        "запомненный Jugglinator не берётся")
         }
     }
 
@@ -184,8 +184,8 @@ enum BindChecks: CheckSuite {
             c.expectEqual(noAX, .captured(.appWindow(AppWindowRef(bundleID: "com.apple.Notes", windowTitle: "", appName: "Заметки")),
                                           suggestedTitle: "Заметки"), "без Accessibility — окно без заголовка")
 
-            c.expectEqual(BindingCapture.capture(context: FrontmostContext(bundleID: "com.sefimov.juggler")),
-                          .failed(BindTexts.frontmostIsJuggler), "сам Juggler не привязывается")
+            c.expectEqual(BindingCapture.capture(context: FrontmostContext(bundleID: "com.sefimov.jugglinator")),
+                          .failed(BindTexts.frontmostIsJuggler), "сам Jugglinator не привязывается")
             c.expectEqual(BindingCapture.capture(context: .unknown), .failed(BindTexts.noFrontmostApp), "нет контекста → ошибка")
         }
     }

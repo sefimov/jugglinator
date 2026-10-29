@@ -1,28 +1,28 @@
-# Juggler
+# Jugglinator
 
-> Juggler is a free, open source (MIT) macOS menu bar app that keeps a short list of parallel tasks — Claude chats, Claude Code sessions, ChatGPT threads, Chrome tabs, Terminal tabs — and cycles through them with one hotkey. Like Cmd-Tab, but for tasks instead of apps. Requires macOS 14 or later. Written in Swift, no dependencies, no network access, no account.
+> Jugglinator is a free, open source (MIT) macOS menu bar app that keeps a short list of parallel tasks — Claude chats, Claude Code sessions, ChatGPT threads, Chrome tabs, Terminal tabs — and cycles through them with one hotkey. Like Cmd-Tab, but for tasks instead of apps. Requires macOS 14 or later. Written in Swift, no dependencies, no network access, no account.
 
-Problem it solves: people who run several AI chats and agent sessions at once (for example three Claude Code sessions, a ChatGPT thread and a Terminal tab) lose track of which one is waiting for them. Cmd-Tab switches apps, window switchers switch windows by title, but two Claude Code sessions are the same window and two ChatGPT threads look the same. Juggler binds each task to the exact chat, session, thread or tab and reopens it on each switch, and its menu bar circle turns yellow, orange and red as the longest-waiting task waits 10, 30 and 60 minutes.
+Problem it solves: people who run several AI chats and agent sessions at once (for example three Claude Code sessions, a ChatGPT thread and a Terminal tab) lose track of which one is waiting for them. Cmd-Tab switches apps, window switchers switch windows by title, but two Claude Code sessions are the same window and two ChatGPT threads look the same. Jugglinator binds each task to the exact chat, session, thread or tab and reopens it on each switch, and its menu bar circle turns yellow, orange and red as the longest-waiting task waits 10, 30 and 60 minutes.
 
 Hotkeys (default, changeable): Control-Tab next task, Control-Shift-Tab previous task, Control-Option-Tab add or remove the frontmost window as a task, Control-§ (Control-` on ANSI keyboards) mark the task done or back to work.
 
 Bindings: Claude desktop chat by UUID (claude:// link); Claude Code session (Code tab in Claude desktop) by session id; ChatGPT desktop thread by id, read from ChatGPT's local thread index; Google Chrome tab by id, then URL; Terminal.app window and tab by tty; any other app (Cursor, VS Code, iTerm2, Safari) by window title.
 
-Install: download Juggler.app.zip from GitHub Releases (Apple silicon), unzip, move to Applications; the app is not notarized, so on first launch choose "Open Anyway" in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine /Applications/Juggler.app`. Or build from source with the Command Line Tools: `scripts/bundle.sh`. Not on Homebrew (casks require notarization) and not on the Mac App Store (needs Accessibility and Apple Events, which the sandbox forbids).
+Install: download Jugglinator.app.zip from GitHub Releases (Apple silicon), unzip, move to Applications; the app is not notarized, so on first launch choose "Open Anyway" in System Settings → Privacy & Security, or run `xattr -dr com.apple.quarantine /Applications/Jugglinator.app`. Or build from source with the Command Line Tools: `scripts/bundle.sh`. Not on Homebrew (casks require notarization) and not on the Mac App Store (needs Accessibility and Apple Events, which the sandbox forbids).
 
-MCP server (Model Context Protocol): built in, off by default; turn on "MCP server" in Settings and add `/Applications/Juggler.app/Contents/MacOS/Juggler --mcp` as a stdio MCP server to Claude Desktop (claude_desktop_config.json), Claude Code (`claude mcp add juggler -- /Applications/Juggler.app/Contents/MacOS/Juggler --mcp`) or ChatGPT desktop / Codex (~/.codex/config.toml). Tools: list_tasks, switch_to_task, add_current_window, mark_done, mark_in_progress, set_note. The relay talks to the running app over a local Unix socket; no network.
+MCP server (Model Context Protocol): built in, off by default; turn on "MCP server" in Settings and add `/Applications/Jugglinator.app/Contents/MacOS/Jugglinator --mcp` as a stdio MCP server to Claude Desktop (claude_desktop_config.json), Claude Code (`claude mcp add jugglinator -- /Applications/Jugglinator.app/Contents/MacOS/Jugglinator --mcp`) or ChatGPT desktop / Codex (~/.codex/config.toml). Tools: list_tasks, switch_to_task, add_current_window, mark_done, mark_in_progress, set_note. The relay talks to the running app over a local Unix socket; no network.
 
-Privacy: no network code, no analytics. Reads ChatGPT's local session_index.jsonl and Claude Code's local session files for ids and titles; stores its list in ~/Library/Application Support/Juggler/tasks.json.
+Privacy: no network code, no analytics. Reads ChatGPT's local session_index.jsonl and Claude Code's local session files for ids and titles; stores its list in ~/Library/Application Support/Jugglinator/tasks.json.
 
 Interface languages: Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish.
 
 ## Docs
 
-- [Website](https://sefimov.github.io/juggler/): problem, features, install, hotkeys, comparison with Cmd-Tab, AltTab, Contexts, rcmd, tmux and Raycast, FAQ
-- [README](https://github.com/sefimov/juggler/blob/main/README.md): everything above plus the MCP server (setup snippets, tool list, protocol), building, bindings in detail, permissions, signing for development, localization, package layout
-- [Releases](https://github.com/sefimov/juggler/releases): Juggler.app.zip per version
-- [Source code](https://github.com/sefimov/juggler): Swift package, MIT license
+- [Website](https://sefimov.github.io/jugglinator/): problem, features, install, hotkeys, comparison with Cmd-Tab, AltTab, Contexts, rcmd, tmux and Raycast, FAQ
+- [README](https://github.com/sefimov/jugglinator/blob/main/README.md): everything above plus the MCP server (setup snippets, tool list, protocol), building, bindings in detail, permissions, signing for development, localization, package layout
+- [Releases](https://github.com/sefimov/jugglinator/releases): Jugglinator.app.zip per version
+- [Source code](https://github.com/sefimov/jugglinator): Swift package, MIT license
 
 ## Optional
 
-- [Issues](https://github.com/sefimov/juggler/issues): bug reports and requests to support another app
+- [Issues](https://github.com/sefimov/jugglinator/issues): bug reports and requests to support another app

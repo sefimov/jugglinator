@@ -1,5 +1,7 @@
 # LLM visibility baseline
 
+> The project was renamed from Juggler to **Jugglinator** on 2026-10-29, after run 1 showed the name clash below. From run 2 on, count mentions of Jugglinator; mentions of "Juggler" are the other product.
+
 Goal: know whether Juggler comes up when someone asks an AI assistant for a tool that solves the problem Juggler solves, and track how that changes month by month. Run the same questions, in the same way, once a month, and record the results below.
 
 ## How to run

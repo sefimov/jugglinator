@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://sefimov.github.io/juggler/sitemap.xml
+Sitemap: https://sefimov.github.io/jugglinator/sitemap.xml

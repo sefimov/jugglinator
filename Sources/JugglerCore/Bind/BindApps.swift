@@ -24,7 +24,7 @@ public enum BindApps {
     public static let chatGPTBundleIDs = KnownBundleIDs.chatGPTAll
     public static let grokBot = KnownBundleIDs.grokBot
     public static let terminal = KnownBundleIDs.terminal
-    public static let juggler = "com.sefimov.juggler"
+    public static let jugglinator = "com.sefimov.jugglinator"
 
     public static func kind(of bundleID: String?) -> BindAppKind {
         guard let bundleID, !bundleID.isEmpty else { return .other }
@@ -59,13 +59,13 @@ public struct AppIdentity: Codable, Equatable, Sendable {
 
 /// Chooses the app whose context to read.
 ///
-/// When "Make the current chat a task" is clicked in the Juggler menu, Juggler itself
-/// may be frontmost. Then the last active app other than Juggler is used.
+/// When "Make the current chat a task" is clicked in the Jugglinator menu, Jugglinator itself
+/// may be frontmost. Then the last active app other than Jugglinator is used.
 public enum FrontmostAppChooser {
     public static func isOwn(_ app: AppIdentity, ownBundleID: String?, ownPID: Int32) -> Bool {
         if app.pid == ownPID { return true }
         if BindApps.same(app.bundleID, ownBundleID) { return true }
-        return BindApps.same(app.bundleID, BindApps.juggler)
+        return BindApps.same(app.bundleID, BindApps.jugglinator)
     }
 
     /// - Returns: the app and a flag saying the remembered one was used rather than the current frontmost.

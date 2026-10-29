@@ -86,14 +86,14 @@ extension UIChecks {
             c.expect(LoginItemState.requiresApproval.needsSystemSettings, "ждёт одобрения → кнопка «Объекты входа»")
             c.expect(!LoginItemState.enabled.needsSystemSettings, "включён → кнопки нет")
             c.expectNil(LoginItemState.enabled.explanation, "включён — пояснения нет")
-            c.expect(LoginItemState.notFound.explanation?.contains("Juggler.app") == true, "не найден → пояснение про .app")
+            c.expect(LoginItemState.notFound.explanation?.contains("Jugglinator.app") == true, "не найден → пояснение про .app")
         }
     }
 
     static func checkPersistence(_ c: CheckRunner) {
         c.group("сохранение между запусками") {
             let dir = FileManager.default.temporaryDirectory
-                .appendingPathComponent("juggler-ui-checks-\(UUID().uuidString)", isDirectory: true)
+                .appendingPathComponent("jugglinator-ui-checks-\(UUID().uuidString)", isDirectory: true)
             defer { try? FileManager.default.removeItem(at: dir) }
             let url = dir.appendingPathComponent("tasks.json")
 

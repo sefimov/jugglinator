@@ -6,7 +6,7 @@ public enum BindTexts {
     public static let automationSettingsURL = "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation"
 
     public static var noFrontmostApp: String { loc("Не удалось определить переднее окно. Переключитесь на окно чата и повторите.") }
-    public static var frontmostIsJuggler: String { loc("Впереди окно Juggler. Переключитесь на окно чата и повторите.") }
+    public static var frontmostIsJuggler: String { loc("Впереди окно Jugglinator. Переключитесь на окно чата и повторите.") }
     public static var emptyLink: String { loc("Вставьте ссылку на чат.") }
     /// Title of a new session task when the session has no title and the window title is just "Claude".
     public static var defaultSessionTaskTitle: String { loc("Сессия Claude Code") }
@@ -56,12 +56,12 @@ public enum BindTexts {
             return chatGPTLinkMessage(lookup: nil, accessibilityTrusted: accessibilityTrusted)
         default:
             let reason = accessibilityTrusted
-                ? loc("Juggler не смог прочитать адрес чата из окна Claude.")
-                : loc("Без разрешения «Универсальный доступ» Juggler не может прочитать адрес чата из окна Claude.")
+                ? loc("Jugglinator не смог прочитать адрес чата из окна Claude.")
+                : loc("Без разрешения «Универсальный доступ» Jugglinator не может прочитать адрес чата из окна Claude.")
             let howTo = loc("""
                 Откройте этот чат на claude.ai в браузере, скопируйте адрес из адресной строки \
                 (https://claude.ai/chat/<id>) и вставьте его сюда. Ссылки «Поделиться» (claude.ai/share/…) не подходят. \
-                Сессия Claude Code (вкладка Code) привязывается сама, если у Juggler есть разрешение «Универсальный доступ»; \
+                Сессия Claude Code (вкладка Code) привязывается сама, если у Jugglinator есть разрешение «Универсальный доступ»; \
                 вручную — ссылкой claude://claude.ai/epitaxy/local_<id>.
                 """)
             return reason + " " + howTo
@@ -92,8 +92,8 @@ public enum BindTexts {
             return howTo
         case .noWindowTitle?, nil:
             let reason = accessibilityTrusted
-                ? loc("Juggler не смог прочитать заголовок окна ChatGPT, поэтому тред не найти по названию.")
-                : loc("Без разрешения «Универсальный доступ» Juggler не видит заголовок окна ChatGPT и не может найти тред по названию.")
+                ? loc("Jugglinator не смог прочитать заголовок окна ChatGPT, поэтому тред не найти по названию.")
+                : loc("Без разрешения «Универсальный доступ» Jugglinator не видит заголовок окна ChatGPT и не может найти тред по названию.")
             return reason + " " + howTo
         }
     }
@@ -128,42 +128,42 @@ public enum BindTexts {
 
     public static var accessibilityTitle: String { loc("Нужно разрешение «Универсальный доступ»") }
     public static var accessibilityMessage: String { loc("""
-        Juggler читает заголовки окон, поднимает нужное окно и пробует прочитать адрес чата Claude. \
+        Jugglinator читает заголовки окон, поднимает нужное окно и пробует прочитать адрес чата Claude. \
         Для этого нужно разрешение «Универсальный доступ».
 
         Откройте Системные настройки → Конфиденциальность и безопасность → Универсальный доступ \
-        и включите Juggler. Если Juggler уже в списке, но не работает, выключите и снова включите его.
+        и включите Jugglinator. Если Jugglinator уже в списке, но не работает, выключите и снова включите его.
         """) }
     public static var openSettingsButton: String { loc("Открыть настройки") }
     public static var laterButton: String { loc("Позже") }
     public static var continueWithoutButton: String { loc("Продолжить без него") }
 
-    public static var chromeInstructionsShort: String { loc("Разрешите Juggler управлять Google Chrome: Системные настройки → Конфиденциальность и безопасность → Автоматизация.") }
-    public static var chromeDeniedTitle: String { loc("Juggler не может управлять Google Chrome") }
+    public static var chromeInstructionsShort: String { loc("Разрешите Jugglinator управлять Google Chrome: Системные настройки → Конфиденциальность и безопасность → Автоматизация.") }
+    public static var chromeDeniedTitle: String { loc("Jugglinator не может управлять Google Chrome") }
     public static var chromeDeniedMessage: String { loc("""
-        macOS запретила Juggler управлять Google Chrome (ошибка -1743). Без этого Juggler не видит вкладки \
+        macOS запретила Jugglinator управлять Google Chrome (ошибка -1743). Без этого Jugglinator не видит вкладки \
         и не может переключиться на привязанную вкладку — только открыть её адрес заново.
 
         Как включить:
         1. Откройте Системные настройки → Конфиденциальность и безопасность → Автоматизация.
-        2. Найдите Juggler и включите переключатель «Google Chrome».
-        3. Если Juggler в списке нет, выполните в Терминале
-           tccutil reset AppleEvents com.sefimov.juggler
+        2. Найдите Jugglinator и включите переключатель «Google Chrome».
+        3. Если Jugglinator в списке нет, выполните в Терминале
+           tccutil reset AppleEvents com.sefimov.jugglinator
            и привяжите вкладку снова — macOS спросит разрешение.
         """) }
 
-    public static var terminalDeniedTitle: String { loc("Juggler не может управлять Терминалом") }
+    public static var terminalDeniedTitle: String { loc("Jugglinator не может управлять Терминалом") }
     public static var terminalDeniedMessage: String { loc("""
-        macOS запретила Juggler управлять Терминалом (ошибка -1743). Без этого Juggler не знает id окна \
+        macOS запретила Jugglinator управлять Терминалом (ошибка -1743). Без этого Jugglinator не знает id окна \
         и вкладку (tty): окно Терминала привязывается как обычное окно, по заголовку, а при переходе \
         нужная вкладка не выбирается.
 
         Как включить:
         1. Откройте Системные настройки → Конфиденциальность и безопасность → Автоматизация.
-        2. Найдите Juggler и включите переключатель «Терминал».
-        3. Если Juggler в списке нет, выполните в Терминале
-           tccutil reset AppleEvents com.sefimov.juggler
-           и нажмите «Разрешить…» в настройках Juggler (раздел «Разрешения») — macOS спросит разрешение.
+        2. Найдите Jugglinator и включите переключатель «Терминал».
+        3. Если Jugglinator в списке нет, выполните в Терминале
+           tccutil reset AppleEvents com.sefimov.jugglinator
+           и нажмите «Разрешить…» в настройках Jugglinator (раздел «Разрешения») — macOS спросит разрешение.
         """) }
 
     // MARK: Activation outcomes

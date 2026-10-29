@@ -79,9 +79,9 @@ extension BindChecks {
         c.group("Терминал: заголовки") {
             c.expectEqual(TerminalTitle.clean(terminalTitle), "sergejefimov", "без пользователя@хоста, оболочки и размера")
             c.expectEqual(TerminalTitle.taskTitle(from: terminalTitle), "sergejefimov", "название задачи с мака пользователя")
-            c.expectEqual(TerminalTitle.clean("juggler — ✳ Ревью PR — claude — 214×24"), "juggler — Ревью PR — claude",
+            c.expectEqual(TerminalTitle.clean("jugglinator — ✳ Ревью PR — claude — 214×24"), "jugglinator — Ревью PR — claude",
                           "значок Claude Code в начале части убирается, процесс остаётся")
-            c.expectEqual(TerminalTitle.taskTitle(from: "juggler — ✳ Ревью PR — claude — 214×24"), "juggler — Ревью PR",
+            c.expectEqual(TerminalTitle.taskTitle(from: "jugglinator — ✳ Ревью PR — claude — 214×24"), "jugglinator — Ревью PR",
                           "в названии задачи — без хвоста «claude»")
             c.expectEqual(TerminalTitle.clean("⠂ Сборка — node — 80x24"), "Сборка — node", "спиннер и размер через x")
             c.expectEqual(TerminalTitle.clean("proj — vim main.swift — ttys004 — 120×40"), "proj — vim main.swift", "tty и размер")
@@ -128,9 +128,9 @@ extension BindChecks {
 
             // Without AppleScript permission: a plain window, but the title is still noise-free.
             let noAccess = BindingCapture.capture(context: FrontmostContext(bundleID: BindApps.terminal, appName: "Терминал",
-                                                                            windowTitle: "juggler — -zsh — 214×24"))
-            c.expectEqual(noAccess, .captured(.appWindow(AppWindowRef(bundleID: BindApps.terminal, windowTitle: "juggler — -zsh — 214×24", appName: "Терминал")),
-                                              suggestedTitle: "juggler"),
+                                                                            windowTitle: "jugglinator — -zsh — 214×24"))
+            c.expectEqual(noAccess, .captured(.appWindow(AppWindowRef(bundleID: BindApps.terminal, windowTitle: "jugglinator — -zsh — 214×24", appName: "Терминал")),
+                                              suggestedTitle: "jugglinator"),
                           "без разрешения — обычное окно")
             let blank = BindingCapture.capture(context: FrontmostContext(bundleID: BindApps.terminal, appName: "Терминал"))
             c.expectEqual(blank, .captured(.appWindow(AppWindowRef(bundleID: BindApps.terminal, appName: "Терминал")), suggestedTitle: "Терминал"),
@@ -162,10 +162,10 @@ extension BindChecks {
             c.expect(!BindPlanner.sameTarget(a, otherTab), "другой tty в том же окне — другая вкладка")
             c.expect(BindPlanner.sameTarget(a, windowOnly), "tty неизвестен — сравнение по id окна")
             c.expect(BindPlanner.sameTarget(
-                .appWindow(AppWindowRef(bundleID: BindApps.terminal, windowTitle: "juggler — -zsh — 214×24")),
-                .appWindow(AppWindowRef(bundleID: BindApps.terminal, windowTitle: "juggler — -zsh — 80×24"))),
+                .appWindow(AppWindowRef(bundleID: BindApps.terminal, windowTitle: "jugglinator — -zsh — 214×24")),
+                .appWindow(AppWindowRef(bundleID: BindApps.terminal, windowTitle: "jugglinator — -zsh — 80×24"))),
                 "Терминал как окно: размер не мешает")
-            c.expectEqual(WindowTitleMatcher.bestIndex(of: "juggler — -zsh — 214×24", in: ["x — -zsh — 80×24", "juggler — node — 80×24", "juggler — -zsh — 100×30"],
+            c.expectEqual(WindowTitleMatcher.bestIndex(of: "jugglinator — -zsh — 214×24", in: ["x — -zsh — 80×24", "jugglinator — node — 80×24", "jugglinator — -zsh — 100×30"],
                                                        bundleID: BindApps.terminal), 2,
                           "окно Терминала по заголовку без размера")
         }

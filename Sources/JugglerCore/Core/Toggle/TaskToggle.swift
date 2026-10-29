@@ -278,7 +278,7 @@ public enum TaskToggleTexts {
     /// Card after removal: "Task 2 "Title" removed — ⌃⌥⇥ within 5 s restores it".
     public static func removedCard(number: Int, title: String, hotkey: Hotkey?, window: TimeInterval = TaskRemoval.undoWindow) -> String {
         let head = loc("Задача \(number) «\(TransitionCardBuilder.title(title))» удалена")
-        guard let hotkey else { return loc("\(head) — вернуть: «\(restoreMenuTitle)» в меню Juggler") }
+        guard let hotkey else { return loc("\(head) — вернуть: «\(restoreMenuTitle)» в меню Jugglinator") }
         return loc("\(head) — \(hotkey.displayString) в течение \(Int(window.rounded())) с вернёт")
     }
 

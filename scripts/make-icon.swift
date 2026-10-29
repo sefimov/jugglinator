@@ -1,5 +1,5 @@
 #!/usr/bin/env swift
-// Renders the Juggler app icon with CoreGraphics and builds AppIcon.icns.
+// Renders the Jugglinator app icon with CoreGraphics and builds AppIcon.icns.
 //
 //   swift scripts/make-icon.swift [output-dir]     (default: Resources)
 //
@@ -91,7 +91,7 @@ do {
     let fm = FileManager.default
     try fm.createDirectory(at: outDir, withIntermediateDirectories: true)
 
-    let work = fm.temporaryDirectory.appendingPathComponent("juggler-icon-\(ProcessInfo.processInfo.processIdentifier)")
+    let work = fm.temporaryDirectory.appendingPathComponent("jugglinator-icon-\(ProcessInfo.processInfo.processIdentifier)")
     let iconset = work.appendingPathComponent("AppIcon.iconset", isDirectory: true)
     try? fm.removeItem(at: work)
     try fm.createDirectory(at: iconset, withIntermediateDirectories: true)

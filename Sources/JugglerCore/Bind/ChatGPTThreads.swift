@@ -38,7 +38,7 @@ public enum ChatGPTSessionIndexRead: Equatable, Sendable {
 /// The same id appears several times (the thread was renamed) — the line with the latest
 /// `updated_at` wins; on a tie or without a date — the last one in the file. Different ids may share a name.
 ///
-/// Read-only: Juggler never writes there. Missing file, oversized file, broken lines —
+/// Read-only: Jugglinator never writes there. Missing file, oversized file, broken lines —
 /// no errors. The format is someone else's and may change, so parsing is lenient.
 public enum ChatGPTSessionIndex {
     /// Files larger than this are not read: the real list is tens of kilobytes.

@@ -17,6 +17,7 @@ enum CoreChecks: CheckSuite {
         sessionChecks(c)
         toggleChecks(c)
         doneToggleChecks(c)
+        migrationChecks(c)
     }
 }
 
@@ -31,7 +32,7 @@ enum Fixture {
 
     static func tempStore() -> (TaskStore, URL) {
         let dir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("juggler-checks-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("jugglinator-checks-\(UUID().uuidString)", isDirectory: true)
         return (TaskStore(fileURL: dir.appendingPathComponent("tasks.json"), now: { t0 }), dir)
     }
 }

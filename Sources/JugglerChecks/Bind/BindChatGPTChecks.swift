@@ -87,7 +87,7 @@ extension BindChecks {
     static func chatGPTIndexFile(_ c: CheckRunner) {
         c.group("session_index.jsonl: файл") {
             let fm = FileManager.default
-            let dir = fm.temporaryDirectory.appendingPathComponent("juggler-codex-\(UUID().uuidString)", isDirectory: true)
+            let dir = fm.temporaryDirectory.appendingPathComponent("jugglinator-codex-\(UUID().uuidString)", isDirectory: true)
             try fm.createDirectory(at: dir, withIntermediateDirectories: true)
             defer { try? fm.removeItem(at: dir) }
             let url = dir.appendingPathComponent("session_index.jsonl")
@@ -247,7 +247,7 @@ extension BindChecks {
             for trusted in [true, false] {
                 let generic = BindTexts.manualLinkMessage(.chatGPTThread, accessibilityTrusted: trusted)
                 c.expect(generic.contains("codex://threads/<id>"), "общий текст называет ссылку (AX \(trusted))")
-                c.expect(!generic.contains("не умеет"), "и больше не говорит, что Juggler не умеет искать тред (AX \(trusted))")
+                c.expect(!generic.contains("не умеет"), "и больше не говорит, что Jugglinator не умеет искать тред (AX \(trusted))")
             }
             c.expect(BindTexts.manualLinkMessage(.chatGPTThread, accessibilityTrusted: false).contains("Универсальный доступ"),
                      "без Accessibility — причина в разрешении")

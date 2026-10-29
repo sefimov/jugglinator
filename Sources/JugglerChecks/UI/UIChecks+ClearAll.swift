@@ -19,7 +19,7 @@ extension UIChecks {
                           "после очистки пункта «Очистить все задачи» нет")
 
             // Saving an empty list to tasks.json.
-            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("juggler-clear-\(UUID().uuidString)")
+            let dir = FileManager.default.temporaryDirectory.appendingPathComponent("jugglinator-clear-\(UUID().uuidString)")
             defer { try? FileManager.default.removeItem(at: dir) }
             let url = dir.appendingPathComponent("tasks.json")
             var saved = sample().0

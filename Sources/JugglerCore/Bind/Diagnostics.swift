@@ -49,7 +49,7 @@ public enum ClaudeChatReadStatus: String, Codable, Equatable, Sendable {
 /// Printed in `--probe-frontmost` and used for user-facing messages.
 public struct ContextDiagnostics: Codable, Equatable, Sendable {
     public var accessibilityTrusted: Bool
-    /// The context was taken from the remembered app because Juggler itself was frontmost.
+    /// The context was taken from the remembered app because Jugglinator itself was frontmost.
     public var usedRememberedApp: Bool
     /// The window title was read via Accessibility.
     public var windowTitleRead: Bool
