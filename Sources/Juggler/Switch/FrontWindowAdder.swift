@@ -6,12 +6,15 @@ import JugglerCore
 /// The task goes to the end of the list and becomes current; windows are not switched.
 @MainActor
 enum FrontWindowAdder {
-    static func add(_ binding: TaskBinding, title: String, model: AppModel, card: TransitionCardPresenting) {
+    /// Returns the new task's id (`nil` if the document did not take it).
+    @discardableResult
+    static func add(_ binding: TaskBinding, title: String, model: AppModel, card: TransitionCardPresenting) -> UUID? {
         let now = model.clock()
         var id: UUID?
         model.update { id = BindPlanner.createTask(in: &$0, title: title, binding: binding, now: now) }
-        guard let id, let number = model.document.number(of: id), let task = model.document.task(withID: id) else { return }
+        guard let id, let number = model.document.number(of: id), let task = model.document.task(withID: id) else { return nil }
         switchLog.info("Переднее окно не в списке: добавлено задачей \(number)")
         (card as? TransitionMessagePresenting)?.showMessage(TaskToggleTexts.addedCard(number: number, title: task.title))
+        return id
     }
 }

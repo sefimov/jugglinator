@@ -184,3 +184,15 @@
 "Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: l’attività %lld aspetta da più tempo — %@, %@";
 "Juggler: других задач в работе нет" = "Juggler: nessun’altra attività in corso";
 "Juggler: нет задач в работе" = "Juggler: nessuna attività in corso";
+
+/* MCP-сервер (настройки) */
+"MCP-сервер" = "Server MCP";
+"Включить MCP-сервер" = "Attiva il server MCP";
+"ИИ-ассистенты — Claude Desktop, Claude Code, ChatGPT — смогут видеть список задач, переключаться на задачу, добавлять текущее окно, отмечать задачи сделанными и менять заметки. Работает только на этом Mac, через сокет в папке данных Juggler, без сети." = "Gli assistenti IA — Claude Desktop, Claude Code, ChatGPT — potranno vedere l’elenco delle attività, passare a un’attività, aggiungere la finestra corrente, segnare le attività come fatte e modificare le note. Funziona solo su questo Mac, tramite un socket nella cartella dati di Juggler, senza rete.";
+"Juggler запущен не из Juggler.app: в примерах ниже путь к текущей сборке." = "Juggler non è avviato da Juggler.app: gli esempi qui sotto puntano alla build corrente.";
+"Claude Desktop: добавьте в claude_desktop_config.json" = "Claude Desktop: aggiungi a claude_desktop_config.json";
+"Claude Code: выполните в Терминале" = "Claude Code: esegui nel Terminale";
+"ChatGPT (Codex): добавьте в ~/.codex/config.toml" = "ChatGPT (Codex): aggiungi a ~/.codex/config.toml";
+"Сокет" = "Socket";
+"Скопировать" = "Copia";
+"Не удалось запустить MCP-сервер: %@" = "Impossibile avviare il server MCP: %@";

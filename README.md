@@ -35,6 +35,7 @@ Juggler is a macOS menu bar app that keeps the list of those tasks and cycles th
   - Any other app (Cursor, VS Code, iTerm2, Grok, Safari…): the window by title.
 - **Mark a task done** with ⌃§ (⌃` on an ANSI keyboard); done tasks are skipped in the cycle. Press again to bring it back, or clear them all with "Delete Done Tasks" in the menu.
 - **The menu bar circle** turns from green to yellow, orange and red as the longest-waiting task waits 10, 30 and 60 minutes. Hover it to see which task that is.
+- **An MCP server for your AI assistant.** Turn on "MCP server" in Settings and Claude Desktop, Claude Code or ChatGPT (Codex) can list your tasks, switch to one, add the current window, mark tasks done and edit notes, see [MCP server](#mcp-server).
 - **Private by design.** No account, no network, no analytics. Juggler reads a few local files (ChatGPT's thread index, Claude Code session titles) and writes its own `tasks.json`. No third-party dependencies, about 3 MB on disk.
 - **12 languages:** Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish. Switch in Settings → Language without a restart.
 
@@ -105,13 +106,70 @@ Juggler is not a replacement for ⌘Tab or a window manager. It is a task list f
 
 **Is it on Homebrew or the Mac App Store?** No. Homebrew casks now require notarized apps, and the App Store sandbox does not allow the Accessibility and Apple Events access Juggler needs. Download the zip or build from source.
 
+**Can my AI assistant drive Juggler?** Yes, through the built-in [MCP server](#mcp-server): turn it on in Settings and add `Juggler --mcp` to Claude Desktop, Claude Code or Codex. The assistant can then list your tasks, switch to one, add the current window, mark tasks done and edit notes.
+
 **Where do I report a bug or ask for an app to be supported?** [GitHub issues](https://github.com/sefimov/juggler/issues). Say which app and what the window title looks like.
+
+## MCP server
+
+Juggler has a built-in [MCP](https://modelcontextprotocol.io) (Model Context Protocol) server, so an AI assistant can work with the same task list you cycle through with ⌃⇥. It is off by default.
+
+1. Juggler menu → "Settings…" → "MCP server" → turn on "Enable MCP server". The section then shows the exact snippets below with the path of your copy of Juggler, each with a Copy button.
+2. Add the server to your assistant:
+
+   - **Claude Desktop**: add to `~/Library/Application Support/Claude/claude_desktop_config.json` and restart Claude Desktop:
+     ```json
+     {
+       "mcpServers": {
+         "juggler": {
+           "command": "/Applications/Juggler.app/Contents/MacOS/Juggler",
+           "args": ["--mcp"]
+         }
+       }
+     }
+     ```
+   - **Claude Code**:
+     ```sh
+     claude mcp add juggler -- /Applications/Juggler.app/Contents/MacOS/Juggler --mcp
+     ```
+   - **ChatGPT desktop / Codex**: add to `~/.codex/config.toml`:
+     ```toml
+     [mcp_servers.juggler]
+     command = "/Applications/Juggler.app/Contents/MacOS/Juggler"
+     args = ["--mcp"]
+     ```
+3. Ask the assistant to "list my Juggler tasks" or "switch to task 2".
+
+Tools:
+
+| Tool | What it does |
+|---|---|
+| `list_tasks` | Number, id, title, note, done mark, binding kind (`claudeChat`, `claudeCodeSession`, `chatGPTThread`, `chromeTab`, `terminalWindow`, `appWindow`), minutes since the last visit and which task is current (the frontmost window's task, otherwise the last visited one) |
+| `switch_to_task` | Same as the ⌃⇥ cycle landing on the task: opens the binding, shows the card, records the visit. By `number` or `id` |
+| `add_current_window` | Same as ⌃⌥⇥ in a window that is not a task yet: adds the frontmost window and makes it current. If the window already is a task, returns it |
+| `mark_done`, `mark_in_progress` | Set or clear the done mark, with the same card as ⌃§ |
+| `set_note` | Replace the "why / next" note (an empty string clears it) |
+
+How it works: the running Juggler.app listens on a Unix socket, `~/Library/Application Support/Juggler/mcp.sock`. `Juggler --mcp` is the stdio process the assistant launches; it relays newline-delimited JSON-RPC between stdin/stdout and the socket, so the assistant talks to the app that owns the task list, not to a second copy of `tasks.json`. While Juggler is not running or the toggle is off, the relay still answers `initialize` and `tools/list` itself, and every tool call returns an error that says how to turn the server on; it reconnects on the next request once Juggler is up. Nothing leaves the Mac: there is no network transport.
+
+Protocol: MCP revision 2025-06-18 (2025-03-26 and 2024-11-05 are accepted in `initialize`), tools only, implemented with Foundation JSON and no dependencies. The protocol logic is `Sources/JugglerCore/MCP/`, checked by `swift run JugglerChecks MCP`; the socket server, the relay and the settings section are `Sources/Juggler/MCP/`, exercised over a real socket by `Juggler --self-test`.
+
+Trying it by hand, without an assistant:
+
+```sh
+# Juggler.app is running with "MCP server" on.
+printf '%s\n' \
+  '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"shell","version":"0"}}}' \
+  '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+  '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_tasks","arguments":{}}}' \
+  | /Applications/Juggler.app/Contents/MacOS/Juggler --mcp
+```
 
 ---
 
 ## Developer documentation
 
-Everything below is for building, debugging and extending Juggler: [building and checks](#building-and-checks), [the .app bundle](#building-the-app), [hotkeys](#hotkeys) and [adding or removing the current window](#add-or-remove-the-current-window) in detail, [bindings](#bindings), [permissions](#permissions), [signing for development](#signing-the-juggler-dev-certificate), [`--probe-frontmost`](#debugging-bindings---probe-frontmost), [localization](#localization), [package layout](#package-layout) and [extension points](#extension-points-and-rules-for-ui-switch-bind-and-pack). Bundle id: `com.sefimov.juggler`.
+Everything below is for building, debugging and extending Juggler: [building and checks](#building-and-checks), [the .app bundle](#building-the-app), [hotkeys](#hotkeys) and [adding or removing the current window](#add-or-remove-the-current-window) in detail, [bindings](#bindings), [permissions](#permissions), [signing for development](#signing-the-juggler-dev-certificate), [`--probe-frontmost`](#debugging-bindings---probe-frontmost), [localization](#localization), [package layout](#package-layout) and [extension points](#extension-points-and-rules-for-ui-switch-bind-and-pack). The [MCP server](#mcp-server) is described above. Bundle id: `com.sefimov.juggler`.
 
 ## Building and checks
 
@@ -127,6 +185,7 @@ swift run JugglerChecks --self-fail # deliberate failure: make sure the exit cod
 swift run Juggler                   # run the menu bar app (without an .app)
 swift run Juggler --self-test       # self-test of components without windows or permission prompts
 swift run Juggler --probe-frontmost # JSON with the frontmost window context
+swift run Juggler --mcp             # stdio MCP server, relayed to the running app (see "MCP server")
 ```
 
 `swift run Juggler` is handy for debugging. But without an `.app`, macOS grants permissions to Terminal rather than Juggler, and launch at login does not work. For everyday use, build the `.app`.
@@ -174,7 +233,7 @@ It initializes the store, the composition root and the UI, SWITCH and BIND modul
   ditto build/Juggler.app /Applications/Juggler.app
   ```
   If macOS asks for confirmation, an "Open Login Items" button appears in Juggler settings.
-- Data lives in `~/Library/Application Support/Juggler/tasks.json`, custom hotkeys in `hotkeys.json` next to it.
+- Data lives in `~/Library/Application Support/Juggler/tasks.json`, custom hotkeys in `hotkeys.json` next to it; `mcp.sock` next to them is the MCP server's socket while it is on.
 
 ## Hotkeys
 
@@ -457,16 +516,20 @@ Sources/
                           TerminalTitle (Terminal title without size, shell, user@host)
       Contracts/          ActivationResult, BindingCaptureResult, TransitionCardContent, HotkeyAction
     UI/  Switch/  Bind/   pure logic for the UI, SWITCH, BIND tasks
+    MCP/                  MCP: JSONValue, JSON-RPC, MCPRequestHandler (initialize, ping, tools/list, tools/call),
+                          MCPTools (schemas, task selection, results), MCPConfig (socket path, client snippets)
   Juggler/                the app (SwiftUI + AppKit, MenuBarExtra)
     App/                  CORE/PACK: entry point, AppDelegate, AppModel, protocols, composition root, self-test
     UI/                   UI: UIModule — menu bar and settings scenes
     Switch/               SWITCH: SwitchModule — switcher, card, hotkeys
     Bind/                 BIND: BindModule — window context, binding, activation, permissions
+    MCP/                  MCP: MCPModule — Unix socket server, `--mcp` stdio relay, live backend, settings section
   JugglerChecks/          executable checks
-    main.swift            list of suites: Core, UI, Switch, Bind (already listed)
+    main.swift            list of suites: Core, UI, Switch, Bind, MCP
     Harness/              CheckRunner, the CheckSuite protocol
     Core/                 core checks
     UI/  Switch/  Bind/   UIChecks, SwitchChecks, BindChecks
+    MCP/                  MCPChecks
 scripts/
   bundle.sh               builds build/Juggler.app, signs, checks, self-tests
   Info.plist              the app's Info.plist template
@@ -476,7 +539,7 @@ Resources/
   AppIcon-1024.png        1024 px preview for the README
 ```
 
-Data is stored in `~/Library/Application Support/Juggler/tasks.json`.
+Data is stored in `~/Library/Application Support/Juggler/tasks.json`; the MCP socket `mcp.sock` lives next to it while the server is on.
 
 A binding in JSON is `{"kind": "<kind>", "<kind>": {…}}`. Kinds: `chromeTab`, `claudeChat`, `claudeCodeSession`, `chatGPTThread`, `appWindow`. New kinds are only ever added, so files from earlier versions load without loss. An unrecognized kind, for example from a file written by a newer version, becomes "no binding", and the rest of the task's data is kept.
 
@@ -511,7 +574,8 @@ Each task works only in its own folders:
    - `SwitchModule.hotkeySettingsView(environment:)`;
    - `SwitchModule.selfTest()`;
    - `UIModule.scenes(environment:)`;
-   - `UIModule.selfTest()`.
+   - `UIModule.selfTest()`;
+   - `MCPModule.makeServer(model:bind:switcher:card:)`, `MCPModule.settingsView(environment:)`, `MCPModule.runStdioBridge()`, `MCPModule.selfTest()`.
 
    The `*Module.swift` files currently contain stubs. A task replaces their bodies with its own types and keeps the signatures. You may add as many new files to your own folder as you like.
 3. **State** is held by `AppModel` (`App/AppModel.swift`), the sole owner of `TasksDocument`.

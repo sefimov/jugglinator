@@ -18,6 +18,7 @@ enum SelfTest {
         results += BindModule.selfTest()
         results += SwitchModule.selfTest()
         results += UIModule.selfTest()
+        results += MCPModule.selfTest()
 
         for result in results {
             let mark = result.passed ? "ok  " : "FAIL"
@@ -62,12 +63,13 @@ enum SelfTest {
             ("SWITCH: переключатель", env.switcher is CycleTaskSwitcher),
             ("SWITCH: «сделано» ⌃§", env.doneToggler is LiveDoneToggler),
             ("SWITCH: хоткеи Carbon", env.hotkeys is CarbonHotkeyCenter),
+            ("MCP: сервер", env.mcp != nil),
         ]
         let missing = live.filter { !$0.1 }.map(\.0)
         results.append(SelfTestResult(
             "Корень композиции: рабочие реализации модулей",
-            passed: missing.isEmpty && !env.isStarted,
-            detail: missing.isEmpty ? "\(live.count) компонентов, хоткеи не запущены" : "заглушки: \(missing.joined(separator: ", "))"))
+            passed: missing.isEmpty && !env.isStarted && env.mcp?.isListening == false,
+            detail: missing.isEmpty ? "\(live.count) компонентов, хоткеи и MCP не запущены" : "заглушки: \(missing.joined(separator: ", "))"))
         return results
     }
 

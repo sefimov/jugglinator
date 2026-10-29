@@ -184,3 +184,15 @@
 "Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler：任务 %lld 等待最久 — %@，%@";
 "Juggler: других задач в работе нет" = "Juggler：没有其他进行中的任务";
 "Juggler: нет задач в работе" = "Juggler：没有进行中的任务";
+
+/* MCP-сервер (настройки) */
+"MCP-сервер" = "MCP 服务器";
+"Включить MCP-сервер" = "启用 MCP 服务器";
+"ИИ-ассистенты — Claude Desktop, Claude Code, ChatGPT — смогут видеть список задач, переключаться на задачу, добавлять текущее окно, отмечать задачи сделанными и менять заметки. Работает только на этом Mac, через сокет в папке данных Juggler, без сети." = "AI 助手（Claude Desktop、Claude Code、ChatGPT）将能查看任务列表、切换到某个任务、添加当前窗口、将任务标记为已完成以及修改备注。仅在这台 Mac 上运行，通过 Juggler 数据文件夹中的套接字通信，不使用网络。";
+"Juggler запущен не из Juggler.app: в примерах ниже путь к текущей сборке." = "Juggler 不是从 Juggler.app 启动的：下面的示例指向当前构建的路径。";
+"Claude Desktop: добавьте в claude_desktop_config.json" = "Claude Desktop：添加到 claude_desktop_config.json";
+"Claude Code: выполните в Терминале" = "Claude Code：在终端中运行";
+"ChatGPT (Codex): добавьте в ~/.codex/config.toml" = "ChatGPT (Codex)：添加到 ~/.codex/config.toml";
+"Сокет" = "套接字";
+"Скопировать" = "拷贝";
+"Не удалось запустить MCP-сервер: %@" = "无法启动 MCP 服务器：%@";

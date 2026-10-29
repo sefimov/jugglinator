@@ -41,10 +41,11 @@
         "Deep links: Claude chat by UUID, Claude Code session by id, ChatGPT thread by id, Chrome tab by id, Terminal tab by tty",
         "Mark tasks done; done tasks are skipped",
         "Menu bar circle turns yellow, orange and red as the longest-waiting task waits",
+        "Built-in MCP server: Claude Desktop, Claude Code and ChatGPT can list tasks, switch to one and add the current window",
         "No account, no network, no analytics",
         "Interface in 12 languages"
       ],
-      "keywords": "macOS, menu bar, hotkey, task switcher, window switcher, Claude Code, ChatGPT, Claude, AI agents, parallel sessions"
+      "keywords": "macOS, menu bar, hotkey, task switcher, window switcher, Claude Code, ChatGPT, Claude, AI agents, parallel sessions, MCP server, Model Context Protocol"
     },
     {
       "@type": "SoftwareSourceCode",
@@ -82,6 +83,11 @@
           "@type": "Question",
           "name": "Why does macOS say the developer cannot be verified?",
           "acceptedAnswer": { "@type": "Answer", "text": "The release is ad-hoc signed and not notarized with an Apple Developer ID. Open System Settings → Privacy & Security and click Open Anyway, or run xattr -dr com.apple.quarantine /Applications/Juggler.app once. The source is on GitHub if you prefer to build it yourself." }
+        },
+        {
+          "@type": "Question",
+          "name": "Can Claude or ChatGPT control Juggler through MCP?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Yes. Juggler has a built-in MCP (Model Context Protocol) server, off by default. Turn on MCP server in Settings, then add /Applications/Juggler.app/Contents/MacOS/Juggler --mcp as a stdio server to Claude Desktop, Claude Code (claude mcp add juggler -- /Applications/Juggler.app/Contents/MacOS/Juggler --mcp) or ChatGPT desktop / Codex. The assistant gets list_tasks, switch_to_task, add_current_window, mark_done, mark_in_progress and set_note. It talks to the running app over a local Unix socket; nothing goes over the network." }
         },
         {
           "@type": "Question",
@@ -160,6 +166,7 @@
     </li>
     <li><strong>Mark a task done</strong> with <kbd>⌃§</kbd> (<kbd>⌃`</kbd> on an ANSI keyboard); done tasks are skipped in the cycle. Press again to bring it back, or clear them all with "Delete Done Tasks" in the menu.</li>
     <li><strong>The menu bar circle</strong> turns <span class="dot" style="background:var(--green)"></span>green → <span class="dot" style="background:var(--yellow)"></span>yellow → <span class="dot" style="background:var(--orange)"></span>orange → <span class="dot" style="background:var(--red)"></span>red as the longest-waiting task waits 10, 30 and 60 minutes. Hover it to see which task that is.</li>
+    <li><strong>An MCP server for your AI assistant.</strong> Turn on "MCP server" in Settings and Claude Desktop, Claude Code or ChatGPT (Codex) can list your tasks, switch to one, add the current window, mark tasks done and edit notes. See the <a href="https://github.com/sefimov/juggler#mcp-server">setup snippets</a>.</li>
     <li><strong>Private by design.</strong> No account, no network, no analytics. Juggler reads a few local files (ChatGPT's thread index, Claude Code session titles) and writes its own <code>tasks.json</code>. No third-party dependencies, about 3 MB on disk.</li>
     <li><strong>12 languages:</strong> Arabic, Chinese (Simplified), English, French, German, Hindi, Italian, Japanese, Korean, Portuguese (Brazil), Russian, Spanish. Switch in Settings → Language without a restart.</li>
   </ul>
@@ -213,6 +220,7 @@ open /Applications/Juggler.app          # a colored circle appears in the menu b
   <div class="card"><strong>Does Juggler send anything anywhere?</strong><br>No. It has no network code. It reads ChatGPT's local <code>session_index.jsonl</code> and Claude Code's local session files to learn thread ids and titles, and stores its own list in <code>~/Library/Application Support/Juggler/tasks.json</code>.</div>
   <div class="card"><strong>Why does macOS say the developer cannot be verified?</strong><br>The release is ad-hoc signed and not notarized with an Apple Developer ID. "Open Anyway" in System Settings or the <code>xattr</code> command above fixes it once. The source is on GitHub if you prefer to build it yourself.</div>
   <div class="card"><strong>Does it work with the Russian or other non-US keyboard layouts?</strong><br>Yes. Hotkeys are bound to physical keys, not characters, so <kbd>⌃⇥</kbd> and <kbd>⌃§</kbd> work in any layout.</div>
+  <div class="card"><strong>Can Claude or ChatGPT control Juggler through MCP?</strong><br>Yes. Juggler has a built-in MCP (Model Context Protocol) server, off by default. Turn on "MCP server" in Settings, then add <code>/Applications/Juggler.app/Contents/MacOS/Juggler --mcp</code> as a stdio server to Claude Desktop, Claude Code (<code>claude mcp add juggler -- /Applications/Juggler.app/Contents/MacOS/Juggler --mcp</code>) or ChatGPT desktop / Codex. The assistant gets <code>list_tasks</code>, <code>switch_to_task</code>, <code>add_current_window</code>, <code>mark_done</code>, <code>mark_in_progress</code> and <code>set_note</code>. It talks to the running app over a local Unix socket; nothing goes over the network. <a href="https://github.com/sefimov/juggler#mcp-server">Setup snippets in the README</a>.</div>
   <div class="card"><strong>Is it on Homebrew or the Mac App Store?</strong><br>No. Homebrew casks now require notarized apps, and the App Store sandbox does not allow the Accessibility and Apple Events access Juggler needs. Download the zip or build from source.</div>
   <div class="card"><strong>Where do I report a bug or ask for an app to be supported?</strong><br><a href="https://github.com/sefimov/juggler/issues">GitHub issues</a>. Say which app and what the window title looks like.</div>
 
