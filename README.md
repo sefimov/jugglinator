@@ -11,7 +11,7 @@ Like ⌘Tab, but for tasks instead of apps.
 <p align="center">
   <a href="https://github.com/sefimov/juggler/releases/latest/download/Juggler.app.zip"><img src="https://img.shields.io/badge/Download_for_macOS-14%2B-black?style=for-the-badge&logo=apple" height="44" alt="Download for macOS 14+"></a>
   <br>
-  <sub>Free and open source (MIT). Not notarized yet: on first launch see <a href="#first-launch">First launch</a>.</sub>
+  <sub>Free and open source (MIT) · <a href="https://sefimov.github.io/juggler/">Website</a>. Not notarized yet: on first launch see <a href="#first-launch">First launch</a>.</sub>
 </p>
 
 ---
@@ -103,7 +103,7 @@ Juggler is not a replacement for ⌘Tab or a window manager. It is a task list f
 
 **Does it work with the Russian or other non-US keyboard layouts?** Yes. Hotkeys are bound to physical keys, not characters, so ⌃⇥ and ⌃§ work in any layout.
 
-**Is it on Homebrew or the Mac App Store?** Not yet. Homebrew is planned. The App Store sandbox does not allow the Accessibility and Apple Events access Juggler needs, so an App Store version is unlikely.
+**Is it on Homebrew or the Mac App Store?** No. Homebrew casks now require notarized apps, and the App Store sandbox does not allow the Accessibility and Apple Events access Juggler needs. Download the zip or build from source.
 
 **Where do I report a bug or ask for an app to be supported?** [GitHub issues](https://github.com/sefimov/juggler/issues). Say which app and what the window title looks like.
 
@@ -190,6 +190,7 @@ It initializes the store, the composition root and the UI, SWITCH and BIND modul
 - Juggler detects the keyboard type (ISO with § or ANSI with `) and picks the "done" default accordingly.
 - The hotkeys are global: while Juggler is running, ⌃⇥ and ⌃⇧⇥ no longer switch tabs in Chrome, Safari, Terminal, iTerm2, VS Code or Xcode, and ⌃§ / ⌃` is taken from them too (in VS Code ⌃` normally toggles the terminal). Reassign any of them in Settings → "Hotkeys" if that gets in the way.
 - The switching order is fixed: 1→2→3→1. Tasks marked "done" are skipped. The current task is determined at the moment of the key press from the frontmost window or tab.
+- **⌃⇥ in a window that is not a task** adds it as a new task (card "Task N “…” added") instead of switching; the next press switches as usual. A window that needs a link (a Claude chat whose id was not read, an ambiguous ChatGPT thread), a window without a title, or Juggler itself is not added: ⌃⇥ just switches, and ⌃⌥⇥ adds such a window with a dialog.
 - On each switch, a card with the number, title, note and "away N min" appears for a second or so. The card does not take focus and lets clicks through.
 - **Reassigning:** Juggler settings → "Hotkeys". Click the field, then press the desired combination; Esc cancels, "Default" restores the default.
 - `~/Library/Application Support/Juggler/hotkeys.json` stores only reassigned combinations. Defaults are computed at launch from the keyboard type. To reset everything, quit Juggler and delete this file.
@@ -225,9 +226,9 @@ If several tasks match, a match by id wins, then by URL, then by name. On a tie,
 
 ⌃§ ("Mark Done / Back to Work" in the hotkey settings) toggles the "done" mark of one task. It does not switch windows.
 
-- **Which task:** the task of the frontmost window if the window matches it exactly (the rules above), otherwise the current task, the one marked ▸ in the list.
+- **Which task:** only the task of the frontmost window, if the window matches it exactly (the rules above). The last active task is never marked instead.
+- **The frontmost window is not a task** — it is added as a new task, nothing is marked. A window that needs a link opens the usual binding dialog. If the window cannot be added (desktop, Juggler itself, a window without a title), there is a short beep and a card explaining it.
 - **First press** marks the task done; a card appears: "Task N “…” done". **A second press** takes the mark off: "Task N “…” is back in progress". The change is saved to `tasks.json` right away.
-- **No tasks** — nothing changes: a short beep and a card "No tasks yet: add a task from the Juggler menu". If there are tasks but none is current and the window matches none of them, there is also a beep and a card explaining it.
 - The hotkey is reassigned like the others (Settings → "Hotkeys"). An old `hotkeys.json` without this action still loads, and ⌃§ (⌃` on ANSI) stays the default; the key in the file is `toggleDone`.
 
 ## Menu bar circle
@@ -242,6 +243,7 @@ The menu bar icon is a circle. Its color shows the not-done task you have been a
 | red | an hour or more |
 | grey outline | no tasks, or all of them are done |
 
+- **The number inside the circle** is the task of the frontmost window (exact match, the rules above). In a window that is not a task there is no number, and the menu marks no task with ▸ either. The window is re-read when another app becomes active and every 3 seconds (switching tabs inside an app sends no notification).
 - The thresholds are the same as the "away N min" colors in the list. A task that has never been opened counts from the moment it was created.
 - The color is recomputed right after switching, marking done, adding and removing a task, and at least once a minute (also after the Mac wakes up).
 - Hovering the icon shows which task it is and how long you have been away from it, for example "Task 3 — Report, away 12 min". The tooltip is localized. SwiftUI `.help` on a `MenuBarExtra` label does not reach the status item, so the text is also set directly on the status item button (`StatusItemTooltip`).
