@@ -4,10 +4,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "Juggler",
+    name: "Jugglinator",
     platforms: [.macOS(.v14)],
     products: [
-        .executable(name: "Juggler", targets: ["Juggler"]),
+        .executable(name: "Jugglinator", targets: ["Jugglinator"]),
         .executable(name: "JugglerChecks", targets: ["JugglerChecks"]),
         .library(name: "JugglerCore", targets: ["JugglerCore"]),
     ],
@@ -15,7 +15,7 @@ let package = Package(
         // Pure logic: Foundation only. Checked from JugglerChecks.
         .target(name: "JugglerCore"),
         // The menu bar app (SwiftUI + AppKit).
-        .executableTarget(name: "Juggler", dependencies: ["JugglerCore"]),
+        .executableTarget(name: "Jugglinator", dependencies: ["JugglerCore"]),
         // Executable checks: `swift run JugglerChecks`, exit code 0 — all passed.
         .executableTarget(name: "JugglerChecks", dependencies: ["JugglerCore"]),
     ]

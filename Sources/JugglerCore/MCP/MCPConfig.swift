@@ -2,17 +2,17 @@ import Foundation
 
 /// Where the MCP server lives and how clients are told to reach it.
 ///
-/// Transport: the running Juggler.app listens on a Unix socket in its data folder
-/// (`~/Library/Application Support/Juggler/mcp.sock`); `Juggler --mcp` is the stdio process that
+/// Transport: the running Jugglinator.app listens on a Unix socket in its data folder
+/// (`~/Library/Application Support/Jugglinator/mcp.sock`); `Jugglinator --mcp` is the stdio process that
 /// MCP clients launch, and it relays newline-delimited JSON-RPC between stdin/stdout and that socket.
 public enum MCPConfig {
     /// `UserDefaults` key of the "MCP server" toggle (off by default).
     public static let enabledKey = "mcpServerEnabled"
-    /// The command-line flag that turns the Juggler executable into the stdio relay.
+    /// The command-line flag that turns the Jugglinator executable into the stdio relay.
     public static let flag = "--mcp"
     public static let socketFileName = "mcp.sock"
-    /// Server name in client configs (`claude mcp add juggler …`, `"mcpServers": {"juggler": …}`).
-    public static let serverName = "juggler"
+    /// Server name in client configs (`claude mcp add jugglinator …`, `"mcpServers": {"jugglinator": …}`).
+    public static let serverName = "jugglinator"
     public static let claudeDesktopConfigPath = "~/Library/Application Support/Claude/claude_desktop_config.json"
     public static let codexConfigPath = "~/.codex/config.toml"
 
@@ -41,12 +41,12 @@ public enum MCPConfig {
         return config.text(pretty: true)
     }
 
-    /// `claude mcp add juggler -- <executable> --mcp` for Claude Code.
+    /// `claude mcp add jugglinator -- <executable> --mcp` for Claude Code.
     public static func claudeCodeCommand(executablePath: String) -> String {
         "claude mcp add \(serverName) -- \(shellQuoted(executablePath)) \(flag)"
     }
 
-    /// The `[mcp_servers.juggler]` table for ChatGPT desktop / Codex (`~/.codex/config.toml`).
+    /// The `[mcp_servers.jugglinator]` table for ChatGPT desktop / Codex (`~/.codex/config.toml`).
     public static func codexSnippet(executablePath: String) -> String {
         """
         [mcp_servers.\(serverName)]

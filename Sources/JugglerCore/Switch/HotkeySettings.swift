@@ -138,7 +138,7 @@ private struct LossyHotkey: Decodable {
     init(from decoder: Decoder) throws { value = try? Hotkey(from: decoder) }
 }
 
-/// Storage of custom combinations: `~/Library/Application Support/Juggler/hotkeys.json`,
+/// Storage of custom combinations: `~/Library/Application Support/Jugglinator/hotkeys.json`,
 /// next to `tasks.json`. No file or a broken one — defaults are used.
 public final class HotkeyOverridesStore {
     public let fileURL: URL

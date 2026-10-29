@@ -38,9 +38,9 @@ extension BindChecks {
         c.group("Привязка сессии Claude Code") {
             let titled = BindingCapture.capture(context: FrontmostContext(
                 bundleID: BindApps.claude, appName: "Claude", windowTitle: "Claude",
-                claudeCodeSessionID: sessionID, claudeCodeSessionTitle: "  Сессии Claude Code в Juggler "))
-            c.expectEqual(titled, .captured(.claudeCodeSession(ClaudeCodeSessionRef(sessionID: sessionID, title: "Сессии Claude Code в Juggler")),
-                                            suggestedTitle: "Сессии Claude Code в Juggler"),
+                claudeCodeSessionID: sessionID, claudeCodeSessionTitle: "  Сессии Claude Code в Jugglinator "))
+            c.expectEqual(titled, .captured(.claudeCodeSession(ClaudeCodeSessionRef(sessionID: sessionID, title: "Сессии Claude Code в Jugglinator")),
+                                            suggestedTitle: "Сессии Claude Code в Jugglinator"),
                           "вкладка Code → сессия сразу, название из метаданных")
 
             let byWindow = BindingCapture.capture(context: FrontmostContext(
@@ -128,7 +128,7 @@ extension BindChecks {
     static func sessionMetadata(_ c: CheckRunner) {
         c.group("Метаданные claude-code-sessions") {
             let fm = FileManager.default
-            let root = fm.temporaryDirectory.appendingPathComponent("juggler-sessions-\(UUID().uuidString)", isDirectory: true)
+            let root = fm.temporaryDirectory.appendingPathComponent("jugglinator-sessions-\(UUID().uuidString)", isDirectory: true)
             defer { try? fm.removeItem(at: root) }
             func write(_ text: String, _ components: [String]) throws {
                 let url = components.reduce(root) { $0.appendingPathComponent($1) }
@@ -139,11 +139,11 @@ extension BindChecks {
             c.expectNil(ClaudeCodeSessionMetadata.info(sessionID: sessionID, root: root), "нет папки — nil, без ошибок")
             c.expectNil(ClaudeCodeSessionMetadata.info(sessionID: sessionID, root: nil), "нет корня — nil")
 
-            let full = #"{"sessionId":"\#(sessionID)","title":" Сессии Code ","cwd":"/Users/me/work/juggler","isArchived":false,"lastActivityAt":1792762529268,"model":"x"}"#
+            let full = #"{"sessionId":"\#(sessionID)","title":" Сессии Code ","cwd":"/Users/me/work/jugglinator","isArchived":false,"lastActivityAt":1792762529268,"model":"x"}"#
             try write(full, ["528e4771-d70f-4ecd-b1ee-7feb6fe7d772", "5f0bd1ec-d049-4fca-8044-a9ea78d7ddb3", "\(sessionID).json"])
             try write("{}", ["528e4771-d70f-4ecd-b1ee-7feb6fe7d772", "5f0bd1ec-d049-4fca-8044-a9ea78d7ddb3", "scheduled-tasks.json"])
             let info = ClaudeCodeSessionMetadata.info(sessionID: sessionID.uppercased(), root: root)
-            c.expectEqual(info, ClaudeCodeSessionInfo(sessionID: sessionID, title: "Сессии Code", cwd: "/Users/me/work/juggler", isArchived: false),
+            c.expectEqual(info, ClaudeCodeSessionInfo(sessionID: sessionID, title: "Сессии Code", cwd: "/Users/me/work/jugglinator", isArchived: false),
                           "раскладка root/<uuid>/<uuid>/local_<uuid>.json, id без учёта регистра")
 
             let deep = "local_11111111-2222-4333-8444-555555555555"

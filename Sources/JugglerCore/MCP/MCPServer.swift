@@ -3,7 +3,7 @@ import Foundation
 /// The MCP (Model Context Protocol) server logic: JSON-RPC over newline-delimited JSON,
 /// the `initialize` handshake, `ping`, `tools/list` and `tools/call`.
 ///
-/// Transport-agnostic: the app feeds it lines from a Unix socket, `Juggler --mcp` feeds it lines
+/// Transport-agnostic: the app feeds it lines from a Unix socket, `Jugglinator --mcp` feeds it lines
 /// from stdin when the app is not running. One instance per connection (it remembers whether
 /// the client has initialized, nothing else).
 public final class MCPRequestHandler {
@@ -11,10 +11,10 @@ public final class MCPRequestHandler {
     /// everything we use (tools with `structuredContent`) degrades gracefully.
     public static let protocolVersion = "2025-06-18"
     public static let supportedVersions: Set<String> = ["2025-06-18", "2025-03-26", "2024-11-05"]
-    public static let serverName = "juggler"
+    public static let serverName = "jugglinator"
 
     /// Shown to the assistant after `initialize`: what the server is for.
-    public static let instructions = "Juggler keeps the user's list of parallel tasks on their Mac: Claude chats, "
+    public static let instructions = "Jugglinator keeps the user's list of parallel tasks on their Mac: Claude chats, "
         + "Claude Code sessions, ChatGPT threads, Chrome tabs, Terminal tabs and other windows, each bound to the exact "
         + "chat, session, thread or tab. Use list_tasks to see the list and which task is current, switch_to_task to bring "
         + "a task to the front, add_current_window to add the frontmost window, mark_done / mark_in_progress and set_note "
@@ -34,8 +34,8 @@ public final class MCPRequestHandler {
         self.unavailableMessage = unavailableMessage
     }
 
-    public static let defaultUnavailableMessage = "Juggler is not running or its MCP server is turned off. "
-        + "Open Juggler and turn on \"MCP server\" in Settings, then try again."
+    public static let defaultUnavailableMessage = "Jugglinator is not running or its MCP server is turned off. "
+        + "Open Jugglinator and turn on \"MCP server\" in Settings, then try again."
 
     /// One line in, at most one line out (`nil` for a notification). Never throws: errors become JSON-RPC errors.
     public func handle(line: String) -> String? {
@@ -71,7 +71,7 @@ public final class MCPRequestHandler {
             return .success([
                 "protocolVersion": .string(version),
                 "capabilities": ["tools": ["listChanged": false]],
-                "serverInfo": ["name": .string(Self.serverName), "title": "Juggler", "version": .string(serverVersion)],
+                "serverInfo": ["name": .string(Self.serverName), "title": "Jugglinator", "version": .string(serverVersion)],
                 "instructions": .string(Self.instructions),
             ])
 

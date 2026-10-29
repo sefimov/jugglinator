@@ -1,4 +1,4 @@
-# Build and checks on every push and PR to main; on a v* tag — a release with Juggler.app.zip.
+# Build and checks on every push and PR to main; on a v* tag — a release with Jugglinator.app.zip.
 name: CI
 
 on:
@@ -51,13 +51,13 @@ jobs:
           if [ "$GITHUB_REF_TYPE" = tag ]; then export JUGGLER_VERSION="${GITHUB_REF_NAME#v}"; fi
           scripts/bundle.sh
 
-      - name: Архив Juggler.app.zip
-        run: ditto -c -k --keepParent build/Juggler.app build/Juggler.app.zip
+      - name: Архив Jugglinator.app.zip
+        run: ditto -c -k --keepParent build/Jugglinator.app build/Jugglinator.app.zip
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Juggler.app
-          path: build/Juggler.app.zip
+          name: Jugglinator.app
+          path: build/Jugglinator.app.zip
           retention-days: 14
 
   release:
@@ -69,11 +69,11 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: Juggler.app
+          name: Jugglinator.app
 
       - name: GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" Juggler.app.zip \
-            --repo "$GITHUB_REPOSITORY" --title "Juggler $GITHUB_REF_NAME" --generate-notes
+          gh release create "$GITHUB_REF_NAME" Jugglinator.app.zip \
+            --repo "$GITHUB_REPOSITORY" --title "Jugglinator $GITHUB_REF_NAME" --generate-notes

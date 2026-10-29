@@ -36,11 +36,11 @@ public final class TaskStore {
     private let fileManager: FileManager
     private let now: () -> Date
 
-    /// `~/Library/Application Support/Juggler/tasks.json`.
+    /// `~/Library/Application Support/Jugglinator/tasks.json`.
     public static var defaultFileURL: URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
             ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
-        return base.appendingPathComponent("Juggler", isDirectory: true).appendingPathComponent("tasks.json")
+        return base.appendingPathComponent("Jugglinator", isDirectory: true).appendingPathComponent("tasks.json")
     }
 
     public init(fileURL: URL = TaskStore.defaultFileURL, fileManager: FileManager = .default, now: @escaping () -> Date = Date.init) {

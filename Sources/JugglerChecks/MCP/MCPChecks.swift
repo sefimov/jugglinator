@@ -145,7 +145,7 @@ enum MCPChecks: CheckSuite {
             let result = handler.handle(request(1, "initialize", ["protocolVersion": "2025-06-18", "clientInfo": ["name": "test"]]))
             c.expectEqual(result?["id"], 1, "ответ с тем же id")
             c.expectEqual(result?["result"]?["protocolVersion"], "2025-06-18", "версия протокола")
-            c.expectEqual(result?["result"]?["serverInfo"]?["name"], "juggler", "имя сервера")
+            c.expectEqual(result?["result"]?["serverInfo"]?["name"], "jugglinator", "имя сервера")
             c.expectEqual(result?["result"]?["serverInfo"]?["version"], "1.2.3", "версия приложения")
             c.expect(result?["result"]?["capabilities"]?["tools"] != nil, "заявлены инструменты")
             c.expect(result?["result"]?["instructions"]?.stringValue?.contains("list_tasks") == true, "инструкция упоминает list_tasks")
@@ -247,7 +247,7 @@ enum MCPChecks: CheckSuite {
             c.expect(text.contains("3. Третья · visited just now"), "текст: без привязки")
 
             let empty = call(MCPRequestHandler(backend: FakeBackend(doc: TasksDocument(), current: nil), serverVersion: "x"), "list_tasks")
-            c.expectEqual(self.text(empty), "The Juggler task list is empty.", "пустой список — текст")
+            c.expectEqual(self.text(empty), "The Jugglinator task list is empty.", "пустой список — текст")
             c.expectEqual(empty?["structuredContent"]?["current_number"], .null, "пустой список — нет текущей")
         }
 
@@ -349,18 +349,18 @@ enum MCPChecks: CheckSuite {
 
     static func configChecks(_ c: CheckRunner) {
         c.group("MCP: конфигурация клиентов") {
-            let path = "/Applications/Juggler.app/Contents/MacOS/Juggler"
+            let path = "/Applications/Jugglinator.app/Contents/MacOS/Jugglinator"
             let snippet = MCPConfig.claudeDesktopSnippet(executablePath: path)
-            c.expectEqual(JSONValue(text: snippet)?["mcpServers"]?["juggler"],
-                          ["command": .string(path), "args": ["--mcp"]], "Claude Desktop: mcpServers.juggler")
+            c.expectEqual(JSONValue(text: snippet)?["mcpServers"]?["jugglinator"],
+                          ["command": .string(path), "args": ["--mcp"]], "Claude Desktop: mcpServers.jugglinator")
             c.expect(snippet.contains("\n"), "Claude Desktop: отформатировано")
             c.expectEqual(MCPConfig.claudeCodeCommand(executablePath: path),
-                          "claude mcp add juggler -- /Applications/Juggler.app/Contents/MacOS/Juggler --mcp", "Claude Code: команда")
-            c.expectEqual(MCPConfig.claudeCodeCommand(executablePath: "/Users/me/My Apps/Juggler.app/Contents/MacOS/Juggler"),
-                          "claude mcp add juggler -- '/Users/me/My Apps/Juggler.app/Contents/MacOS/Juggler' --mcp", "Claude Code: путь с пробелом в кавычках")
+                          "claude mcp add jugglinator -- /Applications/Jugglinator.app/Contents/MacOS/Jugglinator --mcp", "Claude Code: команда")
+            c.expectEqual(MCPConfig.claudeCodeCommand(executablePath: "/Users/me/My Apps/Jugglinator.app/Contents/MacOS/Jugglinator"),
+                          "claude mcp add jugglinator -- '/Users/me/My Apps/Jugglinator.app/Contents/MacOS/Jugglinator' --mcp", "Claude Code: путь с пробелом в кавычках")
             c.expectEqual(MCPConfig.shellQuoted("it's"), "'it'\\''s'", "апостроф в пути")
             c.expectEqual(MCPConfig.codexSnippet(executablePath: path),
-                          "[mcp_servers.juggler]\ncommand = \"/Applications/Juggler.app/Contents/MacOS/Juggler\"\nargs = [\"--mcp\"]", "Codex: TOML")
+                          "[mcp_servers.jugglinator]\ncommand = \"/Applications/Jugglinator.app/Contents/MacOS/Jugglinator\"\nargs = [\"--mcp\"]", "Codex: TOML")
             c.expectEqual(MCPConfig.socketURL(dataDirectory: URL(fileURLWithPath: "/tmp/j")).path, "/tmp/j/mcp.sock", "сокет рядом с tasks.json")
             c.expect(MCPConfig.isSocketPathUsable(String(repeating: "a", count: 103)), "103 байта помещаются в sun_path")
             c.expect(!MCPConfig.isSocketPathUsable(String(repeating: "a", count: 104)), "104 — нет")

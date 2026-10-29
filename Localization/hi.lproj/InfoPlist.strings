@@ -1,2 +1,2 @@
-"CFBundleDisplayName" = "Juggler";
-"NSAppleEventsUsageDescription" = "Juggler, Google Chrome के सक्रिय टैब का पता और शीर्षक तथा Terminal की विंडो और टैब पढ़ता है ताकि उन्हें किसी कार्य से बाँध सके, और कार्यों के बीच जाने पर उन्हीं पर स्विच करता है।";
+"CFBundleDisplayName" = "Jugglinator";
+"NSAppleEventsUsageDescription" = "Jugglinator, Google Chrome के सक्रिय टैब का पता और शीर्षक तथा Terminal की विंडो और टैब पढ़ता है ताकि उन्हें किसी कार्य से बाँध सके, और कार्यों के बीच जाने पर उन्हीं पर स्विच करता है।";

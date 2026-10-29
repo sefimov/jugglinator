@@ -22,7 +22,7 @@ public struct ClaudeCodeSessionInfo: Equatable, Sendable {
 /// `~/Library/Application Support/Claude/claude-code-sessions/<uuid>/<uuid>/local_<uuid>.json`
 /// (fields `sessionId`, `title`, `cwd`, `isArchived` and others).
 ///
-/// Read-only: Juggler never writes there. Missing folder, file or field — `nil`/empty value,
+/// Read-only: Jugglinator never writes there. Missing folder, file or field — `nil`/empty value,
 /// no errors. The format is someone else's and may change, so parsing is lenient.
 public enum ClaudeCodeSessionMetadata {
     /// Files larger than this are not read: real metadata is tens of kilobytes.

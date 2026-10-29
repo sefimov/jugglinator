@@ -187,7 +187,7 @@ public enum LoginItemState: String, Equatable, Sendable, CaseIterable {
         case .requiresApproval:
             return loc("Нужно разрешить запуск в «Системных настройках» → «Основные» → «Объекты входа».")
         case .notFound:
-            return loc("Запуск при входе доступен только для собранного приложения Juggler.app.")
+            return loc("Запуск при входе доступен только для собранного приложения Jugglinator.app.")
         }
     }
 

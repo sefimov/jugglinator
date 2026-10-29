@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<!-- Info.plist template for build/Juggler.app. scripts/bundle.sh substitutes
+<!-- Info.plist template for build/Jugglinator.app. scripts/bundle.sh substitutes
      __VERSION__ and __BUILD__ and copies the result to Contents/Info.plist.
      Languages are the Localization/*.lproj folders (scripts/check-localization.py checks the list);
      languages outside the list fall back to English. -->
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>com.sefimov.juggler</string>
+	<string>com.sefimov.jugglinator</string>
 	<key>CFBundleName</key>
-	<string>Juggler</string>
+	<string>Jugglinator</string>
 	<key>CFBundleDisplayName</key>
-	<string>Juggler</string>
+	<string>Jugglinator</string>
 	<key>CFBundleExecutable</key>
-	<string>Juggler</string>
+	<string>Jugglinator</string>
 	<key>CFBundleIconFile</key>
 	<string>AppIcon</string>
 	<key>CFBundlePackageType</key>
@@ -50,6 +50,6 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSAppleEventsUsageDescription</key>
-	<string>Juggler reads the address and title of the active Google Chrome tab and the window and tab in Terminal to bind them to a task, and switches to them when you move between tasks.</string>
+	<string>Jugglinator reads the address and title of the active Google Chrome tab and the window and tab in Terminal to bind them to a task, and switches to them when you move between tasks.</string>
 </dict>
 </plist>

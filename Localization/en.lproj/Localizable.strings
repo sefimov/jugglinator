@@ -1,4 +1,4 @@
-/* Juggler: строки интерфейса. Ключ — исходная русская строка из кода. */
+/* Jugglinator: строки интерфейса. Ключ — исходная русская строка из кода. */
 
 "Не удалось сохранить задачи: %@" = "Couldn't save tasks: %@";
 "Универсальный доступ" = "Accessibility";
@@ -9,7 +9,7 @@
 "Управление Google Chrome" = "Google Chrome Control";
 "Запустить Chrome" = "Launch Chrome";
 "Разрешить…" = "Allow…";
-"Нужно, чтобы привязывать вкладки и переключаться на них. Без него Juggler открывает адрес заново — в Chrome появляются дубли вкладок." = "Needed to bind tabs and switch to them. Without it Juggler reopens the address — and Chrome fills up with duplicate tabs.";
+"Нужно, чтобы привязывать вкладки и переключаться на них. Без него Jugglinator открывает адрес заново — в Chrome появляются дубли вкладок." = "Needed to bind tabs and switch to them. Without it Jugglinator reopens the address — and Chrome fills up with duplicate tabs.";
 "разрешено" = "allowed";
 "запрещено" = "denied";
 "ещё не спрашивали" = "not asked yet";
@@ -17,7 +17,7 @@
 "неизвестно" = "unknown";
 "Вкладка найдена по адресу." = "Tab found by its address.";
 "Приложение %@ не найдено — чат открыт в браузере." = "%@ not found — the chat was opened in the browser.";
-"Задач пока нет: добавьте задачу в меню Juggler" = "No tasks yet: add a task from the Juggler menu";
+"Задач пока нет: добавьте задачу в меню Jugglinator" = "No tasks yet: add a task from the Jugglinator menu";
 "Все задачи отмечены «сделано»" = "All tasks are marked done";
 "Не удалось сохранить хоткеи: %@" = "Couldn't save hotkeys: %@";
 "По умолчанию" = "Default";
@@ -32,12 +32,12 @@
 "Хоткеи" = "Hotkeys";
 "Разрешения" = "Permissions";
 "Запуск" = "Startup";
-"Запускать Juggler при входе в систему" = "Launch Juggler at login";
+"Запускать Jugglinator при входе в систему" = "Launch Jugglinator at login";
 "Открыть «Объекты входа»" = "Open Login Items";
 "Данные" = "Data";
 "Файл задач" = "Tasks file";
 "Показать в Finder" = "Show in Finder";
-"Настройки Juggler" = "Juggler Settings";
+"Настройки Jugglinator" = "Jugglinator Settings";
 "Не удалось включить запуск при входе: %@" = "Couldn't turn on launch at login: %@";
 "Не удалось выключить запуск при входе: %@" = "Couldn't turn off launch at login: %@";
 "Задача %lld" = "Task %lld";
@@ -66,11 +66,11 @@
 "Снять привязку" = "Unbind";
 "Удалить…" = "Delete…";
 "Не удалось определить переднее окно. Переключитесь на окно чата и повторите." = "Couldn't determine the frontmost window. Switch to the chat window and try again.";
-"Впереди окно Juggler. Переключитесь на окно чата и повторите." = "A Juggler window is in front. Switch to the chat window and try again.";
+"Впереди окно Jugglinator. Переключитесь на окно чата и повторите." = "A Jugglinator window is in front. Switch to the chat window and try again.";
 "Вставьте ссылку на чат." = "Paste a link to the chat.";
 "Сессия Claude Code" = "Claude Code session";
 "Это ссылка «Поделиться» (claude.ai/share/…). Она ведёт на публичную копию беседы, а не на сам чат, поэтому открыть по ней чат в Claude нельзя. Нужен адрес самого чата: https://claude.ai/chat/<id> — он виден в адресной строке, если открыть чат на claude.ai в браузере." = "This is a “Share” link (claude.ai/share/…). It points to a public copy of the conversation, not to the chat itself, so it can't open the chat in Claude. You need the address of the chat itself: https://claude.ai/chat/<id> — it's shown in the address bar when you open the chat on claude.ai in a browser.";
-"Нет разрешения управлять Google Chrome, поэтому вкладку не прочитать. %@" = "Juggler isn't allowed to control Google Chrome, so it can't read the tab. %@";
+"Нет разрешения управлять Google Chrome, поэтому вкладку не прочитать. %@" = "Jugglinator isn't allowed to control Google Chrome, so it can't read the tab. %@";
 "В Google Chrome нет открытого окна с вкладкой." = "Google Chrome has no open window with a tab.";
 "Google Chrome не запущен." = "Google Chrome is not running.";
 "Не удалось прочитать активную вкладку Google Chrome." = "Couldn't read the active Google Chrome tab.";
@@ -79,16 +79,16 @@
 "Ссылка на тред ChatGPT" = "ChatGPT thread link";
 "Ссылка на сессию Claude Code" = "Claude Code session link";
 "Ссылка на чат Claude" = "Claude chat link";
-"Juggler не смог прочитать адрес чата из окна Claude." = "Juggler couldn't read the chat address from the Claude window.";
-"Без разрешения «Универсальный доступ» Juggler не может прочитать адрес чата из окна Claude." = "Without the Accessibility permission Juggler can't read the chat address from the Claude window.";
-"Откройте этот чат на claude.ai в браузере, скопируйте адрес из адресной строки (https://claude.ai/chat/<id>) и вставьте его сюда. Ссылки «Поделиться» (claude.ai/share/…) не подходят. Сессия Claude Code (вкладка Code) привязывается сама, если у Juggler есть разрешение «Универсальный доступ»; вручную — ссылкой claude://claude.ai/epitaxy/local_<id>." = "Open this chat on claude.ai in a browser, copy the address from the address bar (https://claude.ai/chat/<id>) and paste it here. “Share” links (claude.ai/share/…) won't work. A Claude Code session (the Code tab) is bound automatically if Juggler has the Accessibility permission; manually — with a claude://claude.ai/epitaxy/local_<id> link.";
+"Jugglinator не смог прочитать адрес чата из окна Claude." = "Jugglinator couldn't read the chat address from the Claude window.";
+"Без разрешения «Универсальный доступ» Jugglinator не может прочитать адрес чата из окна Claude." = "Without the Accessibility permission Jugglinator can't read the chat address from the Claude window.";
+"Откройте этот чат на claude.ai в браузере, скопируйте адрес из адресной строки (https://claude.ai/chat/<id>) и вставьте его сюда. Ссылки «Поделиться» (claude.ai/share/…) не подходят. Сессия Claude Code (вкладка Code) привязывается сама, если у Jugglinator есть разрешение «Универсальный доступ»; вручную — ссылкой claude://claude.ai/epitaxy/local_<id>." = "Open this chat on claude.ai in a browser, copy the address from the address bar (https://claude.ai/chat/<id>) and paste it here. “Share” links (claude.ai/share/…) won't work. A Claude Code session (the Code tab) is bound automatically if Jugglinator has the Accessibility permission; manually — with a claude://claude.ai/epitaxy/local_<id> link.";
 "Скопируйте ссылку на тред (codex://threads/<id>) и вставьте её сюда." = "Copy the thread link (codex://threads/<id>) and paste it here.";
 "Тредов с названием «%@» несколько (%lld). Вставлена ссылка на последний обновлённый — если это нужный тред, нажмите «Привязать». Иначе вставьте вместо неё ссылку на нужный тред (codex://threads/<id>)." = "There are several threads named “%@” (%lld). A link to the most recently updated one has been pasted — if it's the right thread, click “Bind”. Otherwise paste a link to the right thread instead (codex://threads/<id>).";
 "Тред «%@» не найден в списке тредов ChatGPT (%@). Если тред только что создан или переименован, повторите чуть позже." = "Thread “%@” was not found in the ChatGPT thread list (%@). If the thread was just created or renamed, try again a bit later.";
 "Список тредов ChatGPT (%@) не найден, поэтому тред не найти по названию." = "The ChatGPT thread list (%@) was not found, so the thread can't be found by name.";
 "Список тредов ChatGPT (%@) не читается, поэтому тред не найти по названию." = "The ChatGPT thread list (%@) can't be read, so the thread can't be found by name.";
-"Juggler не смог прочитать заголовок окна ChatGPT, поэтому тред не найти по названию." = "Juggler couldn't read the ChatGPT window title, so the thread can't be found by name.";
-"Без разрешения «Универсальный доступ» Juggler не видит заголовок окна ChatGPT и не может найти тред по названию." = "Without the Accessibility permission Juggler can't see the ChatGPT window title and can't find the thread by name.";
+"Jugglinator не смог прочитать заголовок окна ChatGPT, поэтому тред не найти по названию." = "Jugglinator couldn't read the ChatGPT window title, so the thread can't be found by name.";
+"Без разрешения «Универсальный доступ» Jugglinator не видит заголовок окна ChatGPT и не может найти тред по названию." = "Without the Accessibility permission Jugglinator can't see the ChatGPT window title and can't find the thread by name.";
 "Вставьте ссылку" = "Paste a link";
 "Привязать" = "Bind";
 "Привязать только окно" = "Bind Window Only";
@@ -99,13 +99,13 @@
 "Этот чат уже привязан к задаче %lld. Она отмечена как текущая." = "This chat is already bound to task %lld. It is now marked as current.";
 "Не удалось привязать чат" = "Couldn't bind the chat";
 "Нужно разрешение «Универсальный доступ»" = "Accessibility permission required";
-"Juggler читает заголовки окон, поднимает нужное окно и пробует прочитать адрес чата Claude. Для этого нужно разрешение «Универсальный доступ».\n\nОткройте Системные настройки → Конфиденциальность и безопасность → Универсальный доступ и включите Juggler. Если Juggler уже в списке, но не работает, выключите и снова включите его." = "Juggler reads window titles, brings the right window forward and tries to read the Claude chat address. This requires the Accessibility permission.\n\nOpen System Settings → Privacy & Security → Accessibility and turn on Juggler. If Juggler is already in the list but doesn't work, turn it off and on again.";
+"Jugglinator читает заголовки окон, поднимает нужное окно и пробует прочитать адрес чата Claude. Для этого нужно разрешение «Универсальный доступ».\n\nОткройте Системные настройки → Конфиденциальность и безопасность → Универсальный доступ и включите Jugglinator. Если Jugglinator уже в списке, но не работает, выключите и снова включите его." = "Jugglinator reads window titles, brings the right window forward and tries to read the Claude chat address. This requires the Accessibility permission.\n\nOpen System Settings → Privacy & Security → Accessibility and turn on Jugglinator. If Jugglinator is already in the list but doesn't work, turn it off and on again.";
 "Открыть настройки" = "Open Settings";
 "Позже" = "Later";
 "Продолжить без него" = "Continue Without It";
-"Разрешите Juggler управлять Google Chrome: Системные настройки → Конфиденциальность и безопасность → Автоматизация." = "Allow Juggler to control Google Chrome: System Settings → Privacy & Security → Automation.";
-"Juggler не может управлять Google Chrome" = "Juggler can't control Google Chrome";
-"macOS запретила Juggler управлять Google Chrome (ошибка -1743). Без этого Juggler не видит вкладки и не может переключиться на привязанную вкладку — только открыть её адрес заново.\n\nКак включить:\n1. Откройте Системные настройки → Конфиденциальность и безопасность → Автоматизация.\n2. Найдите Juggler и включите переключатель «Google Chrome».\n3. Если Juggler в списке нет, выполните в Терминале\n   tccutil reset AppleEvents com.sefimov.juggler\n   и привяжите вкладку снова — macOS спросит разрешение." = "macOS has denied Juggler control of Google Chrome (error -1743). Without it Juggler can't see tabs and can't switch to a bound tab — it can only reopen its address.\n\nHow to turn it on:\n1. Open System Settings → Privacy & Security → Automation.\n2. Find Juggler and turn on the “Google Chrome” switch.\n3. If Juggler isn't in the list, run in Terminal\n   tccutil reset AppleEvents com.sefimov.juggler\n   and bind the tab again — macOS will ask for permission.";
+"Разрешите Jugglinator управлять Google Chrome: Системные настройки → Конфиденциальность и безопасность → Автоматизация." = "Allow Jugglinator to control Google Chrome: System Settings → Privacy & Security → Automation.";
+"Jugglinator не может управлять Google Chrome" = "Jugglinator can't control Google Chrome";
+"macOS запретила Jugglinator управлять Google Chrome (ошибка -1743). Без этого Jugglinator не видит вкладки и не может переключиться на привязанную вкладку — только открыть её адрес заново.\n\nКак включить:\n1. Откройте Системные настройки → Конфиденциальность и безопасность → Автоматизация.\n2. Найдите Jugglinator и включите переключатель «Google Chrome».\n3. Если Jugglinator в списке нет, выполните в Терминале\n   tccutil reset AppleEvents com.sefimov.jugglinator\n   и привяжите вкладку снова — macOS спросит разрешение." = "macOS has denied Jugglinator control of Google Chrome (error -1743). Without it Jugglinator can't see tabs and can't switch to a bound tab — it can only reopen its address.\n\nHow to turn it on:\n1. Open System Settings → Privacy & Security → Automation.\n2. Find Jugglinator and turn on the “Google Chrome” switch.\n3. If Jugglinator isn't in the list, run in Terminal\n   tccutil reset AppleEvents com.sefimov.jugglinator\n   and bind the tab again — macOS will ask for permission.";
 "Вкладка не найдена — адрес открыт заново в Chrome." = "Tab not found — the address was reopened in Chrome.";
 "Нет разрешения управлять Chrome — адрес открыт заново." = "No permission to control Chrome — the address was reopened.";
 "Вкладка не найдена, открыть её адрес нельзя — открыт Chrome." = "Tab not found and its address can't be opened — Chrome was brought forward.";
@@ -131,7 +131,7 @@
 "Настройки…" = "Settings…";
 "Выйти" = "Quit";
 "Задача %lld «%@» удалена" = "Task %lld “%@” removed";
-"%@ — вернуть: «%@» в меню Juggler" = "%@ — to restore: “%@” in the Juggler menu";
+"%@ — вернуть: «%@» в меню Jugglinator" = "%@ — to restore: “%@” in the Jugglinator menu";
 "%@ — %@ в течение %lld с вернёт" = "%@ — %@ within %lld s restores it";
 "Задача %lld «%@» возвращена" = "Task %lld “%@” restored";
 "Задача %lld «%@» добавлена" = "Task %lld “%@” added";
@@ -157,14 +157,14 @@
 "Файл задач был повреждён или пропал. Список восстановлен из резервной копии." = "The tasks file was damaged or missing. The list was restored from a backup.";
 "Файл задач был повреждён, резервной копии нет. Испорченный файл сохранён рядом, список начат заново." = "The tasks file was damaged and there is no backup. The damaged file was saved next to it and a new list was started.";
 "Нужно разрешить запуск в «Системных настройках» → «Основные» → «Объекты входа»." = "Launch must be allowed in System Settings → General → Login Items.";
-"Запуск при входе доступен только для собранного приложения Juggler.app." = "Launch at login is only available for the built Juggler.app.";
+"Запуск при входе доступен только для собранного приложения Jugglinator.app." = "Launch at login is only available for the built Jugglinator.app.";
 "%@, %@" = "%@, %@";
 "Терминал" = "Terminal";
 "Запустить Терминал" = "Launch Terminal";
 "Нужно, чтобы привязывать окно и вкладку Терминала и переключаться именно на них. Без него окно Терминала привязывается как обычное окно, по заголовку, а вкладка не выбирается." = "Needed to bind a Terminal window and tab and switch to exactly them. Without it a Terminal window is bound like any app window, by title, and the tab isn't selected.";
 "Терминал не запущен" = "Terminal is not running";
-"Juggler не может управлять Терминалом" = "Juggler can't control Terminal";
-"macOS запретила Juggler управлять Терминалом (ошибка -1743). Без этого Juggler не знает id окна и вкладку (tty): окно Терминала привязывается как обычное окно, по заголовку, а при переходе нужная вкладка не выбирается.\n\nКак включить:\n1. Откройте Системные настройки → Конфиденциальность и безопасность → Автоматизация.\n2. Найдите Juggler и включите переключатель «Терминал».\n3. Если Juggler в списке нет, выполните в Терминале\n   tccutil reset AppleEvents com.sefimov.juggler\n   и нажмите «Разрешить…» в настройках Juggler (раздел «Разрешения») — macOS спросит разрешение." = "macOS has denied Juggler control of Terminal (error -1743). Without it Juggler doesn't know the window id and the tab (tty): a Terminal window is bound like any app window, by title, and the right tab isn't selected when you switch.\n\nHow to turn it on:\n1. Open System Settings → Privacy & Security → Automation.\n2. Find Juggler and turn on the “Terminal” switch.\n3. If Juggler isn't in the list, run in Terminal\n   tccutil reset AppleEvents com.sefimov.juggler\n   and click “Allow…” in Juggler Settings (the Permissions section) — macOS will ask for permission.";
+"Jugglinator не может управлять Терминалом" = "Jugglinator can't control Terminal";
+"macOS запретила Jugglinator управлять Терминалом (ошибка -1743). Без этого Jugglinator не знает id окна и вкладку (tty): окно Терминала привязывается как обычное окно, по заголовку, а при переходе нужная вкладка не выбирается.\n\nКак включить:\n1. Откройте Системные настройки → Конфиденциальность и безопасность → Автоматизация.\n2. Найдите Jugglinator и включите переключатель «Терминал».\n3. Если Jugglinator в списке нет, выполните в Терминале\n   tccutil reset AppleEvents com.sefimov.jugglinator\n   и нажмите «Разрешить…» в настройках Jugglinator (раздел «Разрешения») — macOS спросит разрешение." = "macOS has denied Jugglinator control of Terminal (error -1743). Without it Jugglinator doesn't know the window id and the tab (tty): a Terminal window is bound like any app window, by title, and the right tab isn't selected when you switch.\n\nHow to turn it on:\n1. Open System Settings → Privacy & Security → Automation.\n2. Find Jugglinator and turn on the “Terminal” switch.\n3. If Jugglinator isn't in the list, run in Terminal\n   tccutil reset AppleEvents com.sefimov.jugglinator\n   and click “Allow…” in Jugglinator Settings (the Permissions section) — macOS will ask for permission.";
 "Вкладка Терминала закрыта — открыто её окно." = "Terminal tab closed — its window was brought forward.";
 "Окно Терминала найдено по заголовку." = "Terminal window found by title.";
 "Окно Терминала закрыто — открыт Терминал." = "Terminal window closed — Terminal was brought forward.";
@@ -174,22 +174,22 @@
 "Язык" = "Language";
 "Язык интерфейса" = "Interface language";
 "Как в системе" = "Same as system";
-"Тексты Juggler уже на новом языке. Системные надписи macOS — заголовок окна настроек, стандартные кнопки, тексты запросов разрешений — сменятся после перезапуска." = "Juggler's texts are already in the new language. macOS system labels — the Settings window title, standard buttons, permission request texts — will change after a restart.";
+"Тексты Jugglinator уже на новом языке. Системные надписи macOS — заголовок окна настроек, стандартные кнопки, тексты запросов разрешений — сменятся после перезапуска." = "Jugglinator's texts are already in the new language. macOS system labels — the Settings window title, standard buttons, permission request texts — will change after a restart.";
 "Перезапустить сейчас" = "Restart now";
-"Перезапуск работает только в приложении Juggler.app. Закройте Juggler и запустите его заново." = "Restart only works in the Juggler.app application. Quit Juggler and open it again.";
-"Не удалось перезапустить Juggler: %@" = "Couldn’t restart Juggler: %@";
+"Перезапуск работает только в приложении Jugglinator.app. Закройте Jugglinator и запустите его заново." = "Restart only works in the Jugglinator.app application. Quit Jugglinator and open it again.";
+"Не удалось перезапустить Jugglinator: %@" = "Couldn’t restart Jugglinator: %@";
 "Удалить сделанные задачи" = "Delete Done Tasks";
 "Очистить все задачи" = "Clear All Tasks";
 "Задачи, заметки и привязки будут удалены. Это нельзя отменить." = "Tasks, notes and bindings will be deleted. This can't be undone.";
-"Juggler: дольше всех ждёт задача %lld — %@, %@" = "Juggler: task %lld has waited longest — %@, %@";
-"Juggler: других задач в работе нет" = "Juggler: no other tasks in progress";
-"Juggler: нет задач в работе" = "Juggler: no tasks in progress";
+"Jugglinator: дольше всех ждёт задача %lld — %@, %@" = "Jugglinator: task %lld has waited longest — %@, %@";
+"Jugglinator: других задач в работе нет" = "Jugglinator: no other tasks in progress";
+"Jugglinator: нет задач в работе" = "Jugglinator: no tasks in progress";
 
 /* MCP-сервер (настройки) */
 "MCP-сервер" = "MCP server";
 "Включить MCP-сервер" = "Enable MCP server";
-"ИИ-ассистенты — Claude Desktop, Claude Code, ChatGPT — смогут видеть список задач, переключаться на задачу, добавлять текущее окно, отмечать задачи сделанными и менять заметки. Работает только на этом Mac, через сокет в папке данных Juggler, без сети." = "AI assistants — Claude Desktop, Claude Code, ChatGPT — can see the task list, switch to a task, add the current window, mark tasks done and change notes. Works only on this Mac, through a socket in Juggler's data folder, with no network.";
-"Juggler запущен не из Juggler.app: в примерах ниже путь к текущей сборке." = "Juggler is not running from Juggler.app: the examples below point to the current build.";
+"ИИ-ассистенты — Claude Desktop, Claude Code, ChatGPT — смогут видеть список задач, переключаться на задачу, добавлять текущее окно, отмечать задачи сделанными и менять заметки. Работает только на этом Mac, через сокет в папке данных Jugglinator, без сети." = "AI assistants — Claude Desktop, Claude Code, ChatGPT — can see the task list, switch to a task, add the current window, mark tasks done and change notes. Works only on this Mac, through a socket in Jugglinator's data folder, with no network.";
+"Jugglinator запущен не из Jugglinator.app: в примерах ниже путь к текущей сборке." = "Jugglinator is not running from Jugglinator.app: the examples below point to the current build.";
 "Claude Desktop: добавьте в claude_desktop_config.json" = "Claude Desktop: add to claude_desktop_config.json";
 "Claude Code: выполните в Терминале" = "Claude Code: run in Terminal";
 "ChatGPT (Codex): добавьте в ~/.codex/config.toml" = "ChatGPT (Codex): add to ~/.codex/config.toml";

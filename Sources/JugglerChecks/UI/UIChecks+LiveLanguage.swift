@@ -58,7 +58,7 @@ extension UIChecks {
 
         c.group("Localizer: отсутствующий ключ") {
             let dir = FileManager.default.temporaryDirectory
-                .appendingPathComponent("juggler-livelang-checks-\(UUID().uuidString)", isDirectory: true)
+                .appendingPathComponent("jugglinator-livelang-checks-\(UUID().uuidString)", isDirectory: true)
             defer { try? FileManager.default.removeItem(at: dir) }
             func table(_ code: String, _ text: String) throws {
                 let lproj = dir.appendingPathComponent("\(code).lproj", isDirectory: true)
@@ -106,7 +106,7 @@ extension UIChecks {
             c.expectNil(localizer.plural("нет.такого", 1), "нет ключа — nil")
         }
 
-        c.group("Тексты Juggler на выбранном сейчас языке") {
+        c.group("Тексты Jugglinator на выбранном сейчас языке") {
             var doc = TasksDocument()
             let a = TaskListOps.add(&doc, title: "Почта", now: t0)
             _ = TaskListOps.add(&doc, title: "", now: t0)
@@ -130,7 +130,7 @@ extension UIChecks {
             c.expectEqual(en.3, "away 5 min", "en: давность")
             c.expectEqual(en.4, "Task 1 “Почта” done", "en: карточка «сделано»")
             c.expectEqual(en.5, "Space", "en: подпись клавиши в хоткее")
-            c.expect(en.6.hasPrefix("Juggler: task 2 has waited longest"), "en: подсказка кружка — \(en.6)")
+            c.expect(en.6.hasPrefix("Jugglinator: task 2 has waited longest"), "en: подсказка кружка — \(en.6)")
             c.expect(!en.7.contains("Задача") && en.7.contains("⌃⌥Space"), "en: карточка удаления — \(en.7)")
 
             let de = withSharedLanguage("de") {
@@ -150,7 +150,7 @@ extension UIChecks {
             c.expectEqual(LanguageSettings.code(for: .system, systemPreferred: []), "en", "пустой список — en")
             c.expectEqual(LanguageSettings.code(for: .language("ko"), systemPreferred: ["de"]), "ko", "выбранный язык важнее системы")
 
-            let suite = "com.sefimov.juggler.checks.livelang.\(UUID().uuidString)"
+            let suite = "com.sefimov.jugglinator.checks.livelang.\(UUID().uuidString)"
             guard let defaults = UserDefaults(suiteName: suite) else {
                 c.expect(false, "не удалось создать домен настроек для проверок")
                 return

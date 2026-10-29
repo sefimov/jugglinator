@@ -35,13 +35,13 @@ public enum BindingCapture {
     public static func capture(
         context: FrontmostContext,
         chromeStatus: AutomationStatus? = nil,
-        ownBundleID: String? = BindApps.juggler,
+        ownBundleID: String? = BindApps.jugglinator,
         chatGPTLookup: ChatGPTThreadLookup? = nil
     ) -> BindingCaptureResult {
         guard let bundleID = context.bundleID, !bundleID.isEmpty else {
             return .failed(BindTexts.noFrontmostApp)
         }
-        if BindApps.same(bundleID, ownBundleID) || BindApps.same(bundleID, BindApps.juggler) {
+        if BindApps.same(bundleID, ownBundleID) || BindApps.same(bundleID, BindApps.jugglinator) {
             return .failed(BindTexts.frontmostIsJuggler)
         }
         switch BindApps.kind(of: bundleID) {

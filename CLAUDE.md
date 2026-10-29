@@ -1,4 +1,4 @@
-# Juggler
+# Jugglinator
 
 ## Language
 

@@ -113,21 +113,21 @@ public enum MCPTools {
     /// Properties of a tool that picks a task: by number (position in the list) or by id.
     static let taskSelector: [String: JSONValue] = [
         "number": ["type": "integer", "minimum": 1,
-                   "description": "Task number as shown in the Juggler menu and on the transition card (1-based position in the list)."],
+                   "description": "Task number as shown in the Jugglinator menu and on the transition card (1-based position in the list)."],
         "id": ["type": "string", "description": "Task id (UUID) from list_tasks. Pass either number or id."],
     ]
 
     public static let catalog: [MCPToolDefinition] = [
         MCPToolDefinition(
-            name: listTasks, title: "List Juggler tasks",
-            description: "List the user's Juggler tasks: number, title, note, done mark, what the task is bound to "
+            name: listTasks, title: "List Jugglinator tasks",
+            description: "List the user's Jugglinator tasks: number, title, note, done mark, what the task is bound to "
                 + "(Claude chat, Claude Code session, ChatGPT thread, Chrome tab, Terminal tab or app window), "
                 + "minutes since the user last visited it, and which task is current (the frontmost window's task, "
                 + "otherwise the last visited one). Call this first to get task numbers and ids.",
             inputSchema: ["type": "object", "properties": [:], "additionalProperties": false],
             readOnly: true),
         MCPToolDefinition(
-            name: switchToTask, title: "Switch to a Juggler task",
+            name: switchToTask, title: "Switch to a Jugglinator task",
             description: "Bring a task to the front on the user's Mac, like the Control-Tab hotkey landing on it: "
                 + "opens the bound chat, session, thread, tab or window, shows the transition card and records the visit. "
                 + "Pick the task by number or id from list_tasks.",
@@ -136,24 +136,24 @@ public enum MCPTools {
         MCPToolDefinition(
             name: addCurrentWindow, title: "Add the current window as a task",
             description: "Add the frontmost window (chat, session, thread, tab, Terminal tab or app window) "
-                + "to the Juggler task list, like the Control-Option-Tab hotkey. If the window already is a task, "
+                + "to the Jugglinator task list, like the Control-Option-Tab hotkey. If the window already is a task, "
                 + "returns that task. The new task becomes current.",
             inputSchema: ["type": "object", "properties": [:], "additionalProperties": false],
             readOnly: false),
         MCPToolDefinition(
             name: markDone, title: "Mark a task done",
-            description: "Mark a Juggler task as done: the hotkey cycle skips it until it is back in progress. "
+            description: "Mark a Jugglinator task as done: the hotkey cycle skips it until it is back in progress. "
                 + "Pick the task by number or id.",
             inputSchema: ["type": "object", "properties": .object(taskSelector), "additionalProperties": false],
             readOnly: false),
         MCPToolDefinition(
             name: markInProgress, title: "Mark a task in progress",
-            description: "Return a done Juggler task to work (clear the done mark). Pick the task by number or id.",
+            description: "Return a done Jugglinator task to work (clear the done mark). Pick the task by number or id.",
             inputSchema: ["type": "object", "properties": .object(taskSelector), "additionalProperties": false],
             readOnly: false),
         MCPToolDefinition(
             name: setNote, title: "Set a task's note",
-            description: "Replace the 'why / next step' note of a Juggler task. The note is shown in the menu "
+            description: "Replace the 'why / next step' note of a Jugglinator task. The note is shown in the menu "
                 + "and on the transition card when the user switches to the task. An empty string clears it. "
                 + "Pick the task by number or id.",
             inputSchema: [
@@ -291,7 +291,7 @@ public enum MCPTools {
             "current_number": .int(currentNumber),
         ]
         if document.tasks.isEmpty {
-            return MCPToolResult(text: "The Juggler task list is empty.", structured: structured)
+            return MCPToolResult(text: "The Jugglinator task list is empty.", structured: structured)
         }
         var lines: [String] = []
         for (index, task) in document.tasks.enumerated() {

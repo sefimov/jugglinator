@@ -7,7 +7,7 @@ extension CoreChecks {
 
         c.group("хранилище: путь по умолчанию") {
             let path = TaskStore.defaultFileURL.path
-            c.expect(path.hasSuffix("/Library/Application Support/Juggler/tasks.json"), "путь ~/Library/Application Support/Juggler/tasks.json")
+            c.expect(path.hasSuffix("/Library/Application Support/Jugglinator/tasks.json"), "путь ~/Library/Application Support/Jugglinator/tasks.json")
         }
 
         c.group("хранилище: первый запуск и запись") {

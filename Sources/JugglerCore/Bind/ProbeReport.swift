@@ -22,7 +22,7 @@ public struct CaptureSummary: Codable, Equatable, Sendable {
     }
 }
 
-/// JSON for `Juggler --probe-frontmost`.
+/// JSON for `Jugglinator --probe-frontmost`.
 public struct ProbeReport: Codable, Equatable, Sendable {
     public var context: FrontmostContext
     public var diagnostics: ContextDiagnostics

@@ -1,2 +1,2 @@
-"CFBundleDisplayName" = "Juggler";
-"NSAppleEventsUsageDescription" = "Juggler lee la dirección y el título de la pestaña activa de Google Chrome y la ventana y la pestaña de Terminal para vincularlas a una tarea, y cambia a ellas al pasar de una tarea a otra.";
+"CFBundleDisplayName" = "Jugglinator";
+"NSAppleEventsUsageDescription" = "Jugglinator lee la dirección y el título de la pestaña activa de Google Chrome y la ventana y la pestaña de Terminal para vincularlas a una tarea, y cambia a ellas al pasar de una tarea a otra.";

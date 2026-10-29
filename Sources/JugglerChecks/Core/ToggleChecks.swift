@@ -263,7 +263,7 @@ extension CoreChecks {
             c.expectEqual(TaskToggleTexts.removedCard(number: 2, title: "  План\nрелиза ", hotkey: hotkey),
                           "Задача 2 «План релиза» удалена — ⌃⌥⇥ в течение 5 с вернёт", "карточка удаления")
             c.expectEqual(TaskToggleTexts.removedCard(number: 1, title: "", hotkey: nil),
-                          "Задача 1 «Без названия» удалена — вернуть: «Вернуть удалённую задачу» в меню Juggler",
+                          "Задача 1 «Без названия» удалена — вернуть: «Вернуть удалённую задачу» в меню Jugglinator",
                           "без назначенного хоткея — пункт меню")
             c.expectEqual(TaskToggleTexts.restoredCard(number: 3, title: "Тред"), "Задача 3 «Тред» возвращена", "карточка возврата")
             c.expectEqual(TaskToggleTexts.addedCard(number: 4, title: "  Новое\nокно "), "Задача 4 «Новое окно» добавлена", "карточка добавления")
@@ -321,7 +321,7 @@ extension CoreChecks {
                           [.currentWindow, .restoreRemoved, .clearAll, .settings, .quit],
                           "под списком: окно, возврат, очистка, настройки, выход")
             c.expectEqual(TaskToggleTexts.settingsMenuTitle, "Настройки…", "пункт «Настройки…»")
-            c.expectEqual(TaskToggleTexts.quitMenuTitle, "Выйти", "«Выйти из Juggler» → «Выйти»")
+            c.expectEqual(TaskToggleTexts.quitMenuTitle, "Выйти", "«Выйти из Jugglinator» → «Выйти»")
         }
     }
 }

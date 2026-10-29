@@ -1,11 +1,11 @@
 #!/bin/bash
-# Builds build/Juggler.app with Command Line Tools only.
+# Builds build/Jugglinator.app with Command Line Tools only.
 #
 #   scripts/bundle.sh                 release build, .app, signing, checks, self-test
-#   scripts/bundle.sh --no-self-test  same without running Juggler --self-test
+#   scripts/bundle.sh --no-self-test  same without running Jugglinator --self-test
 #
 # Environment variables:
-#   JUGGLER_SIGN_IDENTITY  codesign identity (e.g. "Juggler Dev");
+#   JUGGLER_SIGN_IDENTITY  codesign identity (e.g. "Jugglinator Dev");
 #                          ad-hoc signing ("-") by default.
 #   JUGGLER_VERSION        CFBundleShortVersionString, 0.1.0 by default.
 set -euo pipefail
@@ -22,8 +22,8 @@ for arg in "$@"; do
     esac
 done
 
-APP_NAME="Juggler"
-BUNDLE_ID="com.sefimov.juggler"
+APP_NAME="Jugglinator"
+BUNDLE_ID="com.sefimov.jugglinator"
 APP="$ROOT/build/$APP_NAME.app"
 IDENTITY="${JUGGLER_SIGN_IDENTITY:--}"
 VERSION="${JUGGLER_VERSION:-0.1.0}"
@@ -72,7 +72,7 @@ else
     if ! codesign --force --sign "$IDENTITY" --identifier "$BUNDLE_ID" --timestamp=none "$APP"; then
         echo "Не удалось подписать идентичностью «$IDENTITY»." >&2
         echo "Доступные идентичности: security find-identity -p codesigning" >&2
-        echo "Как создать сертификат «Juggler Dev» — в README, раздел «Подпись»." >&2
+        echo "Как создать сертификат «Jugglinator Dev» — в README, раздел «Подпись»." >&2
         exit 1
     fi
 fi

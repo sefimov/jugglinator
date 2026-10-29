@@ -182,7 +182,7 @@ enum SwitchChecks: CheckSuite {
             c.expect(empty.hotkeys.isEmpty, "пустой объект — без своих сочетаний")
 
             let dir = FileManager.default.temporaryDirectory
-                .appendingPathComponent("juggler-switch-checks-\(UUID().uuidString)", isDirectory: true)
+                .appendingPathComponent("jugglinator-switch-checks-\(UUID().uuidString)", isDirectory: true)
             defer { try? FileManager.default.removeItem(at: dir) }
             let store = HotkeyOverridesStore(fileURL: dir.appendingPathComponent("sub/hotkeys.json"))
             c.expectEqual(store.load().outcome, .missing, "нет файла → умолчания")
@@ -248,8 +248,8 @@ enum SwitchChecks: CheckSuite {
                           "окно без заголовка → не добавляется")
             c.expectEqual(plan(.unknown), .unavailable(message: BindTexts.noFrontmostApp), "окно не узнано → не добавляется, с пояснением")
             c.expectEqual(plan(FrontmostContext(bundleID: KnownBundleIDs.claude, windowTitle: "Claude")), .needsLink, "Claude без id → нужна ссылка")
-            c.expectEqual(plan(FrontmostContext(bundleID: BindApps.juggler, windowTitle: "Juggler")), .unavailable(message: BindTexts.frontmostIsJuggler),
-                          "сам Juggler → не добавляется")
+            c.expectEqual(plan(FrontmostContext(bundleID: BindApps.jugglinator, windowTitle: "Jugglinator")), .unavailable(message: BindTexts.frontmostIsJuggler),
+                          "сам Jugglinator → не добавляется")
             // Same tab by URL, but another tab id in the binding: still a task (`BindPlanner.sameTarget`), not a duplicate.
             let sameURL = FrontmostContext(bundleID: KnownBundleIDs.chrome, chromeTab: ChromeTabRef(tabID: 99, url: "https://a.example/x/"))
             c.expectEqual(plan(sameURL), .task(chrome.id), "та же вкладка по адресу → задача")

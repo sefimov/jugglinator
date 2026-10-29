@@ -100,7 +100,7 @@ def normalize(body):
 def literals(pattern):
     """Cyrillic literals right after pattern: {key: "file:line"}."""
     keys = {}
-    for path in sorted(glob.glob(os.path.join(ROOT, "Sources/Juggler/**/*.swift"), recursive=True)
+    for path in sorted(glob.glob(os.path.join(ROOT, "Sources/Jugglinator/**/*.swift"), recursive=True)
                        + glob.glob(os.path.join(ROOT, "Sources/JugglerCore/**/*.swift"), recursive=True)):
         src = open(path, encoding="utf-8").read()
         for m in pattern.finditer(src):

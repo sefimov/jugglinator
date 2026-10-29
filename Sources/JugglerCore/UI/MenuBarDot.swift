@@ -72,16 +72,16 @@ public enum MenuBarDotPresenter {
             return MenuBarDot(
                 appearance: .filled(MenuBarDotColor.color(for: level)),
                 taskID: task.id,
-                tooltip: loc("Juggler: дольше всех ждёт задача \(number) — \(title), \(absence)"))
+                tooltip: loc("Jugglinator: дольше всех ждёт задача \(number) — \(title), \(absence)"))
         }
         // No other unfinished tasks. If the current one is still in progress, all is calm.
         if let current = document.lastActiveTask, !current.isDone {
             return MenuBarDot(
                 appearance: .filled(.green), taskID: nil,
-                tooltip: loc("Juggler: других задач в работе нет"))
+                tooltip: loc("Jugglinator: других задач в работе нет"))
         }
         return MenuBarDot(
             appearance: .outline, taskID: nil,
-            tooltip: loc("Juggler: нет задач в работе"))
+            tooltip: loc("Jugglinator: нет задач в работе"))
     }
 }

@@ -1,6 +1,6 @@
 import Foundation
 
-// Shared result types for the app's protocols (Sources/Juggler/App/ExtensionPoints.swift).
+// Shared result types for the app's protocols (Sources/Jugglinator/App/ExtensionPoints.swift).
 // They live in JugglerCore so they can be used in pure logic
 // of UI/SWITCH/BIND and checked from JugglerChecks.
 

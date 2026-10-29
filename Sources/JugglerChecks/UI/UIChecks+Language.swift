@@ -2,7 +2,7 @@ import Foundation
 import JugglerCore
 
 // Language choice: the list, language detection from AppleLanguages, writing and clearing the value
-// in a separate domain (the real com.sefimov.juggler defaults are untouched), the relaunch command.
+// in a separate domain (the real com.sefimov.jugglinator defaults are untouched), the relaunch command.
 
 extension UIChecks {
     static func checkLanguage(_ c: CheckRunner) {
@@ -34,7 +34,7 @@ extension UIChecks {
         }
 
         c.group("Язык: хранение") {
-            let suite = "com.sefimov.juggler.checks.language.\(UUID().uuidString)"
+            let suite = "com.sefimov.jugglinator.checks.language.\(UUID().uuidString)"
             guard let defaults = UserDefaults(suiteName: suite) else {
                 c.expect(false, "не удалось создать домен настроек для проверок")
                 return
@@ -64,7 +64,7 @@ extension UIChecks {
             c.expectEqual(settings.choice, .system, "пустой список — как в системе")
 
             // Another domain doesn't see the chosen value.
-            let other = "com.sefimov.juggler.checks.language.other.\(UUID().uuidString)"
+            let other = "com.sefimov.jugglinator.checks.language.other.\(UUID().uuidString)"
             if let otherDefaults = UserDefaults(suiteName: other) {
                 defer { otherDefaults.removePersistentDomain(forName: other) }
                 settings.select(.language("fr"))
@@ -74,15 +74,15 @@ extension UIChecks {
         }
 
         c.group("Язык: перезапуск") {
-            let command = AppRestart.relaunchCommand(bundlePath: "/Applications/Juggler.app", pid: 123)
+            let command = AppRestart.relaunchCommand(bundlePath: "/Applications/Jugglinator.app", pid: 123)
             c.expectEqual(command?.executable, "/bin/sh", "через sh")
-            c.expectEqual(command?.arguments.suffix(2).map { $0 }, ["/Applications/Juggler.app", "123"],
+            c.expectEqual(command?.arguments.suffix(2).map { $0 }, ["/Applications/Jugglinator.app", "123"],
                           "путь и pid передаются аргументами, а не в тексте скрипта")
             c.expect(command?.arguments.dropFirst().first?.contains("open -n") == true, "открывает новый экземпляр")
             c.expect(command?.arguments.dropFirst().first?.contains("/Applications") == false, "путь не вшит в скрипт")
-            let spaced = AppRestart.relaunchCommand(bundlePath: "/My Apps/Juggler \"x\".app", pid: 1)
-            c.expectEqual(spaced?.arguments.dropLast().last, "/My Apps/Juggler \"x\".app", "пробелы и кавычки в пути не ломают команду")
-            c.expectNil(AppRestart.relaunchCommand(bundlePath: "/work/juggler/.build/debug", pid: 1), "не из .app — перезапуска нет")
+            let spaced = AppRestart.relaunchCommand(bundlePath: "/My Apps/Jugglinator \"x\".app", pid: 1)
+            c.expectEqual(spaced?.arguments.dropLast().last, "/My Apps/Jugglinator \"x\".app", "пробелы и кавычки в пути не ломают команду")
+            c.expectNil(AppRestart.relaunchCommand(bundlePath: "/work/jugglinator/.build/debug", pid: 1), "не из .app — перезапуска нет")
         }
     }
 }

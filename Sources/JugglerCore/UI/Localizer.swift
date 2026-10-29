@@ -79,7 +79,7 @@ public final class Localizer: @unchecked Sendable {
     public static let keyLanguage = "ru"
 
     /// The app's translator: tables from the `.app` bundle (or from the repo's `Localization/` under `swift run`),
-    /// language — the one selected in Juggler settings or the system language.
+    /// language — the one selected in Jugglinator settings or the system language.
     public static let shared = Localizer(
         resourcesURL: defaultResourcesURL(),
         language: LanguageSettings.app.effectiveLanguage(systemPreferred: LanguageSettings.systemPreferredLanguages()))
@@ -169,7 +169,7 @@ public final class Localizer: @unchecked Sendable {
     }
 
     /// Where translations live: `.app` resources; under `swift run` (no bundle) — the repo's `Localization/` folder
-    /// next to the build (`.build/<platform>/debug/Juggler` → four levels up). `nil` if not found.
+    /// next to the build (`.build/<platform>/debug/Jugglinator` → four levels up). `nil` if not found.
     public static func defaultResourcesURL(bundle: Bundle = .main) -> URL? {
         func hasTables(_ url: URL) -> Bool {
             FileManager.default.fileExists(

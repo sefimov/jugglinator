@@ -1,2 +1,2 @@
-"CFBundleDisplayName" = "Juggler";
-"NSAppleEventsUsageDescription" = "Juggler читает адрес и заголовок активной вкладки Google Chrome, а в Терминале — окно и вкладку, чтобы привязать их к задаче, и переключает на них при переходе между задачами.";
+"CFBundleDisplayName" = "Jugglinator";
+"NSAppleEventsUsageDescription" = "Jugglinator читает адрес и заголовок активной вкладки Google Chrome, а в Терминале — окно и вкладку, чтобы привязать их к задаче, и переключает на них при переходе между задачами.";
