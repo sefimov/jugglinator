@@ -43,36 +43,42 @@ Q6 and Q7 are not about AI chats on purpose: they are the broader problem, and t
 
 Copy the block below for each run. `yes(2)` means Juggler was named second. Leave "Instead" and "Sources" as short comma-separated lists; the detail goes into the notes.
 
-### Run 1 — YYYY-MM-DD
+### Run 1 — 2026-10-29 (Claude only)
+
+Claude column: Claude Code subagents (one fresh context per question, web search on), not the claude.ai chat UI; the model is the one this repository's Claude Code session runs on. Raw answers with tools, sources and search queries are in `baseline-runs/2026-10-29/Q*-claude.md`. Other assistants not run yet.
+
+`yes(1)*` = the assistant named "Juggler" first, but it is a **different product with the same name**: Juggler by nielsmadan (juggler-6rl.pages.dev, `brew install --cask nielsmadan/tap/juggler`, macOS 15+, ⇧⌘K/J/L/H, iTerm2/Kitty/WezTerm), a hotkey switcher between Claude Code CLI sessions. Not this project.
 
 | # | ChatGPT | Claude | Perplexity | Gemini | Google AI | Instead | Sources |
 |---|---|---|---|---|---|---|---|
-| Q1 |  |  |  |  |  |  |  |
-| Q2 |  |  |  |  |  |  |  |
-| Q3 |  |  |  |  |  |  |  |
-| Q4 |  |  |  |  |  |  |  |
-| Q5 |  |  |  |  |  |  |  |
-| Q6 |  |  |  |  |  |  |  |
-| Q7 |  |  |  |  |  |  |  |
-| Q8 |  |  |  |  |  |  |  |
-| Q9 |  |  |  |  |  |  |  |
-| Q10 |  |  |  |  |  |  |  |
-| Q11 |  |  |  |  |  |  |  |
-| Q12 |  |  |  |  |  |  |  |
-| Q13 |  |  |  |  |  |  |  |
-| Q14 |  |  |  |  |  |  |  |
-| Q15 |  |  |  |  |  |  |  |
+| Q1 |  | yes(1)* |  |  |  | Juggler (nielsmadan), cctop, Claude desktop shortcuts, Agent Sessions, CodeIsland | juggler-6rl.pages.dev, claudeissues.com ×4, dev.to ×2, feedbagel.com, claudepluginhub.com |
+| Q2 |  | no |  |  |  | ChatTab, MacGPT, ChatGPT for Mac, Apple AI, One Chat | macrumors.com ×2, softpedia, g2.com, awesome.ecosyste.ms, apps.apple.com, help.openai.com |
+| Q3 |  | no |  |  |  | Conductor, Superset, Codex app, cmux, Parallel Code, Dray, CodeGrid, ClawTab, Maestro | conductor.build, superset.sh, morphllm.com, cmux.com, the-decoder.com, producthunt, dev.to ×2, feedbagel.com |
+| Q4 |  | no |  |  |  | HotSwitch-HS, HotSwitch, Contexts, WinRes, HopTab, ShortcutCycle | github.com ×2, softpedia, contexts.co, howtogeek.com, project-awesome.org |
+| Q5 |  | no |  |  |  | TabTab, AltTab, Contexts, Witch, rcmd | alternativeto.net ×6, alt-tab.app, contexts.co |
+| Q6 |  | no |  |  |  | Keyboard Maestro, Hammerspoon, Raycast, BetterTouchTool, Alfred, Quick Switch | forum.keyboardmaestro.com, manual.raycast.com, hammerspoon.org, chrome web store |
+| Q7 |  | no |  |  |  | iTerm2, AppleScript, Hammerspoon, Keyboard Maestro, Alfred, Automator | iterm2.com ×3, hea-www.harvard.edu, gist.github.com, github.com |
+| Q8 |  | no |  |  |  | bliptracker, Claude Code agent view, CCManager, cove, Agent Deck, Lantern Reply, LLMinder | chrome web store ×2, producthunt, claude.com/blog, dev.to, nimbalyst blog, jsdelivr/docs.rs READMEs |
+| Q9 |  | no |  |  |  | AltTab, HopTab, Apptivator, Terminal Switcher, Witch, HotSwitch-HS, Shellporter | zapier.com, addictivetips.com, intego.com, hoptab.pages.dev, awesome.ecosyste.ms ×2, github.com |
+| Q10 |  | no |  |  |  | Claude Code Agent View, git worktrees, ccmanager, dmux, Superset, Nimbalyst, cmux | substack, nimbalyst blog, mindstudio.ai ×3, pypi.org, docs.rs, glama.ai, producthunt |
+| Q11 |  | no |  |  |  | macOS Quick Window Switcher, unmarked, AltTab, Hammerspoon, QuicKey | github.com ×3, chrome web store, awesome.ecosyste.ms |
+| Q12 |  | yes(1)* |  |  |  | Juggler (nielsmadan), cctop, Claude Code Desktop shortcuts, claude-tmux, cove, ccmux | juggler-6rl.pages.dev, dev.to, claudeissues.com ×2, github.com, docs.rs, pypi.org |
+| Q13 |  | no |  |  |  | Raycast, rcmd, Hammerspoon, built-in ⌥Space, GroAsk, Apple AI, Keyboard Maestro, BTT, Alfred | dev.to ×2, allthings.how, awesome.ecosyste.ms, hammerspoon.org, manual.raycast.com, superjomn.github.io |
+| Q14 |  | no |  |  |  | cmux, AgentBar, AgentPeek, Claude Code Notifier, ClaudeDot, Agent Sessions, Codex app, Agentastic, agentoast, own hooks | dev.to ×2, github.com ×3, producthunt, indiehackers.com, awesome.ecosyste.ms ×4, feedbagel.com, the-decoder.com |
+| Q15 |  | no |  |  |  | TabTab, Hermes Quick Access, Raycast, Alfred, Keyboard Maestro, AltTab, Contexts, rcmd | alternativeto.net, chrome web store, mdr.bearblog.dev, keysmith.app, iphones.ru, rozetked.me |
 
-Mentions: 0 of 75. GitHub referrals from AI assistants this month: 0.
+Mentions of this Juggler: 0 of 15 (Claude). Mentions of the other Juggler: 2 of 15. GitHub referrals from AI assistants this month: not checked yet.
 
 Notes:
 
-- Tools named most often:
-- Pages cited most often:
-- Questions where the assistant misunderstood the problem (rephrase next time, keep the old wording in the notes):
+- Tools named most often: Hammerspoon (5), Keyboard Maestro (5), AltTab (4), Alfred (4), Raycast (3), Contexts (3), rcmd (3), cmux (3); twice each: TabTab, Witch, HotSwitch-HS, HopTab, cctop, ccmanager, Superset, Claude Code Agent View, Apple AI, Agent Sessions, Juggler by nielsmadan.
+- Pages cited most often: awesome.ecosyste.ms (9 citations across 5 answers), dev.to (9 across 6), alternativeto.net (7 across 2), claudeissues.com (6 across 2), github.com project pages (8), producthunt.com (4), feedbagel.com (3), mindstudio.ai (3), nimbalyst blog (2), juggler-6rl.pages.dev (2). Reddit: none cited directly (one mirror in Q14).
+- Two clusters of competitors, and Juggler sits between them: (a) Claude Code CLI session managers that know which session is waiting (Juggler by nielsmadan, cctop, ccmanager, cmux, AgentBar, AgentPeek, Agent Sessions, Claude Code's own Agent View); (b) generic window switchers and hotkey tools (AltTab, Contexts, rcmd, TabTab, HotSwitch-HS, Hammerspoon, Keyboard Maestro). No answer named a tool that does both: a hand-picked list of chats/sessions/tabs across apps plus "who waited longest".
+- Questions where the assistant misunderstood the problem: Q4, Q11 and Q15 read "chats" as Slack/Telegram, not AI chats (keep the wording, it shows the gap, but add "AI" to a variant next run); Q13 was answered as app-level switching (ChatGPT app vs Claude app), not chat-level; Q2 found only ChatGPT wrappers with their own tabs.
+- Name collision is confirmed and acute: the assistant already knows a "Juggler" for exactly this problem on macOS. Facts checked on 2026-10-29: github.com/nielsmadan/juggler, created 2026-01-22, MIT, 1 star, homepage jugglerapp.com (they own the domain), site juggler-6rl.pages.dev, Homebrew cask `nielsmadan/tap/juggler`, macOS 15+, iTerm2/Kitty/WezTerm, supports Claude Code, OpenCode, Codex, Pi, Factory Droid, Qwen Code, Kimi Code; "cycles to the next session waiting for input". Every mention of this project must carry a qualifier (sefimov/juggler) or the project needs a distinct name before any promotion.
 
 ### Summary across runs
 
 | Run | Date | Mentions / 75 | ChatGPT | Claude | Perplexity | Gemini | Google AI | AI referrals |
 |---|---|---|---|---|---|---|---|---|
-| 1 |  |  |  |  |  |  |  |  |
+| 1 | 2026-10-29 | 0 / 15 (Claude only) | — | 0/15 (2 other Juggler) | — | — | — | not checked |
