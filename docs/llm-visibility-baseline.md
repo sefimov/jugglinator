@@ -79,8 +79,23 @@ Notes:
 - Questions where the assistant misunderstood the problem: Q4, Q11 and Q15 read "chats" as Slack/Telegram, not AI chats (keep the wording, it shows the gap, but add "AI" to a variant next run); Q13 was answered as app-level switching (ChatGPT app vs Claude app), not chat-level; Q2 found only ChatGPT wrappers with their own tabs.
 - Name collision is confirmed and acute: the assistant already knows a "Juggler" for exactly this problem on macOS. Facts checked on 2026-10-29: github.com/nielsmadan/juggler, created 2026-01-22, MIT, 1 star, homepage jugglerapp.com (they own the domain), site juggler-6rl.pages.dev, Homebrew cask `nielsmadan/tap/juggler`, macOS 15+, iTerm2/Kitty/WezTerm, supports Claude Code, OpenCode, Codex, Pi, Factory Droid, Qwen Code, Kimi Code; "cycles to the next session waiting for input". Every mention of this project must carry a qualifier (sefimov/juggler) or the project needs a distinct name before any promotion.
 
+### Run 2 (partial) — 2026-10-30, Claude only, the day after the rename
+
+Five questions re-run the same way (`baseline-runs/2026-10-30/`), to see whether anything changed right after the rename and the v0.3.0 release. A web search for "Jugglinator" returned nothing that day: the new repository and site were not indexed yet.
+
+| # | Claude | Instead | Sources |
+|---|---|---|---|
+| Q1 | no (Juggler by nielsmadan 1st again) | Juggler (nielsmadan), cctop, claudebar, Clave, TermHub | juggler-6rl.pages.dev, claudeissues.com, cctop.app, github.com ×3 |
+| Q2 | no | ChatTab, MacGPT, Apple AI, ChatGPT for Mac | macrumors, toolbit.ai, macgpt.com, macworld, awesome.ecosyste.ms, help.openai.com |
+| Q4 (with "AI chats") | no | rcmd, HopTab, Cycler, Apple AI, GroAsk, Hammerspoon | macpowerusers forum, alternativeto.net ×2, github.com ×2 |
+| Q9 | no | Context Switch, AltTab, Tab, Witch, Contexts, Apple AI | apps.apple.com, github.com ×2, contexts.co, intego.com |
+| Q13 | no | Quiper, GroAsk, AppleAI, IntelliBar, FetchAI, Peek AI | github.com, theaireport.ai, chatgate.ai, theresanaiforthat.com |
+
+Mentions of Jugglinator: 0 of 5. Expected: assistants with search can only cite what is indexed, and nothing about Jugglinator was. Re-check in two to four weeks, after the awesome-list and AlternativeTo submissions.
+
 ### Summary across runs
 
 | Run | Date | Mentions / 75 | ChatGPT | Claude | Perplexity | Gemini | Google AI | AI referrals |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 2026-10-29 | 0 / 15 (Claude only) | — | 0/15 (2 other Juggler) | — | — | — | not checked |
+| 2 (partial) | 2026-10-30 | 0 / 5 (Claude only) | — | 0/5 (1 other Juggler) | — | — | — | 0 (21 views, all own) |
