@@ -14,6 +14,8 @@ Like ⌘Tab, but for tasks instead of apps.
   <sub>Free and open source (MIT) · <a href="https://sefimov.github.io/jugglinator/">Website</a>. Not notarized yet: on first launch see <a href="#first-launch">First launch</a>.</sub>
 </p>
 
+<p align="center"><img src="docs/screenshot.png" width="382" alt="Jugglinator menu: four numbered tasks (two Terminal tabs, a Claude Code session, a ChatGPT thread) with how long ago each was visited, and Add Current Window, Clear All Tasks, Settings, Quit"></p>
+
 ---
 
 ## The problem

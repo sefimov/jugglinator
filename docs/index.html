@@ -12,8 +12,8 @@
 <meta property="og:title" content="Jugglinator — one hotkey to cycle through your parallel AI chats on macOS">
 <meta property="og:description" content="Free, open source menu bar app for people who run several Claude Code sessions, ChatGPT threads, Chrome tabs and Terminal tabs at once. One hotkey lands on the right one.">
 <meta property="og:url" content="https://sefimov.github.io/jugglinator/">
-<meta property="og:image" content="https://sefimov.github.io/jugglinator/icon.png">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://sefimov.github.io/jugglinator/screenshot.png">
+<meta name="twitter:card" content="summary_large_image">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -29,12 +29,13 @@
       "url": "https://sefimov.github.io/jugglinator/",
       "downloadUrl": "https://github.com/sefimov/jugglinator/releases/latest/download/Jugglinator.app.zip",
       "installUrl": "https://github.com/sefimov/jugglinator/releases/latest",
-      "softwareVersion": "0.2.0",
+      "softwareVersion": "0.3.0",
       "license": "https://opensource.org/license/mit",
       "isAccessibleForFree": true,
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "author": { "@type": "Person", "name": "Sergej Efimov", "url": "https://github.com/sefimov" },
       "image": "https://sefimov.github.io/jugglinator/icon.png",
+      "screenshot": "https://sefimov.github.io/jugglinator/screenshot.png",
       "featureList": [
         "Cycle through tasks with Control-Tab, in a fixed order",
         "Add or remove the frontmost window as a task with one hotkey",
@@ -112,6 +113,9 @@
   main { max-width: 720px; margin: 0 auto; padding: 48px 16px 64px; }
   header { text-align: center; margin-bottom: 40px; }
   header img { width: 112px; height: 112px; }
+  .shot { margin: -16px 0 40px; text-align: center; }
+  .shot img { width: 100%; max-width: 382px; height: auto; border-radius: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.18); }
+  .shot figcaption { color: var(--muted); font-size: 15px; margin-top: 10px; }
   h1 { font-size: 40px; margin: 12px 0 8px; letter-spacing: -0.02em; }
   .tagline { font-size: 21px; color: var(--muted); margin: 0 auto 24px; max-width: 560px; }
   .cta { display: inline-block; background: var(--fg); color: var(--bg); text-decoration: none; font-weight: 600; padding: 12px 22px; border-radius: 10px; }
@@ -145,6 +149,11 @@
     <a class="cta" href="https://github.com/sefimov/jugglinator/releases/latest/download/Jugglinator.app.zip">Download for macOS 14+</a>
     <p class="sub">Free and open source (MIT) · Apple silicon · <a href="https://github.com/sefimov/jugglinator">Source on GitHub</a><br>Not notarized yet: on first launch see <a href="#first-launch">First launch</a>.</p>
   </header>
+
+  <figure class="shot">
+    <img src="screenshot.png" width="764" height="598" alt="Jugglinator menu: four numbered tasks (two Terminal tabs, a Claude Code session, a ChatGPT thread) with how long ago each was visited, and Add Current Window, Clear All Tasks, Settings, Quit">
+    <figcaption>The menu: numbered tasks, how long each has waited, and the last visited one in green.</figcaption>
+  </figure>
 
   <h2 id="problem">The problem</h2>
   <p>You have three Claude Code sessions working on three branches, a ChatGPT thread where you are drafting a spec, a Claude chat with a design review, a Terminal tab with the tests and a Chrome tab with the docs. Each of them is one <em>task</em>. <kbd>⌘⇥</kbd> shows you apps, not tasks. Window switchers show you windows, but two Claude Code sessions are the same window and two ChatGPT threads look identical in a list. So you click around, lose track of which agent has been waiting for you for an hour, and forget the one that has finished.</p>
