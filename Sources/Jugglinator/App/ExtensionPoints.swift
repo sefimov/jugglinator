@@ -18,6 +18,13 @@ import os
 @MainActor
 protocol FrontmostContextProviding: AnyObject {
     func currentContext() -> FrontmostContext
+    /// Diagnostics of the last read: permission states, Claude and ChatGPT lookups.
+    var lastDiagnostics: ContextDiagnostics { get }
+}
+
+extension FrontmostContextProviding {
+    /// Substituted providers know nothing about permissions.
+    var lastDiagnostics: ContextDiagnostics { ContextDiagnostics() }
 }
 
 /// Builds a binding from the frontmost window context (no dialogs).
