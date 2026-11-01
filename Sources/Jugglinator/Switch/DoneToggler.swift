@@ -6,6 +6,7 @@ import JugglerCore
 /// - the window is a task — its mark is toggled (`DoneToggle`), saved to tasks.json, with a card;
 /// - the window is not in the list — it is added as a new task, the mark is not touched;
 ///   a Claude or ChatGPT window that needs a link goes through the usual binding flow with dialogs;
+///   so does a Chrome tab that can't be read until the user allows Automation (system prompt);
 /// - the window cannot be added (desktop, Jugglinator itself) — a sound and a card with an explanation.
 /// The last active task is never toggled instead. Windows are not switched.
 @MainActor
@@ -41,6 +42,13 @@ final class LiveDoneToggler: DoneToggling {
         case .needsLink:
             addWithDialogs()
         case .unavailable(let message):
+            // Chrome needs Automation consent (e.g. a rebuilt ad-hoc app: System Settings still shows
+            // the old grant): the flow with dialogs shows the system prompt and then adds the tab.
+            if BindApps.kind(of: context.bundleID) == .chrome,
+               bind.contextProvider.lastDiagnostics.chromeAutomation == .requiresConsent {
+                addWithDialogs()
+                return
+            }
             beep()
             messages?.showMessage(message ?? DoneToggleTexts.noCurrentTaskMessage)
         }
