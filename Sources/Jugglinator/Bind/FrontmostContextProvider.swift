@@ -26,8 +26,6 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
     private var observer: NSObjectProtocol?
     private let ownPID = ProcessInfo.processInfo.processIdentifier
     private let ownBundleID = Bundle.main.bundleIdentifier
-    /// Apps that already have `AXManualAccessibility` enabled (pid).
-    private var manualAccessibilityEnabled = Set<pid_t>()
     /// Claude Code session metadata folder.
     private let claudeCodeSessionsRoot: URL?
     /// List of ChatGPT threads (`session_index.jsonl`).
@@ -186,18 +184,19 @@ final class LiveFrontmostContextProvider: FrontmostContextProviding {
     }
 
     private func readClaudeChat(pid: pid_t, window: AXUIElement?, interactive: Bool) -> (urls: [String], foundWebArea: Bool, manualAccepted: Bool) {
-        var manualAccepted = true
-        if !manualAccessibilityEnabled.contains(pid) {
-            manualAccepted = AX.enableManualAccessibility(pid: pid)
-            manualAccessibilityEnabled.insert(pid)
-        }
-        // Electron doesn't build the tree right after the flag is enabled: a few short attempts.
-        let attempts = interactive ? 6 : 2
+        // Set on every read, not once per process: Chromium (Claude 4.4212, Electron 44) drops the web
+        // content tree again when no assistive client uses it. Setting the flag on a live tree is a no-op.
+        let manualAccepted = AX.enableManualAccessibility(pid: pid)
+        // A dropped tree is rebuilt about 2.1 s after the flag is set (measured 01.11.2026):
+        // when binding we wait up to ~3.5 s, when switching only briefly.
+        let attempts = interactive ? 24 : 2
         var last: (urls: [String], foundWebArea: Bool) = ([], false)
         for attempt in 0..<attempts {
             guard let window = window ?? AX.focusedWindow(pid: pid) else { break }
             last = AX.webAreaURLs(in: window)
             if ClaudeChatURLExtractor.link(fromCandidates: last.urls) != nil { break }
+            // The page is loaded but is not a chat (settings, projects): waiting won't help.
+            if last.urls.contains(where: { $0.hasPrefix("https://") }) { break }
             if attempt + 1 < attempts { Thread.sleep(forTimeInterval: 0.15) }
         }
         log.debug("Claude AX: веб-область \(last.foundWebArea), адресов \(last.urls.count)")
