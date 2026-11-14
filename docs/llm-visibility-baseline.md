@@ -93,9 +93,43 @@ Five questions re-run the same way (`baseline-runs/2026-10-30/`), to see whether
 
 Mentions of Jugglinator: 0 of 5. Expected: assistants with search can only cite what is indexed, and nothing about Jugglinator was. Re-check in two to four weeks, after the awesome-list and AlternativeTo submissions.
 
+### Run 3 — 2026-11-14 (Claude only), two weeks after the rename
+
+All 15 questions, verbatim, the same way as run 1: one Claude Code subagent per question, fresh context, web search on, no hint about the project. Raw tool lists, sources and search queries are in `baseline-runs/2026-11-14/Q*-claude.md`. Other assistants not run.
+
+| # | Claude | Instead | Sources |
+|---|---|---|---|
+| Q1 | no (Juggler by nielsmadan 4th, first third-party tool) | Claude desktop shortcuts, iTerm2, tmux, Juggler (nielsmadan), cctop, Hawky, Raycast Agent Inbox, AgentManager, Clave | claudeissues.com ×3, juggler-6rl.pages.dev ×2, cctop.app ×2, alternativeto.net, raycast.com, producthunt, awesome.ecosyste.ms, dev.to |
+| Q2 | no | Quiper, Kikumap, MacGPT, Apple AI, GroAsk, Peek, PromptBar, ChatGPT desktop app | producthunt ×2, awesome.ecosyste.ms ×2, dev.to, help.openai.com, elephas.app, macworld, indiehackers |
+| Q3 | no | git worktrees, Conductor, Codex app, Agent of Empires, Claude Squad, cmux, Agentastic, Parallel Code, CodeGrid, Vibe Island, Agent Sessions | betterstack.com ×2, conductor.build ×2, feedbagel.com ×2, hunted.space ×2, awesome.ecosyste.ms ×2, vibeisland.app ×2, morphllm.com, the-decoder.com |
+| Q4 | no | HopTab, Quick Tab, rcmd, ShortcutCycle, AltTab, Witch, Contexts, Hammerspoon, Keyboard Maestro, BetterTouchTool | alternativeto.net ×2, alt-tab.app ×2, apps.apple.com, cultofmac, digitaltrends, zapier, project-awesome.org |
+| Q5 | no | AltTab, BetterCmdTab, Better Window Switcher, WindowHopper, OneSwitch, Witch, Switch, Peek, Raycast, Alfred | alt-tab.app ×3, opensourcealternatives.to ×3, alternativeto.net ×2, setapp.com ×2, softpedia ×2, producthunt |
+| Q6 | no | Tab Hot Key, Hermes Quick Access, AppleScript, Keyboard Maestro, Hammerspoon, Raycast, BetterTouchTool, Alfred, TabGroup Trigger | chrome web store ×4, support.google.com, github.com, workona.com |
+| Q7 | no (Juggler by nielsmadan last, 11th; new here) | AppleScript, Hammerspoon, Automator, Shortcuts, Keyboard Maestro, BetterTouchTool, Alfred, Raycast, iTerm2, Juggler (nielsmadan) | discussions.apple.com ×2, docs.rs ×2, scriptingosx.com, juggler-6rl.pages.dev, mdr.bearblog.dev |
+| Q8 | no | bliptracker, Chat Timeline, AgentPet, Harbar, lazyagent, Agent Signals, Agent Inbox | chrome web store ×2, producthunt ×2, awesome.ecosyste.ms, claudepluginhub.com, raycast.com |
+| Q9 | no | AltTab, Raycast, Witch, Terminal Switcher, Nudge, TermBar, Agent Control Tower Lite, Apple AI, GroAsk, Menu AI | awesome.ecosyste.ms ×2, dev.to ×2, producthunt ×2, github.com ×2, apps.apple.com, alt-tab.app |
+| Q10 | no | git worktrees, Claude Code agent view, Claude Code Desktop, tmux, Claude Squad, amux, Conductor, Vibe Kanban, Nimbalyst | claude.com/blog, amux.io ×2, nimbalyst ×2, buildfastwithai.com, blog.gitbutler.com, dev.to |
+| Q11 | no | BetterCmdTab, foxhop, OneSwitch, Winby, AltTab, Reef, Hammerspoon | github.com ×6, opensourcealternatives.to ×2, raycast.com, alternativeto.net |
+| Q12 | no (Juggler by nielsmadan 4th, first third-party tool) | Claude Desktop shortcuts, Terminal, iTerm2, Juggler (nielsmadan), cctop, cmux, AgentManager, Raycast Agent Inbox | code.claude.com ×3, claudeissues.com ×2, juggler-6rl.pages.dev ×2, cctop.app ×2, cmux.com, producthunt |
+| Q13 | no | GroAsk, Apple AI, Quiper, Adro Browser, BoltAI, MindMac, Beam, Raycast, Alfred, Hammerspoon | dev.to ×2, hashnode ×2, thedailyworkflow.com ×2, awesome.ecosyste.ms, apps.apple.com, help.openai.com |
+| Q14 | no | git worktree, Codex app, cmux, Supacode, Crew Tower, Agent Sessions, AgentsRoom, Verdent Deck, Axel, AgentMicro, Agent of Empires | aipure.ai ×2, huntscreens.com ×2, comss.ru, cmux.com, betterstack.com, awesome.ecosyste.ms |
+| Q15 | no | ReturnFast, TabTab, Better Window Switcher, Hermes Quick Access, ReTab, JumpTab, AltTab, BetterTouchTool, Keyboard Maestro | producthunt ×3, apps.apple.com ×3, alternativeto.net ×2, chrome web store ×2, alt-tab.app |
+
+Mentions of Jugglinator: 0 of 15 (Claude). Mentions of the other Juggler: 3 of 15 (Q1, Q7, Q12; run 1 had Q1 and Q12). GitHub traffic for the last 14 days: 6 views, 1 unique visitor, the only referrer is github.com; no referrals from AI assistants.
+
+Notes:
+
+- Jugglinator is still not in the search index. Two direct web searches on 2026-11-14 ("Jugglinator" and "Jugglinator macOS menu bar app AI chats") returned nothing about the project: the first returned juggling robots, the second other menu bar AI apps. Until the name is findable, no assistant with search can cite it, whatever the question.
+- Seven answers say outright that no tool for the job was found (Q2, Q4, Q8, Q9, Q11, Q13, Q15): a list of specific chats across apps, a hotkey to the next one, "who waited longest". This is the gap Jugglinator fills, and the assistant has nothing to put there.
+- Tools named most often: AltTab (5), Hammerspoon (5), Raycast (5), Keyboard Maestro (4), BetterTouchTool (4), Alfred (4), Witch (3), cmux (3), Apple AI (3), GroAsk (3), Juggler by nielsmadan (3). New since run 1: BetterCmdTab, Better Window Switcher, OneSwitch, Quiper, Kikumap, Agent of Empires, Raycast Agent Inbox.
+- Pages cited most often: awesome.ecosyste.ms (7 answers), producthunt.com (7), github.com project pages, dev.to (5), alternativeto.net (5), apps.apple.com (5), chrome web store (3). These are the same catalogs as in run 1, so the submission list stands: awesome lists, AlternativeTo, Product Hunt.
+- Caveat on this run: the 15 subagents searched at the same time and hit the search rate limit. Nine of the 15 answers lost at least one search (`too_many_requests`); in two more a retry succeeded. Every answer still had at least two successful searches, but the tool lists are thinner than they would be with all searches, and parts of some answers came from general knowledge (noted per file). Next run: start the questions in batches of four or five.
+- Q4, Q11 and Q15 were again read as Slack/Telegram chats, not AI chats.
+
 ### Summary across runs
 
 | Run | Date | Mentions / 75 | ChatGPT | Claude | Perplexity | Gemini | Google AI | AI referrals |
 |---|---|---|---|---|---|---|---|---|
 | 1 | 2026-10-29 | 0 / 15 (Claude only) | — | 0/15 (2 other Juggler) | — | — | — | not checked |
 | 2 (partial) | 2026-10-30 | 0 / 5 (Claude only) | — | 0/5 (1 other Juggler) | — | — | — | 0 (21 views, all own) |
+| 3 | 2026-11-14 | 0 / 15 (Claude only) | — | 0/15 (3 other Juggler) | — | — | — | 0 (6 views, 1 visitor) |
